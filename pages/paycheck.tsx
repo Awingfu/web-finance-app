@@ -19,8 +19,9 @@ const Paycheck: NextPage = () => {
           <p className={styles.description}>
             Here we will estimate your take home pay!
           </p>
-  
         </main>
+
+        
   
         <footer className={styles.footer}>
           <p>Created by: Adam Lui</p>
