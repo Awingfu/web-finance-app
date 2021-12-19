@@ -20,14 +20,9 @@ const federal_witholding =
         [110988, 268075, 23921.5, .35, 110988],
         [268075, Infinity, 78902.13, .37, 268075]
     ],
-    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : {
-
-    },
-    [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : {
-
-    },
+    [TAX_CLASSES.MARRIED_FILING_SEPARATELY]: [],
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : [],
+    [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : [],
 };
-
-federal_witholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = federal_witholding[TAX_CLASSES.SINGLE]
 
 export default federal_witholding;
