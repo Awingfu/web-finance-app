@@ -13,12 +13,6 @@ interface Taxes {
 }
 
 // Source: https://taxfoundation.org/2022-tax-brackets/
-const federal_standard_deductions = {
-    [TAX_CLASSES.SINGLE] : 12950,
-    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : 25900,
-    [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : 19400,
-}
-
 // [min, max, tax_rate]
 // next step will convert to [min, max, tax_rate]
 const federal_taxes: Taxes = 
@@ -70,5 +64,10 @@ for (let tax_class in federal_taxes) {
 // MARRIED_FILING_SEPARATELY is currently the same as SINGLE
 federal_taxes[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_taxes[TAX_CLASSES.SINGLE]]
 
+export const federal_standard_deductions = {
+    [TAX_CLASSES.SINGLE] : 12950,
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : 25900,
+    [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : 19400,
+}
 
 export default federal_taxes;
