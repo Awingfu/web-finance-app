@@ -64,10 +64,37 @@ for (let tax_class in federal_taxes) {
 // MARRIED_FILING_SEPARATELY is currently the same as SINGLE
 federal_taxes[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_taxes[TAX_CLASSES.SINGLE]]
 
+// maybe move to constants?
 export const federal_standard_deductions = {
     [TAX_CLASSES.SINGLE] : 12950,
     [TAX_CLASSES.MARRIED_FILING_JOINTLY] : 25900,
     [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : 19400,
 }
+
+// https://www.nerdwallet.com/article/taxes/fica-tax-withholding
+export const social_security_taxes: Taxes = 
+{
+    [TAX_CLASSES.SINGLE] : [
+        [0, 142800, .062],
+        [142800, Infinity, .0],
+    ],
+    //??
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : [
+        [0, 285600, .062],
+        [285600, Infinity, .0],
+    ]
+};
+
+export const medicare_taxes: Taxes = 
+{
+    [TAX_CLASSES.SINGLE] : [
+        [0, 200000, .0145],
+        [200000, Infinity, .0235],
+    ],
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : [
+        [0, 250000, .0145],
+        [250000, Infinity, .0235],
+    ]
+};
 
 export default federal_taxes;
