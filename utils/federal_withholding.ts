@@ -8,30 +8,30 @@ enum TAX_CLASSES {
     HEAD_OF_HOUSEHOLD = "Head of Household"
 };
 
-interface Witholding { 
+interface Withholding { 
     [key: string]: number[][]
 }
 
 // Calculate (cumulative from previous tax rows) and push into rows. Array modification is by reference
-// Input witholding should be in the format [min income, max income, witholding rate]
-// Output witholding will be in the format [min income, max income, witholding rate, cumulative witholding from above rows]
-const addCumulativeColumn = (witholding_table : Witholding) => {
-    for (let tax_class in witholding_table) {
+// Input withholding should be in the format [min income, max income, withholding rate]
+// Output withholding will be in the format [min income, max income, withholding rate, cumulative withholding from above rows]
+const addCumulativeColumn = (withholding_table : Withholding) => {
+    for (let tax_class in withholding_table) {
         let last_sum = 0;
         let current_sum = 0;
-        for (let row_num = 0; row_num < witholding_table[tax_class].length; row_num++) {
-            let row_ref = witholding_table[tax_class][row_num];
+        for (let row_num = 0; row_num < withholding_table[tax_class].length; row_num++) {
+            let row_ref = withholding_table[tax_class][row_num];
             row_ref.push(last_sum + current_sum);
             last_sum += current_sum;
             // ignore infinity case in last row of each table
-            if (row_num != witholding_table[tax_class].length) {
+            if (row_num != withholding_table[tax_class].length) {
                 current_sum = (row_ref[1] - row_ref[0]) * row_ref[2];
             }
         }
     }
 }
 
-const federal_witholding : Witholding = 
+const federal_withholding : Withholding = 
 {
     [TAX_CLASSES.SINGLE] : [
         [0, 6275, .0],
@@ -64,25 +64,25 @@ const federal_witholding : Witholding =
         [271200, Infinity, .37],
     ],
 };
-federal_witholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_witholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(federal_witholding);
+federal_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
+addCumulativeColumn(federal_withholding);
 
 // https://www.nerdwallet.com/article/taxes/fica-tax-withholding
 // This is done individually so tax class doesn't matter
-const social_security_witholding : Witholding = 
+const social_security_withholding : Withholding = 
 {
     [TAX_CLASSES.SINGLE] : [
         [0, 142800, .062],
         [142800, Infinity, .0],
     ]
 };
-social_security_witholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_witholding[TAX_CLASSES.SINGLE]];
-social_security_witholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = [...federal_witholding[TAX_CLASSES.SINGLE]];
-social_security_witholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...federal_witholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(social_security_witholding);
+social_security_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
+social_security_withholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
+social_security_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...federal_withholding[TAX_CLASSES.SINGLE]];
+addCumulativeColumn(social_security_withholding);
 
 // Source https://www.irs.gov/taxtopics/tc560
-const medicare_witholding : Witholding = 
+const medicare_withholding : Withholding = 
 {
     [TAX_CLASSES.SINGLE] : [
         [0, 200000, .0145],
@@ -97,11 +97,11 @@ const medicare_witholding : Witholding =
         [125000, Infinity, .0235],
     ],
 };
-medicare_witholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...medicare_witholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(medicare_witholding);
+medicare_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...medicare_withholding[TAX_CLASSES.SINGLE]];
+addCumulativeColumn(medicare_withholding);
 
 export {
-    social_security_witholding,
-    medicare_witholding,
-    federal_witholding,
+    social_security_withholding,
+    medicare_withholding,
+    federal_withholding,
 }
