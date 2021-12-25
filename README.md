@@ -1,5 +1,14 @@
 # web-finance-app
 
+## Colors
+
+primary: {
+    main: '#06A77D',
+},
+secondary: {
+    main: '#052F5F',
+},
+
 ## What is this
 
 This is a tool that will do random finance stuff such as:

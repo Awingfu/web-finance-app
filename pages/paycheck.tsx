@@ -1,15 +1,12 @@
 import type { NextPage } from 'next'
-import Head from 'next/head'
 import styles from '../styles/Paycheck.module.css'
+import Header from '../src/Header'
+import Footer from '../src/Footer'
 
 const Paycheck: NextPage = () => {
     return (
       <div className={styles.container}>
-        <Head>
-          <title>Lui Finance App | Paycheck Calculator</title>
-          <meta name="description" content="paycheck calculator" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+        <Header titleName='Paycheck Calculator'/>
   
         <main className={styles.main}>
           <h1 className={styles.title}>
@@ -22,9 +19,7 @@ const Paycheck: NextPage = () => {
         </main>
 
   
-        <footer className={styles.footer}>
-          <p>Created by: Adam Lui</p>
-        </footer>
+        <Footer />
       </div>
     )
   }

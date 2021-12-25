@@ -1,5 +1,6 @@
 // 2022
 // Source: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf page 11 W4 after 2020
+// Use for tax estimation but not withholdings
 
 enum TAX_CLASSES {
     SINGLE = "Single", 
