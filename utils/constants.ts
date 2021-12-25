@@ -25,15 +25,15 @@ export const _401k_maximum_contribution_total = 61000; // 2022
 export const _IRA_maximum_contribution_individual = 6000; // 2022
 export const _IRA_catchup = 1000; // 2022
 export const _IRA_maximum_contribution_individual_over50 = _IRA_maximum_contribution_individual + _IRA_catchup;
-export const _IRA_traditional_phase_out_income_limit_single_covered = 78000;
-export const _IRA_traditional_phase_out_income_limit_married_joint_covered = 129000;
-export const _IRA_traditional_phase_out_income_limit_married_joint_not_covered = 214000;
-export const _IRA_traditional_phase_out_income_limit_married_separate_covered = 10000;
+export const _IRA_traditional_phase_out_income_limit_single_covered = 78000; // 2022
+export const _IRA_traditional_phase_out_income_limit_married_joint_covered = 129000; // 2022
+export const _IRA_traditional_phase_out_income_limit_married_joint_not_covered = 214000; // 2022
+export const _IRA_traditional_phase_out_income_limit_married_separate_covered = 10000; // 2022
 
 // Roth IRA
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/amount-of-roth-ira-contributions-that-you-can-make-for-2022
-export const _IRA_roth_phase_out_income_start_single = 129000;
-export const _IRA_roth_phase_out_income_limit_single = 144000;
+export const _IRA_roth_phase_out_income_start_single = 129000; // 2022
+export const _IRA_roth_phase_out_income_limit_single = 144000; // 2022
 export const _IRA_roth_phase_out_income_start_head_of_household = _IRA_roth_phase_out_income_start_single;
 export const _IRA_roth_phase_out_income_limit_head_of_household = _IRA_roth_phase_out_income_limit_single;
 export const _IRA_roth_phase_out_income_start_married_joint = 204000;
@@ -49,10 +49,9 @@ export const _IRA_roth_reduced_contribution_divisor_married_separate = _IRA_roth
 // maximum contribution calculation. function of age, income, and filing status
 // could probably refactor this using linear algebra
 export const _IRA_roth_get_max_contribution = (age: number, income: number, tax_class: string) : number => {
-    let IRA_max = 0;
+    const IRA_max = age >= 50 ? _IRA_maximum_contribution_individual_over50 : _IRA_maximum_contribution_individual;
     switch(tax_class) {
         case TAX_CLASSES.SINGLE:
-            IRA_max = age >= 50 ? _IRA_maximum_contribution_individual_over50 : _IRA_maximum_contribution_individual;
             if (income < _IRA_roth_phase_out_income_start_single)
                 return IRA_max;
             else if (income > _IRA_roth_phase_out_income_limit_single)
@@ -64,7 +63,6 @@ export const _IRA_roth_get_max_contribution = (age: number, income: number, tax_
                 return IRA_max - multiply_by_max_contribution;
             } // shouldn't need to break since we return
         case TAX_CLASSES.HEAD_OF_HOUSEHOLD:
-            IRA_max = age >= 50 ? _IRA_maximum_contribution_individual_over50 : _IRA_maximum_contribution_individual;
             if (income < _IRA_roth_phase_out_income_start_head_of_household)
                 return IRA_max;
             else if (income > _IRA_roth_phase_out_income_limit_head_of_household)
@@ -76,7 +74,6 @@ export const _IRA_roth_get_max_contribution = (age: number, income: number, tax_
                 return IRA_max - multiply_by_max_contribution;
             }
         case TAX_CLASSES.MARRIED_FILING_JOINTLY:
-            IRA_max = age >= 50 ? _IRA_maximum_contribution_individual_over50 : _IRA_maximum_contribution_individual;
             if (income < _IRA_roth_phase_out_income_start_married_joint)
                 return IRA_max;
             else if (income > _IRA_roth_phase_out_income_limit_married_joint)
@@ -88,7 +85,6 @@ export const _IRA_roth_get_max_contribution = (age: number, income: number, tax_
                 return IRA_max - multiply_by_max_contribution;
             }
         case TAX_CLASSES.MARRIED_FILING_SEPARATELY:
-            IRA_max = age >= 50 ? _IRA_maximum_contribution_individual_over50 : _IRA_maximum_contribution_individual;
             if (income > _IRA_roth_phase_out_income_limit_married_separate)
                 return 0;
             else

@@ -6,6 +6,10 @@ This is a tool that will do random finance stuff such as:
 
 1. Paycheck Calculator
 
+Planned features
+
+1. 401k Frontloading
+2. 401k Roth vs Traditional
 
 ## References
 

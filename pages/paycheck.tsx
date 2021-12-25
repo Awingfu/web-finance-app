@@ -1,9 +1,6 @@
 import type { NextPage } from 'next'
 import Head from 'next/head'
 import styles from '../styles/Paycheck.module.css'
-import { Form, FloatingLabel } from 'react-bootstrap';
-import CurrencyInput from 'react-currency-input-field';
-// https://www.npmjs.com/package/react-currency-input-field
 
 const Paycheck: NextPage = () => {
     return (
@@ -24,16 +21,6 @@ const Paycheck: NextPage = () => {
           </p>
         </main>
 
-        <Form>
-          <CurrencyInput
-            id="annual-salary"
-            name="annual-salary"
-            prefix="$"
-            defaultValue={50000}
-            decimalsLimit={2}
-            onValueChange={(value, name) => console.log(value, name)}
-          />
-        </Form>
   
         <footer className={styles.footer}>
           <p>Created by: Adam Lui</p>
