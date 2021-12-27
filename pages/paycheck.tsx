@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, OverlayTrigger, Tooltip, Table, InputGroup} from 'react-bootstrap';
+import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown} from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
@@ -10,6 +10,7 @@ import Footer from '../src/Footer';
  *  - bonuses -> one time or distribute into paycheck/yr, also whether it contributes to benefits
  *  - Company match
  *  - Other tax deductions, company match on HSA/FSA
+ *  - multiple states
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
  * 3. Split form and table + functions to separate files
  */
@@ -25,6 +26,18 @@ const formatCurrency = (num: number) : string => {
 
   return formatter.format(num);
 };
+
+const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
+  return salary * (contributionPercentage / 100); 
+}
+
+// Contribution Frequencies
+enum FREQUENCIES {
+  PAYCHECK = "Paycheck",
+  WEEK = "Week",
+  MONTH = "Month",
+  ANNUM = "Annum",
+}
 
 // All types of Pay schedules
 enum PAY_SCHEDULE {
@@ -74,8 +87,13 @@ function Paycheck() {
   const [r401kContribution, changeR401kContribution] = React.useState(0);
   const [tIRAContribution, changeTIRAContribution] = React.useState(0);
   const [rIRAContribution, changeRIRAContribution] = React.useState(0);
+  const [medicalContribution, changeMedicalContribution] = React.useState(0);
+  const [medicalContributionFrequency, changeMedicalContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
+
+
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+    console.log("Executing changeFunction on " + (e.target as HTMLInputElement).value);
     if (changeFunction === changeSalary) {
       let value = parseFloat((e.target as HTMLInputElement).value); 
       if (isNaN(value) || value < 0) {
@@ -96,6 +114,12 @@ function Paycheck() {
     }
     changeFunction(value);
   };
+
+  const updateWithEventKey = (e: string | null, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+    if (e)
+      changeFunction(e);
+    else console.log("Null event key");
+  }
 
     return (
       <div className={styles.container}>
@@ -207,6 +231,25 @@ function Paycheck() {
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
           </OverlayTrigger>
+
+          <Form.Label>Medical Insurance Contribution</Form.Label>
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>$</InputGroup.Text>
+            <Form.Control type="number" value={medicalContribution} onChange={e => update(e, changeMedicalContribution)}/>
+            <InputGroup.Text>per</InputGroup.Text>
+            <DropdownButton
+              variant="secondary"
+              title={medicalContributionFrequency}
+              id="medical-frequency-dropdown"
+              onSelect={e => updateWithEventKey(e, changeMedicalContributionFrequency)}
+            >
+              <Dropdown.Item eventKey={FREQUENCIES.PAYCHECK} selected="selected">{FREQUENCIES.PAYCHECK}</Dropdown.Item>
+              <Dropdown.Item eventKey={FREQUENCIES.WEEK}>{FREQUENCIES.WEEK}</Dropdown.Item>
+              <Dropdown.Item eventKey={FREQUENCIES.MONTH}>{FREQUENCIES.MONTH}</Dropdown.Item>
+              <Dropdown.Item eventKey={FREQUENCIES.ANNUM}>{FREQUENCIES.ANNUM}</Dropdown.Item>
+            </DropdownButton>
+          </InputGroup>
+
         </Form>
 
         <div className={styles.table}>
@@ -229,13 +272,13 @@ function Paycheck() {
               </tr>
               <tr>
                 <td>Traditional 401k</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(calculateContributionFromPercentage(salary, t401kContribution))}</td>
+                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, t401kContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Traditional IRA</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(calculateContributionFromPercentage(salary, tIRAContribution))}</td>
+                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, tIRAContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Medical Insurance</td>
@@ -290,13 +333,13 @@ function Paycheck() {
               </tr>
               <tr>
                 <td>Roth 401k</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(calculateContributionFromPercentage(salary, r401kContribution))}</td>
+                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, r401kContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Roth IRA</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(calculateContributionFromPercentage(salary, rIRAContribution))}</td>
+                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, rIRAContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td className={styles.thicc}>Take Home Pay</td>
