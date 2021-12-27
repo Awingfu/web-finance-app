@@ -1,0 +1,38 @@
+$medium: 1024px;
+
+.main {
+    padding: 2rem 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.paycheckForm {
+    @media screen and (min-width: $medium) {
+        margin: 0 20%;
+        padding: 0 100px;
+    }
+
+    @media screen and (max-width: $medium) {
+        margin: 0 100px;
+    }
+    
+}
+
+.table {
+    margin-top: 4rem;
+
+    @media screen and (min-width: $medium) {
+        margin-left: 20%;
+        margin-right: 20%;
+        padding: 0 100px;
+    }
+
+    @media screen and (max-width: $medium) {
+        margin-left: 100px;
+        margin-right: 100px;
+    }
+    
+}

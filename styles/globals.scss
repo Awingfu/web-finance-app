@@ -14,3 +14,15 @@ a {
 * {
   box-sizing: border-box;
 }
+
+$primary: #06A77D;
+$secondary: #052F5F;
+
+$theme-colors: (
+  primary: $primary,
+  secondary: $secondary,
+);
+
+$medium: 1024px;
+
+@import "bootstrap";

@@ -12,7 +12,7 @@ import { Container, Nav, Navbar} from 'react-bootstrap';
  */
 const NavigationBar = () => {
     return (
-        <Navbar bg="dark" variant="dark">
+        <Navbar bg="primary" variant="dark">
             <Container>
                 <Link href="/" passHref>
                     <Navbar.Brand> Finance App </Navbar.Brand>

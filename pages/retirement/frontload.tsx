@@ -2,7 +2,7 @@ import type { NextPage } from 'next';
 import Header from '../../src/Header';
 import Footer from '../../src/Footer';
 // TODO change styles
-import styles from '../../styles/Paycheck.module.css'
+import styles from '../../styles/Home.module.css'
 
 
 /**
