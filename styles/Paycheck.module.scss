@@ -13,6 +13,10 @@ $medium: 1024px;
     font-weight: bold;
 }
 
+.specialHeaderWidth {
+    width: 300px;
+}
+
 .paycheckForm {
     @media screen and (min-width: $medium) {
         margin: 0 20%;

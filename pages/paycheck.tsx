@@ -154,7 +154,7 @@ function Paycheck() {
               <tr>
                 <th></th>
                 <th>Annual</th>
-                <th>Paycheck - {paySchedule}</th>
+                <th className={styles.specialHeaderWidth}>Paycheck - {paySchedule}</th>
               </tr>
             </thead>
             <tbody>
