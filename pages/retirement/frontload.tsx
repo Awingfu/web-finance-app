@@ -1,5 +1,6 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
+import type { NextPage } from 'next';
+import Header from '../../src/Header';
+import Footer from '../../src/Footer';
 // TODO change styles
 import styles from '../../styles/Paycheck.module.css'
 
@@ -13,11 +14,7 @@ import styles from '../../styles/Paycheck.module.css'
 const Frontload: NextPage = () => {
     return (
       <div className={styles.container}>
-        <Head>
-          <title>Lui Finance App | Frontload Calculator</title>
-          <meta name="description" content="frontload calculator" />
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
+        <Header titleName='Frontload Calculator' />
   
         <main className={styles.main}>
           <h1 className={styles.title}>
@@ -30,9 +27,7 @@ const Frontload: NextPage = () => {
         </main>
 
   
-        <footer className={styles.footer}>
-          <p>Created by: Adam Lui</p>
-        </footer>
+        <Footer />
       </div>
     )
   }
