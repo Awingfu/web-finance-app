@@ -65,6 +65,8 @@ const renderTooltip = (props: any) => (
  * 
  * Net Pay
  * 
+ * Table formatting in globals.scss
+ * 
  * Next goals:
  * State income tax withholding
  * bonuses -> one time or distribute into paycheck/yr, also whether it contributes to benefits
@@ -89,7 +91,7 @@ function Paycheck() {
           </h1>
   
           <p className={styles.description}>
-            Here we will estimate your take home pay!
+            Here we will estimate your take home pay (for 2022)!
           </p>
         </main>
 
@@ -108,7 +110,7 @@ function Paycheck() {
             <br/>
             <OverlayTrigger
               placement="bottom"
-              delay={{ show: 250, hide: 400 }}
+              delay={{ show: 150, hide: 200 }}
               overlay={renderTooltip({text:"Every two weeks"})}
             >
               <Form.Check
@@ -123,7 +125,7 @@ function Paycheck() {
             </OverlayTrigger>
             <OverlayTrigger
               placement="bottom"
-              delay={{ show: 250, hide: 400 }}
+              delay={{ show: 150, hide: 200 }}
               overlay={renderTooltip({text:"Twice a month"})}
             >
               <Form.Check
@@ -147,7 +149,7 @@ function Paycheck() {
         </Form>
 
         <div className={styles.table}>
-          <Table striped bordered hover responsive size="sm">
+          <Table hover responsive size="sm">
             <thead>
               <tr>
                 <th></th>
@@ -157,18 +159,88 @@ function Paycheck() {
             </thead>
             <tbody>
               <tr>
-                <td>Gross Income</td>
+                <td className={styles.thicc}>Gross Income</td>
                 <td>{formatCurrency(salary)}</td>
                 <td>{formatCurrency(convertAmountToPaySchedule(salary, paySchedule))}</td>
               </tr>
               <tr>
-                <td>2</td>
-                <td>Jacob</td>
-                <td>Thornton</td>
+                <td colSpan={3} className={styles.thicc}>Pre-Tax Contributions</td>
               </tr>
               <tr>
-                <td>3</td>
-                <td colSpan={2}>Larry the Bird</td>
+                <td>Traditional 401k</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Traditional IRA</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Medical Insurance</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Commuter Benefits</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>HSA/FSA</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Taxable Pay</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
+              </tr>
+              <tr>
+                <td>Federal Withholding</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>FICA</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Medicare</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>State Withholding</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Net Pay</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td colSpan={3} className={styles.thicc}>Post-Tax Contributions</td>
+              </tr>
+              <tr>
+                <td>Roth 401k</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td>Roth IRA</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
+              </tr>
+              <tr>
+                <td className={styles.thicc}>Take Home Pay</td>
+                <td>placeholder</td>
+                <td>placeholder</td>
               </tr>
             </tbody>
           </Table>

@@ -1,14 +1,5 @@
 # web-finance-app
 
-## Colors
-
-primary: {
-    main: '#06A77D',
-},
-secondary: {
-    main: '#052F5F',
-},
-
 ## What is this
 
 This is a tool that will do random finance stuff such as:
@@ -19,6 +10,7 @@ Planned features
 
 1. 401k Frontloading
 2. 401k Roth vs Traditional
+3. Budgeting
 
 ## References
 
