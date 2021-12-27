@@ -1,5 +1,11 @@
 $medium: 1024px;
 
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
 .main {
     padding: 2rem 0;
     flex: 1;

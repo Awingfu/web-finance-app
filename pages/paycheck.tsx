@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, FloatingLabel, OverlayTrigger, Tooltip, Table } from 'react-bootstrap';
+import { Form, OverlayTrigger, Tooltip, Table, InputGroup} from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
@@ -7,6 +7,9 @@ import Footer from '../src/Footer';
 /**
  * TODO: 
  * 1. Create more advanced table
+ *  - bonuses -> one time or distribute into paycheck/yr, also whether it contributes to benefits
+ *  - Company match
+ *  - Other tax deductions, company match on HSA/FSA
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
  * 3. Split form and table + functions to separate files
  */
@@ -55,30 +58,43 @@ const renderTooltip = (props: any) => (
  * 3 col table
  * Radio button for paycheck frequency
  * $ total HSA conribution
- * company match
- * X% match on Y% of contribution, % base contribution (no match)
  * % selection for 401k, roth 401k, after tax 401k (mega),
  * % selection for tIRA, roth IRA
- * "" | Annual | Paycheck 
- * Gross Pay |
- * 
- * 
- * Net Pay
- * 
  * Table formatting in globals.scss
  * 
  * Next goals:
  * State income tax withholding
- * bonuses -> one time or distribute into paycheck/yr, also whether it contributes to benefits
  * save info to local storage + clear data button -> so we don't lose data on refresh
  * 
  * */ 
 function Paycheck() {
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
+  const [t401kContribution, changeT401kContribution] = React.useState(0);
+  const [r401kContribution, changeR401kContribution] = React.useState(0);
+  const [tIRAContribution, changeTIRAContribution] = React.useState(0);
+  const [rIRAContribution, changeRIRAContribution] = React.useState(0);
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
-    changeFunction((e.target as HTMLInputElement).value);
+    if (changeFunction === changeSalary) {
+      let value = parseFloat((e.target as HTMLInputElement).value); 
+      if (isNaN(value) || value < 0) {
+        value = 0;
+      }
+      changeFunction(value);
+    } else {
+      changeFunction((e.target as HTMLInputElement).value);
+    }
+  };
+
+  const updateContribution = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+    let value = parseInt((e.target as HTMLInputElement).value); 
+    if (value < 0) {
+      value = 0;
+    } else if (value > 90) {
+      value = 90;
+    }
+    changeFunction(value);
   };
 
     return (
@@ -96,16 +112,13 @@ function Paycheck() {
         </main>
 
         <Form className={styles.paycheckForm}>
-          <Form.Group className="mb-3" controlId="form.Salary">
-            <FloatingLabel
-              controlId="floatingInput"
-              label="Annual Salary"
-              className="mb-3"
-            >
-              <Form.Control type="number" value={salary} onChange={e => update(e, changeSalary)}/>
-            </FloatingLabel>
-          </Form.Group>
-          <Form.Group className="mb-3" controlId="form.PaycheckSchedule" onChange={e => update(e, changePaySchedule)}>
+          <Form.Label>Annual Salary</Form.Label>
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>$</InputGroup.Text>
+            <Form.Control type="number" value={salary} onChange={e => update(e, changeSalary)}/>
+          </InputGroup>
+
+          <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
             <Form.Label> Paycheck Frequency </Form.Label>
             <br/>
             <OverlayTrigger
@@ -146,6 +159,54 @@ function Paycheck() {
               id="paycheck-schedule-radio-3"
             />
           </Form.Group>
+
+          <Form.Label>401k Contribution</Form.Label>
+          <OverlayTrigger
+              placement="bottom"
+              delay={{ show: 150, hide: 200 }}
+              overlay={renderTooltip({text:"Integer between 0 and 90"})}
+            >
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>Traditional:</InputGroup.Text>
+            <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)}/>
+            <InputGroup.Text>%</InputGroup.Text>
+          </InputGroup>
+          </OverlayTrigger>
+          <OverlayTrigger
+              placement="bottom"
+              delay={{ show: 150, hide: 200 }}
+              overlay={renderTooltip({text:"Integer between 0 and 90"})}
+            >
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>Roth:</InputGroup.Text>
+            <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)}/>
+            <InputGroup.Text>%</InputGroup.Text>
+          </InputGroup>
+          </OverlayTrigger>
+
+          <Form.Label>IRA Contribution</Form.Label>
+          <OverlayTrigger
+              placement="bottom"
+              delay={{ show: 150, hide: 200 }}
+              overlay={renderTooltip({text:"Integer between 0 and 90"})}
+            >
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>Traditional:</InputGroup.Text>
+            <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)}/>
+            <InputGroup.Text>%</InputGroup.Text>
+          </InputGroup>
+          </OverlayTrigger>
+          <OverlayTrigger
+              placement="bottom"
+              delay={{ show: 150, hide: 200 }}
+              overlay={renderTooltip({text:"Integer between 0 and 90"})}
+            >
+          <InputGroup className="mb-3 w-100"> 
+            <InputGroup.Text>Roth:</InputGroup.Text>
+            <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)}/>
+            <InputGroup.Text>%</InputGroup.Text>
+          </InputGroup>
+          </OverlayTrigger>
         </Form>
 
         <div className={styles.table}>
@@ -164,7 +225,7 @@ function Paycheck() {
                 <td>{formatCurrency(convertAmountToPaySchedule(salary, paySchedule))}</td>
               </tr>
               <tr>
-                <td colSpan={3} className={styles.thicc}>Pre-Tax Contributions</td>
+                <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
               </tr>
               <tr>
                 <td>Traditional 401k</td>
@@ -225,7 +286,7 @@ function Paycheck() {
                 <td>placeholder</td>
               </tr>
               <tr>
-                <td colSpan={3} className={styles.thicc}>Post-Tax Contributions</td>
+                <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
               </tr>
               <tr>
                 <td>Roth 401k</td>
