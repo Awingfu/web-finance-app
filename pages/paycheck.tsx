@@ -4,12 +4,12 @@ import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
 
-// Tooltips
-const renderTooltip = (props: any) => (
-  <Tooltip id="button-tooltip" {...props}>
-    {props.text}
-  </Tooltip>
-);
+/**
+ * TODO: 
+ * 1. Create more advanced table
+ * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
+ * 3. Split form and table + functions to separate files
+ */
 
 const formatCurrency = (num: number) : string => {
   let formatter = new Intl.NumberFormat('en-US', {
@@ -30,6 +30,27 @@ enum PAY_SCHEDULE {
   MONTHLY = "Monthly"
 }
 
+const convertAmountToPaySchedule = (amt: number, paySchedule: string): number => {
+  switch(paySchedule) {
+    case PAY_SCHEDULE.BIWEEKLY:
+      return amt / 26;
+    case PAY_SCHEDULE.BIMONTHLY:
+      return amt / 24;
+    case PAY_SCHEDULE.MONTHLY:
+      return amt / 12;
+    default:
+      console.log("Invalid pay schedule detected");
+      return amt;
+  }
+}
+
+// Tooltips
+const renderTooltip = (props: any) => (
+  <Tooltip id="button-tooltip" {...props}>
+    {props.text}
+  </Tooltip>
+);
+
 /** enter salary
  * 3 col table
  * Radio button for paycheck frequency
@@ -45,16 +66,17 @@ enum PAY_SCHEDULE {
  * Net Pay
  * 
  * Next goals:
- * State income
- * bonus -> one time or distribute into paycheck/yr, also whether it contributes to benefits
+ * State income tax withholding
+ * bonuses -> one time or distribute into paycheck/yr, also whether it contributes to benefits
  * save info to local storage + clear data button -> so we don't lose data on refresh
+ * 
  * */ 
 function Paycheck() {
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
-    changeFunction(e.target.value);
+    changeFunction((e.target as HTMLInputElement).value);
   };
 
     return (
@@ -130,14 +152,14 @@ function Paycheck() {
               <tr>
                 <th></th>
                 <th>Annual</th>
-                <th>Paycheck</th>
+                <th>Paycheck - {paySchedule}</th>
               </tr>
             </thead>
             <tbody>
               <tr>
                 <td>Gross Income</td>
                 <td>{formatCurrency(salary)}</td>
-                <td>Otto</td>
+                <td>{formatCurrency(convertAmountToPaySchedule(salary, paySchedule))}</td>
               </tr>
               <tr>
                 <td>2</td>
