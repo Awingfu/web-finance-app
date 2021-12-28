@@ -3,6 +3,8 @@ import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropd
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
+import { social_security_withholding, medicare_withholding, federal_withholding } from '../src/utils';
+import { TAX_CLASSES } from '../src/utils/constants';
 
 /**
  * TODO: 
@@ -108,6 +110,8 @@ function Paycheck() {
   // Form States
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
+  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE);
+
 
   // Pre Tax
   const [t401kContribution, changeT401kContribution] = React.useState(0);
@@ -150,6 +154,10 @@ function Paycheck() {
 
   const taxableIncome_annual = salary - t401k_annual - tIRA_annual - medical_annual - commuter_annual - hsa_annual - otherPreTax_annual;
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
+
+  // Taxes Withheld
+
+
 
   // Post Tax
   const [r401kContribution, changeR401kContribution] = React.useState(0);
@@ -270,6 +278,28 @@ function Paycheck() {
             name="paycheck_schedule"
             type="radio"
             id="paycheck-schedule-radio-3"
+          />
+        </Form.Group>
+
+        <Form.Group className="mb-3" onChange={e => update(e, changeTaxClass)}>
+          <Form.Label> Tax Filing Status </Form.Label>
+          <br />
+          <Form.Check
+            inline
+            label={TAX_CLASSES.SINGLE}
+            value={TAX_CLASSES.SINGLE}
+            defaultChecked
+            name="tax_class"
+            type="radio"
+            id="tax-class-radio-1"
+          />
+          <Form.Check
+            inline
+            label={TAX_CLASSES.MARRIED_FILING_JOINTLY}
+            value={TAX_CLASSES.MARRIED_FILING_JOINTLY}
+            name="tax_class"
+            type="radio"
+            id="tax-class-radio-2"
           />
         </Form.Group>
 
