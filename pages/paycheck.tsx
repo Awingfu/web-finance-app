@@ -163,7 +163,7 @@ function Paycheck() {
   let married = (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY);
   let stateTaxInvalidAlert = <></>;
   if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
-    stateTaxInvalidAlert = <Alert className='mb-3' variant="warning"> {US_STATES_MAP[usState].name} State Tax Withholding has not been defined! Assuming $0. </Alert>
+    stateTaxInvalidAlert = <Alert className='mb-3' variant="danger"> {US_STATES_MAP[usState].name} State Tax Withholding has not been defined! Assuming $0. </Alert>
   }
   const stateTaxes_annual = determineStateTaxesWithheld(usState, salary, married);
   const stateTaxes_paycheck = convertAnnualAmountToPaySchedule(stateTaxes_annual, paySchedule);
