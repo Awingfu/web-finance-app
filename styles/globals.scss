@@ -15,6 +15,11 @@ a {
   box-sizing: border-box;
 }
 
+.dropdown-menu {
+  height: 200px;
+  overflow-y: auto;
+}
+
 // tr > th:not(:first-child) {
 //   text-align: center;
 // }

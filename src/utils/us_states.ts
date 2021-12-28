@@ -9,17 +9,29 @@ interface US_STATE_TAX_UNKNOWN extends US_STATE_BASIC {
     flatTax?: never
 };
 
+export function instanceOfTaxUnknown(object: any): object is US_STATE_TAX_UNKNOWN {
+    return !(object.brackets || object.flatTax);
+}
+
 interface US_STATE_TAX_BRACKETS extends US_STATE_BASIC {
     flatTax?: never
     brackets : number[][] // format of bracket [min, max, tax bracket]
     marriedBrackets? : number[][]
 };
 
+export function instanceOfFlatTax(object: any): object is US_STATE_TAX_FLAT {
+    return !object.brackets && object.flatTax;
+}
+
 interface US_STATE_TAX_FLAT extends US_STATE_BASIC {
     flatTax: number // should be a decimal fraction
     brackets? : never,
     marriedBrackets?: never
 };
+
+export function instanceOfTaxBrackets(object: any): object is US_STATE_TAX_BRACKETS {
+    return !object.flatTax && object.brackets;
+}
 
 type US_STATE_TAX_MAP = US_STATE_TAX_UNKNOWN | US_STATE_TAX_BRACKETS | US_STATE_TAX_FLAT;
 
@@ -29,7 +41,8 @@ interface US_STATE_MAP {
 
 // only for singles
 // source: https://gist.github.com/mshafrir/2646763
-const US_STATES_MAP : US_STATE_MAP = {
+export const US_STATES_MAP : US_STATE_MAP = {
+    'None': { name: 'None', abbreviation: 'None', flatTax: 0 }, //adding None
     'AL': { name: 'Alabama', abbreviation: 'AL' },
     'AK': { name: 'Alaska', abbreviation: 'AK' },
     'AS': { name: 'American Samoa', abbreviation: 'AS' },
@@ -126,5 +139,3 @@ const US_STATES_MAP : US_STATE_MAP = {
     'WI': { name: 'Wisconsin', abbreviation: 'WI' },
     'WY': { name: 'Wyoming', abbreviation: 'WY' }
 };
-
-export default US_STATES_MAP;

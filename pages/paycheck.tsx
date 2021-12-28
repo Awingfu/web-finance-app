@@ -3,7 +3,7 @@ import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropd
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
-import { social_security_withholding, medicare_withholding, federal_withholding } from '../src/utils';
+import { social_security_withholding, medicare_withholding, federal_withholding, determineStateTaxesWithheld, US_STATES_MAP } from '../src/utils';
 import { TAX_CLASSES } from '../src/utils/constants';
 
 /**
@@ -110,7 +110,9 @@ function Paycheck() {
   // Form States
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
-  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE);
+  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE); 
+  const [usState, changeUSState] = React.useState(US_STATES_MAP["None"].abbreviation);
+
 
 
   // Pre Tax
@@ -158,6 +160,9 @@ function Paycheck() {
   // Taxes Withheld
 
 
+  let married = (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY);
+  const stateTaxes_annual = determineStateTaxesWithheld(usState, salary, married);
+  const stateTaxes_paycheck = convertAnnualAmountToPaySchedule(stateTaxes_annual, paySchedule);
 
   // Post Tax
   const [r401kContribution, changeR401kContribution] = React.useState(0);
@@ -303,6 +308,13 @@ function Paycheck() {
           />
         </Form.Group>
 
+        <Form.Label>US State Withholding Tax</Form.Label>
+        <DropdownButton className="mb-3" id="us-state-dropdown-button" title={US_STATES_MAP[usState].name} variant="secondary" onSelect={e => updateWithEventKey(e, changeUSState)}>
+          {Object.keys(US_STATES_MAP).map((key) => (
+            <Dropdown.Item eventKey={key} key={key}>{key}</Dropdown.Item>
+          ))}
+        </DropdownButton>
+
         <Form.Label>401k Contribution</Form.Label>
         <OverlayTrigger
           placement="bottom"
@@ -352,7 +364,7 @@ function Paycheck() {
         </OverlayTrigger>
 
         {Object.keys(customWithholdings).map((key) => (
-          <>
+          <div key={key}>
             <Form.Label>{key} Contribution</Form.Label>
             <InputGroup className="mb-3 w-100">
               <InputGroup.Text>$</InputGroup.Text>
@@ -372,7 +384,7 @@ function Paycheck() {
                 })}
               </DropdownButton>
             </InputGroup>
-          </>
+          </div>
         ))}
 
       </Form>
@@ -396,7 +408,7 @@ function Paycheck() {
               <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
             </tr>
             {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
-              <tr>
+              <tr key={key}>
                 <td>{key}</td>
                 <td>{formatCurrency(preTaxTableMap[key][0])}</td>
                 <td>{formatCurrency(preTaxTableMap[key][1])}</td>
@@ -427,8 +439,8 @@ function Paycheck() {
             </tr>
             <tr>
               <td>State Withholding</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
+              <td>{formatCurrency(stateTaxes_annual)}</td>
+              <td>{formatCurrency(stateTaxes_paycheck)}</td>
             </tr>
             <tr>
               <td>Net Pay</td>
