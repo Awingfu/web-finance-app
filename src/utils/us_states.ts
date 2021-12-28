@@ -10,7 +10,7 @@ interface US_STATE_TAX_UNKNOWN extends US_STATE_BASIC {
 };
 
 export function instanceOfTaxUnknown(object: any): object is US_STATE_TAX_UNKNOWN {
-    return !(object.brackets || object.flatTax);
+    return !(object.brackets || object.flatTax != undefined); //explicit undefined check since 0 is falsy
 }
 
 interface US_STATE_TAX_BRACKETS extends US_STATE_BASIC {
@@ -20,7 +20,7 @@ interface US_STATE_TAX_BRACKETS extends US_STATE_BASIC {
 };
 
 export function instanceOfFlatTax(object: any): object is US_STATE_TAX_FLAT {
-    return !object.brackets && object.flatTax;
+    return !object.brackets && (object.flatTax != undefined);
 }
 
 interface US_STATE_TAX_FLAT extends US_STATE_BASIC {
@@ -42,7 +42,7 @@ interface US_STATE_MAP {
 // only for singles
 // source: https://gist.github.com/mshafrir/2646763
 export const US_STATES_MAP : US_STATE_MAP = {
-    'None': { name: 'None', abbreviation: 'None', flatTax: 0 }, //adding None
+    'None': { name: 'None', abbreviation: 'None', flatTax: 0}, //adding None
     'AL': { name: 'Alabama', abbreviation: 'AL' },
     'AK': { name: 'Alaska', abbreviation: 'AK' },
     'AS': { name: 'American Samoa', abbreviation: 'AS' },

@@ -1,9 +1,9 @@
 import React from 'react';
-import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown } from 'react-bootstrap';
+import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
-import { social_security_withholding, medicare_withholding, federal_withholding, determineStateTaxesWithheld, US_STATES_MAP } from '../src/utils';
+import { determineStateTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown } from '../src/utils';
 import { TAX_CLASSES } from '../src/utils/constants';
 
 /**
@@ -161,6 +161,10 @@ function Paycheck() {
 
 
   let married = (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY);
+  let stateTaxInvalidAlert = <></>;
+  if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
+    stateTaxInvalidAlert = <Alert className='mb-3' variant="warning"> {US_STATES_MAP[usState].name} State Tax Withholding has not been defined! Assuming $0. </Alert>
+  }
   const stateTaxes_annual = determineStateTaxesWithheld(usState, salary, married);
   const stateTaxes_paycheck = convertAnnualAmountToPaySchedule(stateTaxes_annual, paySchedule);
 
@@ -314,6 +318,7 @@ function Paycheck() {
             <Dropdown.Item eventKey={key} key={key}>{key}</Dropdown.Item>
           ))}
         </DropdownButton>
+        {stateTaxInvalidAlert}
 
         <Form.Label>401k Contribution</Form.Label>
         <OverlayTrigger

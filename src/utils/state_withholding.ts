@@ -36,7 +36,6 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
         }
         addCumulativeColumn(tax_brackets) // add 4th column which is cumulative of taxes from rows above
         for (let row = 0; row < tax_brackets.length; row++) {
-            console.log(tax_brackets[row])
             // if we're at the last bracket or the max at the current bracket is higher than income
             if (tax_brackets[row][1] === Infinity || tax_brackets[row][1] > taxableAnnualIncome) {
                 // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
