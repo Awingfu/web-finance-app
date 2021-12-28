@@ -27,37 +27,60 @@ const formatCurrency = (num: number) : string => {
   return formatter.format(num);
 };
 
-const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
-  return salary * (contributionPercentage / 100); 
-}
-
-// Contribution Frequencies
+// Contribution frequencies
 enum FREQUENCIES {
   PAYCHECK = "Paycheck",
+  DAY = "Day",
   WEEK = "Week",
   MONTH = "Month",
   ANNUM = "Annum",
 }
 
-// All types of Pay schedules
-enum PAY_SCHEDULE {
-  BIWEEKLY = "Biweekly",
-  BIMONTHLY = "Bimonthly",
-  MONTHLY = "Monthly"
+const FREQUENCY_TO_ANNUM = {
+  [FREQUENCIES.PAYCHECK] : 0, // this shouldn't be used
+  [FREQUENCIES.DAY] : 365, // simple assumption
+  [FREQUENCIES.WEEK] : 52,
+  [FREQUENCIES.MONTH] : 12,
+  [FREQUENCIES.ANNUM] : 1,
 }
 
-const convertAmountToPaySchedule = (amt: number, paySchedule: string): number => {
-  switch(paySchedule) {
-    case PAY_SCHEDULE.BIWEEKLY:
-      return amt / 26;
-    case PAY_SCHEDULE.BIMONTHLY:
-      return amt / 24;
-    case PAY_SCHEDULE.MONTHLY:
-      return amt / 12;
-    default:
-      console.log("Invalid pay schedule detected");
-      return amt;
-  }
+const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
+// console.log(ALL_FREQUENCIES)
+
+// Types of pay schedules
+enum PAY_SCHEDULE {
+  WEEKLY = "Weekly",
+  BIWEEKLY = "Biweekly",
+  BIMONTHLY = "Bimonthly",
+  MONTHLY = "Monthly",
+}
+
+const PAY_SCHEDULE_TO_ANNUM = {
+  [PAY_SCHEDULE.WEEKLY] : 52,
+  [PAY_SCHEDULE.BIWEEKLY] : 26,
+  [PAY_SCHEDULE.BIMONTHLY] : 24,
+  [PAY_SCHEDULE.MONTHLY] : 12,
+}
+
+const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
+
+
+const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
+  return salary * (contributionPercentage / 100); 
+}
+
+const convertAnnualAmountToPaySchedule = (amount: number, paySchedule: PAY_SCHEDULE): number => {
+  return amount / PAY_SCHEDULE_TO_ANNUM[paySchedule];
+}
+
+const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
+  frequency: FREQUENCIES = FREQUENCIES.ANNUM,
+  paySchedule: PAY_SCHEDULE = PAY_SCHEDULE.BIWEEKLY): number => {
+    if (frequency === FREQUENCIES.PAYCHECK) {
+      return contributionAmount * PAY_SCHEDULE_TO_ANNUM[paySchedule];
+    } else {
+      return contributionAmount * FREQUENCY_TO_ANNUM[frequency]
+    }
 }
 
 // Tooltips
@@ -94,7 +117,7 @@ function Paycheck() {
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
     console.log("Executing changeFunction on " + (e.target as HTMLInputElement).value);
-    if (changeFunction === changeSalary) {
+    if (changeFunction === changeSalary || changeFunction === changeMedicalContribution) {
       let value = parseFloat((e.target as HTMLInputElement).value); 
       if (isNaN(value) || value < 0) {
         value = 0;
@@ -116,6 +139,7 @@ function Paycheck() {
   };
 
   const updateWithEventKey = (e: string | null, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+    console.log("Updating with event key: " + e)
     if (e)
       changeFunction(e);
     else console.log("Null event key");
@@ -243,10 +267,11 @@ function Paycheck() {
               id="medical-frequency-dropdown"
               onSelect={e => updateWithEventKey(e, changeMedicalContributionFrequency)}
             >
-              <Dropdown.Item eventKey={FREQUENCIES.PAYCHECK} selected="selected">{FREQUENCIES.PAYCHECK}</Dropdown.Item>
-              <Dropdown.Item eventKey={FREQUENCIES.WEEK}>{FREQUENCIES.WEEK}</Dropdown.Item>
-              <Dropdown.Item eventKey={FREQUENCIES.MONTH}>{FREQUENCIES.MONTH}</Dropdown.Item>
-              <Dropdown.Item eventKey={FREQUENCIES.ANNUM}>{FREQUENCIES.ANNUM}</Dropdown.Item>
+              {ALL_FREQUENCIES.map((freq) => {
+                let frequencyValue = FREQUENCIES[freq as keyof typeof FREQUENCIES];
+                return (
+                  <Dropdown.Item eventKey={frequencyValue} key={frequencyValue}>{frequencyValue}</Dropdown.Item>
+              )})} 
             </DropdownButton>
           </InputGroup>
 
@@ -265,7 +290,7 @@ function Paycheck() {
               <tr>
                 <td className={styles.thicc}>Gross Income</td>
                 <td>{formatCurrency(salary)}</td>
-                <td>{formatCurrency(convertAmountToPaySchedule(salary, paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
               </tr>
               <tr>
                 <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
@@ -273,17 +298,17 @@ function Paycheck() {
               <tr>
                 <td>Traditional 401k</td>
                 <td>{formatCurrency(calculateContributionFromPercentage(salary, t401kContribution))}</td>
-                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, t401kContribution),paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, t401kContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Traditional IRA</td>
                 <td>{formatCurrency(calculateContributionFromPercentage(salary, tIRAContribution))}</td>
-                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, tIRAContribution),paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, tIRAContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Medical Insurance</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(calculateAnnualFromAmountAndFrequency(medicalContribution, medicalContributionFrequency, paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateAnnualFromAmountAndFrequency(medicalContribution, medicalContributionFrequency, paySchedule),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Commuter Benefits</td>
@@ -334,12 +359,12 @@ function Paycheck() {
               <tr>
                 <td>Roth 401k</td>
                 <td>{formatCurrency(calculateContributionFromPercentage(salary, r401kContribution))}</td>
-                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, r401kContribution),paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, r401kContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td>Roth IRA</td>
                 <td>{formatCurrency(calculateContributionFromPercentage(salary, rIRAContribution))}</td>
-                <td>{formatCurrency(convertAmountToPaySchedule(calculateContributionFromPercentage(salary, rIRAContribution),paySchedule))}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, rIRAContribution),paySchedule))}</td>
               </tr>
               <tr>
                 <td className={styles.thicc}>Take Home Pay</td>
