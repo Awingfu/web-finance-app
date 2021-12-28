@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown} from 'react-bootstrap';
+import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown, FormGroup} from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
@@ -11,6 +11,8 @@ import Footer from '../src/Footer';
  *  - Company match
  *  - Other tax deductions, company match on HSA/FSA
  *  - multiple states
+ *  - accounting format to have withholdings show as red and in parentheses
+ *  - side by side view
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
  * 3. Split form and table + functions to separate files
  */
@@ -64,7 +66,6 @@ const PAY_SCHEDULE_TO_ANNUM = {
 
 const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
-
 const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
   return salary * (contributionPercentage / 100); 
 }
@@ -104,28 +105,62 @@ const renderTooltip = (props: any) => (
  * 
  * */ 
 function Paycheck() {
+  // Form States
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
+
+  // Pre Tax
   const [t401kContribution, changeT401kContribution] = React.useState(0);
-  const [r401kContribution, changeR401kContribution] = React.useState(0);
+  const t401k_annual = calculateContributionFromPercentage(salary, t401kContribution);
+  const t401k_paycheck = convertAnnualAmountToPaySchedule(t401k_annual, paySchedule);
+
   const [tIRAContribution, changeTIRAContribution] = React.useState(0);
-  const [rIRAContribution, changeRIRAContribution] = React.useState(0);
+  const tIRA_annual = calculateContributionFromPercentage(salary, tIRAContribution);
+  const tIRA_paycheck = convertAnnualAmountToPaySchedule(tIRA_annual, paySchedule);
+
   const [medicalContribution, changeMedicalContribution] = React.useState(0);
   const [medicalContributionFrequency, changeMedicalContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
+  const medical_annual = calculateAnnualFromAmountAndFrequency(medicalContribution, medicalContributionFrequency, paySchedule);
+  const medical_paycheck = convertAnnualAmountToPaySchedule(medical_annual, paySchedule);
+
+  const [commuterContribution, changeCommuterContribution] = React.useState(0);
+  const [commuterContributionFrequency, changeCommuterContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
+  const commuter_annual = calculateAnnualFromAmountAndFrequency(commuterContribution, commuterContributionFrequency, paySchedule);
+  const commuter_paycheck = convertAnnualAmountToPaySchedule(commuter_annual, paySchedule);
+
+  const [hsaContribution, changeHSAContribution] = React.useState(0);
+  const [hsaContributionFrequency, changeHSAContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
+  const hsa_annual = calculateAnnualFromAmountAndFrequency(hsaContribution, hsaContributionFrequency, paySchedule);
+  const hsa_paycheck = convertAnnualAmountToPaySchedule(hsa_annual, paySchedule);
+
+  const [otherPreTaxContribution, changeOtherPreTaxContribution] = React.useState(0);
+  const [otherPreTaxContributionFrequency, changeOtherPreTaxContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
+  const otherPreTax_annual = calculateAnnualFromAmountAndFrequency(otherPreTaxContribution, otherPreTaxContributionFrequency, paySchedule);
+  const otherPreTax_paycheck = convertAnnualAmountToPaySchedule(otherPreTax_annual, paySchedule);
 
 
+  // Post Tax
+  const [r401kContribution, changeR401kContribution] = React.useState(0);
+  const [rIRAContribution, changeRIRAContribution] = React.useState(0);
+
+  // helper map since they have the same form format
+  const customPreTaxWithholdings: {[key: string]: any} = {
+    "Medical Insurance": [medicalContribution, changeMedicalContribution, medicalContributionFrequency, changeMedicalContributionFrequency],
+    "Commuter Benefits": [commuterContribution, changeCommuterContribution, commuterContributionFrequency, changeCommuterContributionFrequency],
+    "HSA/FSA": [hsaContribution, changeHSAContribution, hsaContributionFrequency, changeHSAContributionFrequency],
+    "Other Pre-Tax": [otherPreTaxContribution, changeOtherPreTaxContribution, otherPreTaxContributionFrequency, changeOtherPreTaxContributionFrequency],
+  }
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
-    console.log("Executing changeFunction on " + (e.target as HTMLInputElement).value);
-    if (changeFunction === changeSalary || changeFunction === changeMedicalContribution) {
-      let value = parseFloat((e.target as HTMLInputElement).value); 
-      if (isNaN(value) || value < 0) {
-        value = 0;
-      }
-      changeFunction(value);
-    } else {
-      changeFunction((e.target as HTMLInputElement).value);
+    changeFunction((e.target as HTMLInputElement).value);    
+  };
+
+  const updateAmount = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+    let value = parseFloat((e.target as HTMLInputElement).value); 
+    if (isNaN(value) || value < 0) {
+      value = 0;
     }
+    changeFunction(value);    
   };
 
   const updateContribution = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
@@ -163,7 +198,7 @@ function Paycheck() {
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100"> 
             <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control type="number" value={salary} onChange={e => update(e, changeSalary)}/>
+            <Form.Control type="number" value={salary} onChange={e => updateAmount(e, changeSalary)}/>
           </InputGroup>
 
           <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
@@ -256,24 +291,28 @@ function Paycheck() {
           </InputGroup>
           </OverlayTrigger>
 
-          <Form.Label>Medical Insurance Contribution</Form.Label>
-          <InputGroup className="mb-3 w-100"> 
-            <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control type="number" value={medicalContribution} onChange={e => update(e, changeMedicalContribution)}/>
-            <InputGroup.Text>per</InputGroup.Text>
-            <DropdownButton
-              variant="secondary"
-              title={medicalContributionFrequency}
-              id="medical-frequency-dropdown"
-              onSelect={e => updateWithEventKey(e, changeMedicalContributionFrequency)}
-            >
-              {ALL_FREQUENCIES.map((freq) => {
-                let frequencyValue = FREQUENCIES[freq as keyof typeof FREQUENCIES];
-                return (
-                  <Dropdown.Item eventKey={frequencyValue} key={frequencyValue}>{frequencyValue}</Dropdown.Item>
-              )})} 
-            </DropdownButton>
-          </InputGroup>
+          {Object.keys(customPreTaxWithholdings).map((key) => (
+            <> 
+            <Form.Label>{key} Contribution</Form.Label>
+            <InputGroup className="mb-3 w-100"> 
+              <InputGroup.Text>$</InputGroup.Text>
+              <Form.Control type="number" value={customPreTaxWithholdings[key][0]} onChange={e => updateAmount(e, customPreTaxWithholdings[key][1])}/>
+              <InputGroup.Text>per</InputGroup.Text>
+              <DropdownButton
+                variant="secondary"
+                title={customPreTaxWithholdings[key][2]}
+                id={key.replace(' ', '-') + "-frequency-dropdown"}
+                onSelect={e => updateWithEventKey(e, customPreTaxWithholdings[key][3])}
+              >
+                {ALL_FREQUENCIES.map((freq) => {
+                  let frequencyValue = FREQUENCIES[freq as keyof typeof FREQUENCIES];
+                  return (
+                    <Dropdown.Item eventKey={frequencyValue} key={frequencyValue}>{frequencyValue}</Dropdown.Item>
+                )})} 
+              </DropdownButton>
+            </InputGroup>
+            </>
+          ))}
 
         </Form>
 
@@ -297,28 +336,33 @@ function Paycheck() {
               </tr>
               <tr>
                 <td>Traditional 401k</td>
-                <td>{formatCurrency(calculateContributionFromPercentage(salary, t401kContribution))}</td>
-                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, t401kContribution),paySchedule))}</td>
+                <td>{formatCurrency(t401k_annual)}</td>
+                <td>{formatCurrency(t401k_paycheck)}</td>
               </tr>
               <tr>
                 <td>Traditional IRA</td>
-                <td>{formatCurrency(calculateContributionFromPercentage(salary, tIRAContribution))}</td>
-                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateContributionFromPercentage(salary, tIRAContribution),paySchedule))}</td>
+                <td>{formatCurrency(tIRA_annual)}</td>
+                <td>{formatCurrency(tIRA_paycheck)}</td>
               </tr>
               <tr>
                 <td>Medical Insurance</td>
-                <td>{formatCurrency(calculateAnnualFromAmountAndFrequency(medicalContribution, medicalContributionFrequency, paySchedule))}</td>
-                <td>{formatCurrency(convertAnnualAmountToPaySchedule(calculateAnnualFromAmountAndFrequency(medicalContribution, medicalContributionFrequency, paySchedule),paySchedule))}</td>
+                <td>{formatCurrency(medical_annual)}</td>
+                <td>{formatCurrency(medical_paycheck)}</td>
               </tr>
               <tr>
                 <td>Commuter Benefits</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(commuter_annual)}</td>
+                <td>{formatCurrency(commuter_paycheck)}</td>
               </tr>
               <tr>
                 <td>HSA/FSA</td>
-                <td>placeholder</td>
-                <td>placeholder</td>
+                <td>{formatCurrency(hsa_annual)}</td>
+                <td>{formatCurrency(hsa_paycheck)}</td>
+              </tr>
+              <tr>
+                <td>Other</td>
+                <td>{formatCurrency(otherPreTax_annual)}</td>
+                <td>{formatCurrency(otherPreTax_paycheck)}</td>
               </tr>
               <tr>
                 <td>Taxable Pay</td>
