@@ -10,6 +10,7 @@ Planned features
 
 1. 401k Frontloading
 2. 401k Roth vs Traditional
+3. Budgeting
 
 ## References
 
