@@ -39,46 +39,86 @@ interface US_STATE_MAP {
     [key: string] : US_STATE_TAX_MAP
 };
 
-// only for singles
+// Other sources for flat tax: https://www.nerdwallet.com/article/taxes/state-income-tax-rates
+// this table is to prioritize withholdings rather than taxes
 // source: https://gist.github.com/mshafrir/2646763
 export const US_STATES_MAP : US_STATE_MAP = {
     'None': { name: 'None', abbreviation: 'None', flatTax: 0}, //adding None
     'AL': { name: 'Alabama', abbreviation: 'AL' },
-    'AK': { name: 'Alaska', abbreviation: 'AK' },
+    'AK': { name: 'Alaska', abbreviation: 'AK', flatTax: 0 },
     'AS': { name: 'American Samoa', abbreviation: 'AS' },
     'AZ': { name: 'Arizona', abbreviation: 'AZ' },
     'AR': { name: 'Arkansas', abbreviation: 'AR' },
     'CA': { 
         name: 'California', 
         abbreviation: 'CA',
-        // 2021 source: https://www.nerdwallet.com/article/taxes/california-state-tax
+        // 2021 withholding source: https://nfc.usda.gov/Publications/HR_Payroll/Taxes/Bulletins/2021/TAXES-21-15.htm
+        // we're ignoring standard deductions, itemized deductions, credits, allowances, and low income exemptions...
         brackets: [
-            [0, 9325, 0.01],
-            [9325, 22107, 0.02],
-            [22107, 34892, 0.04],
-            [34892, 48435, 0.06],
-            [48435, 61214, 0.08],
-            [61214, 312686, 0.093],
-            [312686, 375221, 0.103],
-            [375221, 625369, 0.113],
-            [625369, Infinity, 0.123],
+            [0, 8932, 0.011],
+            [8932, 21175, 0.022],
+            [21175, 33421, 0.044],
+            [33421, 46394, 0.066],
+            [46394, 58634, 0.088],
+            [58634, 299508, 0.1023],
+            [299508, 359407, 0.1133],
+            [359407, 499012, 0.1243],
+            [499012, 1000000, 0.1353],
+            [1000000, Infinity, 0.1463],
         ],
         marriedBrackets: [
-            [0, 18650, 0.01],
-            [18650, 44214, 0.02],
-            [44214, 69784, 0.04],
-            [69784, 96870, 0.06],
-            [96870, 122428, 0.08],
-            [122428, 625372, 0.093],
-            [625372, 750442, 0.103],
-            [750442, 1250738, 0.113],
-            [1250738, Infinity, 0.123],
+            [0, 17864, 0.011],
+            [17864, 42350, 0.022],
+            [42350, 66842, 0.044],
+            [66842, 92788, 0.066],
+            [92788, 117268, 0.088],
+            [117268, 599016, 0.1023],
+            [599016, 718814, 0.1133],
+            [718814, 1000000, 0.1243],
+            [1000000, 1198024, 0.1353],
+            [1198024, Infinity, 0.1463],
         ]
+        // 2021 tax source: https://www.nerdwallet.com/article/taxes/california-state-tax
+        // brackets: [
+        //     [0, 9325, 0.01],
+        //     [9325, 22107, 0.02],
+        //     [22107, 34892, 0.04],
+        //     [34892, 48435, 0.06],
+        //     [48435, 61214, 0.08],
+        //     [61214, 312686, 0.093],
+        //     [312686, 375221, 0.103],
+        //     [375221, 625369, 0.113],
+        //     [625369, Infinity, 0.123],
+        // ],
+        // marriedBrackets: [
+        //     [0, 18650, 0.01],
+        //     [18650, 44214, 0.02],
+        //     [44214, 69784, 0.04],
+        //     [69784, 96870, 0.06],
+        //     [96870, 122428, 0.08],
+        //     [122428, 625372, 0.093],
+        //     [625372, 750442, 0.103],
+        //     [750442, 1250738, 0.113],
+        //     [1250738, Infinity, 0.123],
+        // ]
     },
-    'CO': { name: 'Colorado', abbreviation: 'CO' },
+    'CO': { name: 'Colorado', abbreviation: 'CO', flatTax: 0.0455},
     'CT': { name: 'Connecticut', abbreviation: 'CT' },
     'DE': { name: 'Delaware', abbreviation: 'DE' },
-    'DC': { name: 'District Of Columbia', abbreviation: 'DC' },
+    'DC': { 
+        name: 'District Of Columbia', 
+        abbreviation: 'DC',
+        // 2021 source https://otr.cfo.dc.gov/release/district-columbia-tax-rate-changes-effective-october-1-2021
+        brackets: [
+            [0, 10000, 0.04],
+            [10000, 40000, 0.06],
+            [40000, 60000, 0.065],
+            [60000, 250000, 0.085],
+            [250000, 500000, 0.0925],
+            [500000, 1000000, 0.0975],
+            [1000000, Infinity, 0.1075],
+        ]    
+    },
     'FM': { name: 'Federated States Of Micronesia', abbreviation: 'FM' },
     'FL': { name: 'Florida', abbreviation: 'FL', flatTax: 0},
     'GA': { name: 'Georgia', abbreviation: 'GA' },
@@ -86,41 +126,83 @@ export const US_STATES_MAP : US_STATE_MAP = {
     'HI': { name: 'Hawaii', abbreviation: 'HI' },
     'ID': { name: 'Idaho', abbreviation: 'ID' },
     'IL': { name: 'Illinois', abbreviation: 'IL', flatTax: 0.0495},
-    'IN': { name: 'Indiana', abbreviation: 'IN' },
+    'IN': { name: 'Indiana', abbreviation: 'IN', flatTax: 0.0323 },
     'IA': { name: 'Iowa', abbreviation: 'IA' },
     'KS': { name: 'Kansas', abbreviation: 'KS' },
-    'KY': { name: 'Kentucky', abbreviation: 'KY' },
+    'KY': { name: 'Kentucky', abbreviation: 'KY', flatTax: 0.05 },
     'LA': { name: 'Louisiana', abbreviation: 'LA' },
     'ME': { name: 'Maine', abbreviation: 'ME' },
     'MH': { name: 'Marshall Islands', abbreviation: 'MH' },
-    'MD': { name: 'Maryland', abbreviation: 'MD' },
-    'MA': { name: 'Massachusetts', abbreviation: 'MA' },
-    'MI': { name: 'Michigan', abbreviation: 'MI' },
+    'MD': { 
+        name: 'Maryland', 
+        abbreviation: 'MD', 
+        // 2021 source: https://www.marylandtaxes.gov/forms/Tax_Publications/Tax_Facts/Withholding_Tax_Facts/Withholding_Tax_Facts_2021.pdf
+        // MD does not withhold under 0.0475% so we're commenting out the lower tax brackets
+        brackets: [
+            // [0, 1000, 0.02],
+            // [1000, 2000, 0.03],
+            // [2000, 3000, 0.04],
+            // [3000, 100000, 0.0475],
+            [0, 100000, 0.0475],
+            [100000, 125000, 0.05],
+            [125000, 150000, 0.0525],
+            [150000, 250000, 0.055],
+            [250000, Infinity, 0.0575],
+        ],
+        marriedBrackets: [
+            // [0, 1000, 0.02],
+            // [1000, 2000, 0.03],
+            // [2000, 3000, 0.04],
+            // [3000, 150000, 0.0475],
+            [0, 150000, 0.0475],
+            [150000, 175000, 0.05],
+            [175000, 225000, 0.0525],
+            [225000, 300000, 0.055],
+            [300000, Infinity, 0.0575],
+        ]
+    },
+    'MA': { name: 'Massachusetts', abbreviation: 'MA', flatTax: 0.05 },
+    'MI': { name: 'Michigan', abbreviation: 'MI', flatTax: 0.0425 },
     'MN': { name: 'Minnesota', abbreviation: 'MN' },
     'MS': { name: 'Mississippi', abbreviation: 'MS' },
-    'MO': { name: 'Missouri', abbreviation: 'MO' },
+    'MO': { 
+        name: 'Missouri', 
+        abbreviation: 'MO',
+        // 2022 source https://dor.mo.gov/forms/Withholding%20Formula_2022.pdf
+        brackets: [
+            [0, 1121, 0.015],
+            [1121, 2242, 0.02],
+            [2242, 3363, 0.025],
+            [3363, 4484, 0.03],
+            [4484, 5605, 0.035],
+            [5605, 6726, 0.04],
+            [6726, 7847, 0.045],
+            [7847, 8968, 0.05],
+            [8968, Infinity, 0.053],
+        ]
+    },
     'MT': { name: 'Montana', abbreviation: 'MT' },
     'NE': { name: 'Nebraska', abbreviation: 'NE' },
     'NV': { name: 'Nevada', abbreviation: 'NV', flatTax: 0},
-    'NH': { name: 'New Hampshire', abbreviation: 'NH' },
+    'NH': { name: 'New Hampshire', abbreviation: 'NH', flatTax: 0 }, // 5% on dividends and interest, TODO
     'NJ': { name: 'New Jersey', abbreviation: 'NJ' },
     'NM': { name: 'New Mexico', abbreviation: 'NM' },
     'NY': { name: 'New York', abbreviation: 'NY' },
-    'NC': { name: 'North Carolina', abbreviation: 'NC' },
+    'NC': { name: 'North Carolina', abbreviation: 'NC', flatTax: 0.0525 },
     'ND': { name: 'North Dakota', abbreviation: 'ND' },
     'MP': { name: 'Northern Mariana Islands', abbreviation: 'MP' },
     'OH': { name: 'Ohio', abbreviation: 'OH' },
     'OK': { name: 'Oklahoma', abbreviation: 'OK' },
     'OR': { name: 'Oregon', abbreviation: 'OR' },
     'PW': { name: 'Palau', abbreviation: 'PW' },
-    'PA': { name: 'Pennsylvania', abbreviation: 'PA' },
+    'PA': { name: 'Pennsylvania', abbreviation: 'PA', flatTax: 0.0307 },
     'PR': { name: 'Puerto Rico', abbreviation: 'PR' },
     'RI': { name: 'Rhode Island', abbreviation: 'RI' },
     'SC': { name: 'South Carolina', abbreviation: 'SC' },
-    'SD': { name: 'South Dakota', abbreviation: 'SD' },
-    'TN': { name: 'Tennessee', abbreviation: 'TN' },
+    'SD': { name: 'South Dakota', abbreviation: 'SD', flatTax: 0 },
+    'TN': { name: 'Tennessee', abbreviation: 'TN', flatTax: 0 },
     'TX': { name: 'Texas', abbreviation: 'TX', flatTax: 0},
-    'UT': { name: 'Utah', abbreviation: 'UT' },
+    'UT': { name: 'Utah', abbreviation: 'UT', flatTax: 0.0495 },
     'VT': { name: 'Vermont', abbreviation: 'VT' },
     'VI': { name: 'Virgin Islands', abbreviation: 'VI' },
     'VA': { 
@@ -137,5 +219,5 @@ export const US_STATES_MAP : US_STATE_MAP = {
     'WA': { name: 'Washington', abbreviation: 'WA', flatTax: 0},
     'WV': { name: 'West Virginia', abbreviation: 'WV' },
     'WI': { name: 'Wisconsin', abbreviation: 'WI' },
-    'WY': { name: 'Wyoming', abbreviation: 'WY' }
+    'WY': { name: 'Wyoming', abbreviation: 'WY', flatTax: 0 }
 };

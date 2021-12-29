@@ -113,8 +113,6 @@ function Paycheck() {
   const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE); 
   const [usState, changeUSState] = React.useState(US_STATES_MAP["None"].abbreviation);
 
-
-
   // Pre Tax
   const [t401kContribution, changeT401kContribution] = React.useState(0);
   const t401k_annual = calculateContributionFromPercentage(salary, t401kContribution);
@@ -158,7 +156,6 @@ function Paycheck() {
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
 
   // Taxes Withheld
-
 
   let married = (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY);
   let stateTaxInvalidAlert = <></>;
