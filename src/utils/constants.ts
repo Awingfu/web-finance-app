@@ -1,4 +1,5 @@
 // Constants
+// This file will contain constants for calculations, enums, and interfaces
 
 export enum TAX_CLASSES {
     SINGLE = "Single", 
@@ -7,12 +8,41 @@ export enum TAX_CLASSES {
     HEAD_OF_HOUSEHOLD = "Head of Household"
 };
 
-export const TAX_STATUSES = [
-    TAX_CLASSES.SINGLE,
-    TAX_CLASSES.MARRIED_FILING_JOINTLY,
-    TAX_CLASSES.MARRIED_FILING_SEPARATELY,
-    TAX_CLASSES.HEAD_OF_HOUSEHOLD
-];
+// Contribution frequencies
+export enum FREQUENCIES {
+    PAYCHECK = "Paycheck",
+    DAY = "Day",
+    WEEK = "Week",
+    MONTH = "Month",
+    ANNUM = "Annum",
+}
+
+export const FREQUENCY_TO_ANNUM = {
+    [FREQUENCIES.PAYCHECK]: 0, // this shouldn't be used
+    [FREQUENCIES.DAY]: 365, // simple assumption
+    [FREQUENCIES.WEEK]: 52,
+    [FREQUENCIES.MONTH]: 12,
+    [FREQUENCIES.ANNUM]: 1,
+}
+
+export const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
+
+// Types of pay schedules
+export enum PAY_SCHEDULE {
+    WEEKLY = "Weekly",
+    BIWEEKLY = "Biweekly",
+    BIMONTHLY = "Bimonthly",
+    MONTHLY = "Monthly",
+}
+
+export const PAY_SCHEDULE_TO_ANNUM = {
+    [PAY_SCHEDULE.WEEKLY]: 52,
+    [PAY_SCHEDULE.BIWEEKLY]: 26,
+    [PAY_SCHEDULE.BIMONTHLY]: 24,
+    [PAY_SCHEDULE.MONTHLY]: 12,
+}
+
+export const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
 // Only assuming traditional 401k (which is the same for 403b, tsp, etc.)
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits

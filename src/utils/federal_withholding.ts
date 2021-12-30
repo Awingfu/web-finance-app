@@ -1,12 +1,6 @@
 // 2022
 // Source: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf page 11 W4 after 2020
-
-enum TAX_CLASSES {
-    SINGLE = "Single", 
-    MARRIED_FILING_JOINTLY = "Married Filing Jointly", 
-    MARRIED_FILING_SEPARATELY = "Married Filing Separatly", 
-    HEAD_OF_HOUSEHOLD = "Head of Household"
-};
+import { TAX_CLASSES } from "./constants";
 
 interface Withholding { 
     [key: string]: number[][]

@@ -1,3 +1,8 @@
+/** This files contains the US States and their withholding data (if filled out)
+*   3 classes for each state: flat tax, brackets (with optional married brackets), and unknown.
+*   State taxes are hard 
+*/
+
 interface US_STATE_BASIC {
     name: string,
     abbreviation: string,

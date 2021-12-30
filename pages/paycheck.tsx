@@ -3,8 +3,8 @@ import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropd
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
-import { determineStateTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown } from '../src/utils';
-import { TAX_CLASSES } from '../src/utils/constants';
+import { determineStateTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
+import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHEDULE, PAY_SCHEDULE_TO_ANNUM, } from '../src/utils/constants';
 
 /**
  * TODO: 
@@ -18,55 +18,6 @@ import { TAX_CLASSES } from '../src/utils/constants';
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
  * 3. Split form and table + functions to separate files
  */
-
-const formatCurrency = (num: number): string => {
-  let formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    // These options are needed to round to whole numbers if that's what you want.
-    //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
-    //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
-  });
-
-  return formatter.format(num);
-};
-
-// Contribution frequencies
-enum FREQUENCIES {
-  PAYCHECK = "Paycheck",
-  DAY = "Day",
-  WEEK = "Week",
-  MONTH = "Month",
-  ANNUM = "Annum",
-}
-
-const FREQUENCY_TO_ANNUM = {
-  [FREQUENCIES.PAYCHECK]: 0, // this shouldn't be used
-  [FREQUENCIES.DAY]: 365, // simple assumption
-  [FREQUENCIES.WEEK]: 52,
-  [FREQUENCIES.MONTH]: 12,
-  [FREQUENCIES.ANNUM]: 1,
-}
-
-const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
-// console.log(ALL_FREQUENCIES)
-
-// Types of pay schedules
-enum PAY_SCHEDULE {
-  WEEKLY = "Weekly",
-  BIWEEKLY = "Biweekly",
-  BIMONTHLY = "Bimonthly",
-  MONTHLY = "Monthly",
-}
-
-const PAY_SCHEDULE_TO_ANNUM = {
-  [PAY_SCHEDULE.WEEKLY]: 52,
-  [PAY_SCHEDULE.BIWEEKLY]: 26,
-  [PAY_SCHEDULE.BIMONTHLY]: 24,
-  [PAY_SCHEDULE.MONTHLY]: 12,
-}
-
-const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
 const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
   return salary * (contributionPercentage / 100);
@@ -152,6 +103,9 @@ function Paycheck() {
     "Other Pre-Tax": [otherPreTax_annual, otherPreTax_paycheck],
   }
 
+  // if all Pre tax deductions are 0, dont render the section at all
+  const shouldRenderPreTaxDeductions = !!Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).length;
+
   const taxableIncome_annual = salary - t401k_annual - tIRA_annual - medical_annual - commuter_annual - hsa_annual - otherPreTax_annual;
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
 
@@ -185,6 +139,9 @@ function Paycheck() {
     "Roth IRA": [rIRA_annual, rIRA_paycheck],
     "Other Post-Tax": [otherPostTax_annual, otherPostTax_paycheck],
   }
+
+  // if all post tax deductions are 0, dont render the section at all
+  const shouldRenderPostTaxDeductions = !!Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).length;
 
   // helper map for forms with custom frequencies
   const customWithholdings: { [key: string]: any } = {
@@ -406,21 +363,26 @@ function Paycheck() {
               <td>{formatCurrency(salary)}</td>
               <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
             </tr>
-            <tr>
+            {shouldRenderPreTaxDeductions && 
+            <>
+              <tr>
               <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
-            </tr>
-            {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>{formatCurrency(preTaxTableMap[key][0])}</td>
-                <td>{formatCurrency(preTaxTableMap[key][1])}</td>
               </tr>
-            ))}
-            <tr>
-              <td>Taxable Pay</td>
-              <td>{formatCurrency(taxableIncome_annual)}</td>
-              <td>{formatCurrency(taxableIncome_paycheck)}</td>
-            </tr>
+              {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
+                <tr key={key}>
+                  <td>{key}</td>
+                  <td>{formatCurrency(preTaxTableMap[key][0])}</td>
+                  <td>{formatCurrency(preTaxTableMap[key][1])}</td>
+                </tr>
+              ))}
+              <tr>
+                <td>Taxable Pay</td>
+                <td>{formatCurrency(taxableIncome_annual)}</td>
+                <td>{formatCurrency(taxableIncome_paycheck)}</td>
+              </tr>
+            </>
+            }
+            
             <tr>
               <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
             </tr>
@@ -449,16 +411,20 @@ function Paycheck() {
               <td>placeholder</td>
               <td>placeholder</td>
             </tr>
-            <tr>
-              <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
-            </tr>
-            {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
-              <tr>
-                <td>{key}</td>
-                <td>{formatCurrency(postTaxTableMap[key][0])}</td>
-                <td>{formatCurrency(postTaxTableMap[key][1])}</td>
-              </tr>
-            ))}
+            {shouldRenderPostTaxDeductions && 
+              <>
+                <tr>
+                  <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
+                </tr>
+                {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
+                  <tr>
+                    <td>{key}</td>
+                    <td>{formatCurrency(postTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(postTaxTableMap[key][1])}</td>
+                  </tr>
+                ))}
+              </>
+            }
             <tr>
               <td className={styles.thicc}>Take Home Pay</td>
               <td>placeholder</td>
