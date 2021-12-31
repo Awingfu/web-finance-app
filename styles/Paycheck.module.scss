@@ -1,4 +1,5 @@
-$medium: 1024px;
+$medium: 1080px;
+$desktop: 1200px;
 
 .container {
     display: flex;
@@ -19,12 +20,14 @@ $medium: 1024px;
     font-weight: bold;
 }
 
-.specialHeaderWidth {
-    width: 250px;
-}
-
 .paycheckForm {
-    @media screen and (min-width: $medium) {
+
+    @media screen and (min-width: $desktop) {
+        width: 40%;
+        margin: 0 2%;
+    }
+
+    @media screen and (min-width: $medium) and (max-width: $desktop) {
         margin: 0 20%;
         padding: 0 100px;
     }
@@ -38,7 +41,12 @@ $medium: 1024px;
 .table {
     margin-top: 4rem;
 
-    @media screen and (min-width: $medium) {
+    @media screen and (min-width: $desktop) {
+        width: 40%;
+        margin: 0 2%;
+    }
+
+    @media screen and (min-width: $medium) and (max-width: $desktop) {
         margin-left: 20%;
         margin-right: 20%;
         padding: 0 100px;
@@ -49,6 +57,15 @@ $medium: 1024px;
         margin-right: 100px;
     }
     
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    @media screen and (min-width: $desktop) {
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
 }
 
 .red {
