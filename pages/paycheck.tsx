@@ -1,10 +1,8 @@
 import React from 'react';
 import { Form, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
-import Header from '../src/Header';
-import Footer from '../src/Footer';
-import TooltipOnHover from '../src/TooltipOnHover';
-import { determineStateTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
+import {Header, Footer, TooltipOnHover } from '../src/components';
+import { determineStateTaxesWithheld, determineFICATaxesWithheld, determineFederalTaxesWithheld, determineMedicareTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
 import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHEDULE, PAY_SCHEDULE_TO_ANNUM, } from '../src/utils/constants';
 
 /**

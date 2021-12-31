@@ -28,6 +28,22 @@ a {
 //   text-align: center;
 // }
 
+footer {
+  display: flex;
+  flex: 1;
+  padding: 1rem 0;
+  border-top: 1px solid #eaeaea;
+  justify-content: center;
+  align-items: center;
+}
+
+footer a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
 $primary: #06A77D;
 $secondary: #052F5F;
 $danger: red;

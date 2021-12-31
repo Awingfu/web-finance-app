@@ -76,17 +76,17 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
         return us_state_object.flatTax * taxableAnnualIncome;
     }
     if (instanceOfTaxBrackets(us_state_object)) {
-        let tax_brackets = us_state_object.brackets;
+        let withholdingBrackets = us_state_object.brackets;
         if (married && us_state_object.marriedBrackets) {
-            tax_brackets = us_state_object.marriedBrackets; 
+            withholdingBrackets = us_state_object.marriedBrackets; 
         }
-        addCumulativeColumn(tax_brackets) // add 4th column which is cumulative of taxes from rows above
-        for (let row = 0; row < tax_brackets.length; row++) {
+        addCumulativeColumn(withholdingBrackets) // add 4th column which is cumulative of taxes from rows above
+        for (let row = 0; row < withholdingBrackets.length; row++) {
             // if we're at the last bracket or the max at the current bracket is higher than income
-            if (tax_brackets[row][1] === Infinity || tax_brackets[row][1] > taxableAnnualIncome) {
+            if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
                 // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
-                console.log("You're at the " + tax_brackets[row][2]*100 +"% tax bracket for " + us_state_object.name + " State");
-                return tax_brackets[row][3] + (taxableAnnualIncome - tax_brackets[row][0]) * tax_brackets[row][2];
+                console.log("You're at the " + withholdingBrackets[row][2]*100 +"% tax bracket for " + us_state_object.name + " State");
+                return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
             }
         }
     }
