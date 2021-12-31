@@ -20,13 +20,13 @@ a {
   overflow-y: auto;
 }
 
-// tr > th:not(:first-child) {
-//   text-align: center;
-// }
+tr > th:not(:first-child) {
+  text-align: right;
+}
 
-// tr > td:not(:first-child) {
-//   text-align: center;
-// }
+tr > td:not(:first-child) {
+  text-align: right;
+}
 
 footer {
   display: flex;

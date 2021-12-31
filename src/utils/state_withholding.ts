@@ -2,6 +2,7 @@
 *   3 classes for each state: flat tax, brackets (with optional married brackets), and unknown.
 *   State taxes are hard 
 */
+import { TAX_CLASSES } from './constants';
 
 // Interfaces and exporting type checkers
 interface US_STATE_BASIC {
@@ -65,7 +66,7 @@ const addCumulativeColumn = (withholding_table : number[][]) => {
 }
 
 // main function to export
-export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAnnualIncome: number, married: boolean = false): number => {
+export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAnnualIncome: number, taxClass: TAX_CLASSES): number => {
     let us_state_object = US_STATES_MAP[stateAbbreviation];
     if (instanceOfTaxUnknown(us_state_object)) {
         console.log(us_state_object.name + " State's taxes are not defined, returning 0.");
@@ -77,7 +78,7 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
     }
     if (instanceOfTaxBrackets(us_state_object)) {
         let withholdingBrackets = us_state_object.brackets;
-        if (married && us_state_object.marriedBrackets) {
+        if (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY && us_state_object.marriedBrackets) {
             withholdingBrackets = us_state_object.marriedBrackets; 
         }
         addCumulativeColumn(withholdingBrackets) // add 4th column which is cumulative of taxes from rows above

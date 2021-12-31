@@ -11,7 +11,7 @@ interface Withholding {
 // Input withholding should be in the format [min income, max income, withholding rate]
 // Output withholding will be in the format [min income, max income, withholding rate, cumulative withholding from above rows]
 const addCumulativeColumn = (withholding_table: Withholding) => {
-    if (withholding_table[0].length === 4) return; // we must have already added the needed column
+    if (withholding_table[TAX_CLASSES.SINGLE].length === 4) return; // we must have already added the needed column
     for (let tax_class in withholding_table) {
         let last_sum = 0;
         let current_sum = 0;
@@ -82,8 +82,8 @@ export const determineFederalTaxesWithheld = (taxableAnnualIncome: number, tax_c
 };
 
 // https://www.nerdwallet.com/article/taxes/fica-tax-withholding
-// This is done individually so tax class doesn't matter. AKA FICA
-const raw_social_security_withholding: Withholding =
+// This is done individually so tax class doesn't matter. AKA Social Security withholding
+const raw_fica_withholding: Withholding =
 {
     [TAX_CLASSES.SINGLE]: [
         [0, 142800, 0.062],
@@ -92,11 +92,11 @@ const raw_social_security_withholding: Withholding =
 };
 
 const processedFICAWithholding = (): Withholding => {
-    raw_social_security_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...raw_social_security_withholding[TAX_CLASSES.SINGLE]];
-    raw_social_security_withholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = [...raw_social_security_withholding[TAX_CLASSES.SINGLE]];
-    raw_social_security_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...raw_social_security_withholding[TAX_CLASSES.SINGLE]];
-    addCumulativeColumn(raw_social_security_withholding);
-    return raw_federal_withholding
+    raw_fica_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...raw_fica_withholding[TAX_CLASSES.SINGLE]];
+    raw_fica_withholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = [...raw_fica_withholding[TAX_CLASSES.SINGLE]];
+    raw_fica_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...raw_fica_withholding[TAX_CLASSES.SINGLE]];
+    addCumulativeColumn(raw_fica_withholding);
+    return raw_fica_withholding
 }
 
 export const determineFICATaxesWithheld = (taxableAnnualIncome: number, tax_class: TAX_CLASSES): number => {

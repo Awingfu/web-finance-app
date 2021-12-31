@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
-import {Header, Footer, TooltipOnHover } from '../src/components';
+import { Header, Footer, TooltipOnHover } from '../src/components';
 import { determineStateTaxesWithheld, determineFICATaxesWithheld, determineFederalTaxesWithheld, determineMedicareTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
 import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHEDULE, PAY_SCHEDULE_TO_ANNUM, } from '../src/utils/constants';
 
@@ -12,10 +12,11 @@ import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHE
  *  - Company match
  *  - Other tax deductions, company match on HSA/FSA
  *  - multiple states
- *  - accounting format to have withholdings show as red and in parentheses
  *  - side by side view
+ *  - maximums on FICA, 401k, IRA
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
- * 3. Split form and table + functions to separate files
+ * 3. Split form and table to separate components
+ * 4. save info to local storage + clear data button -> so we don't lose data on refresh
  */
 
 const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
@@ -36,13 +37,7 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
   }
 }
 
-/** enter salary
- * 3 col table
- * Radio button for paycheck frequency
- * $ total HSA conribution
- * % selection for 401k, roth 401k, after tax 401k (mega),
- * % selection for tIRA, roth IRA
- * Table formatting in globals.scss
+/** 
  * 
  * Next goals:
  * State income tax withholding
@@ -98,20 +93,39 @@ function Paycheck() {
   // if all Pre tax deductions are 0, dont render the section at all
   const shouldRenderPreTaxDeductions = !!Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).length;
 
-  const taxableIncome_annual = salary - t401k_annual - tIRA_annual - medical_annual - commuter_annual - hsa_annual - otherPreTax_annual;
+  const sumOfPreTaxContributions_annual = Object.keys(preTaxTableMap).reduce((prev, curr) => prev + preTaxTableMap[curr][0], 0)
+  const taxableIncome_annual = salary - sumOfPreTaxContributions_annual;
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
 
-  // Taxes Withheld
+  // Taxes Withheld, should use taxableIncome_annual over salary
+  const federalWithholding_annual = determineFederalTaxesWithheld(taxableIncome_annual, taxClass)
+  const federalWithholding_paycheck = convertAnnualAmountToPaySchedule(federalWithholding_annual, paySchedule);
 
-  let married = (taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY);
+  const ficaWithholding_annual = determineFICATaxesWithheld(taxableIncome_annual, taxClass);
+  const ficaWithholding_paycheck = convertAnnualAmountToPaySchedule(ficaWithholding_annual, paySchedule);
+
+  const medicareWithholding_annual = determineMedicareTaxesWithheld(taxableIncome_annual, taxClass);
+  const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(medicareWithholding_annual, paySchedule);
+
   let stateTaxInvalidAlert = <></>;
   if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
     stateTaxInvalidAlert = <Alert className='mb-3' variant="danger"> {US_STATES_MAP[usState].name} State Tax Withholding has not been defined! Assuming $0. </Alert>
   }
-  const stateTaxes_annual = determineStateTaxesWithheld(usState, salary, married);
-  const stateTaxes_paycheck = convertAnnualAmountToPaySchedule(stateTaxes_annual, paySchedule);
+  const stateWithholding_annual = determineStateTaxesWithheld(usState, taxableIncome_annual, taxClass);
+  const stateWithholding_paycheck = convertAnnualAmountToPaySchedule(stateWithholding_annual, paySchedule);
 
-  // Post Tax
+  // used to remove tax rows in table with $0 contributions
+  const taxTableMap: { [key: string]: any } = {
+    "Federal Withholding": [federalWithholding_annual, federalWithholding_paycheck],
+    "FICA": [ficaWithholding_annual, ficaWithholding_paycheck],
+    "Medicare": [medicareWithholding_annual, medicareWithholding_paycheck],
+    "State Withholding": [stateWithholding_annual, stateWithholding_paycheck],
+  }
+
+  const netPay_annual = taxableIncome_annual - federalWithholding_annual - ficaWithholding_annual - medicareWithholding_paycheck - stateWithholding_annual;
+  const netPay_paycheck = convertAnnualAmountToPaySchedule(netPay_annual, paySchedule);
+
+  // Post Tax, uses salary for calculations instead of taxableIncome_annual
   const [r401kContribution, changeR401kContribution] = React.useState(0);
   const r401k_annual = calculateContributionFromPercentage(salary, r401kContribution);
   const r401k_paycheck = convertAnnualAmountToPaySchedule(r401k_annual, paySchedule);
@@ -134,6 +148,11 @@ function Paycheck() {
 
   // if all post tax deductions are 0, dont render the section at all
   const shouldRenderPostTaxDeductions = !!Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).length;
+
+  const sumOfPostTaxContributions_annual = Object.keys(postTaxTableMap).reduce((prev, curr) => prev + postTaxTableMap[curr][0], 0)
+
+  const takeHomePay_annual = netPay_annual - sumOfPostTaxContributions_annual;
+  const takeHomePay_paycheck = convertAnnualAmountToPaySchedule(takeHomePay_annual, paySchedule);
 
   // helper map for forms with custom frequencies
   const customWithholdings: { [key: string]: any } = {
@@ -336,8 +355,8 @@ function Paycheck() {
                 {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
                   <tr key={key}>
                     <td>{key}</td>
-                    <td>{formatCurrency(preTaxTableMap[key][0])}</td>
-                    <td>{formatCurrency(preTaxTableMap[key][1])}</td>
+                    <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
                   </tr>
                 ))}
                 <tr>
@@ -351,30 +370,17 @@ function Paycheck() {
             <tr>
               <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
             </tr>
-            <tr>
-              <td>Federal Withholding</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>FICA</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>Medicare</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>State Withholding</td>
-              <td>{formatCurrency(stateTaxes_annual)}</td>
-              <td>{formatCurrency(stateTaxes_paycheck)}</td>
-            </tr>
+            {Object.keys(taxTableMap).filter((key) => taxTableMap[key][0] != 0).map((key) => (
+              <tr key={key}>
+                <td>{key}</td>
+                <td>{formatCurrency(-taxTableMap[key][0])}</td>
+                <td>{formatCurrency(-taxTableMap[key][1])}</td>
+              </tr>
+            ))}
             <tr>
               <td>Net Pay</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
+              <td>{formatCurrency(netPay_annual)}</td>
+              <td>{formatCurrency(netPay_paycheck)}</td>
             </tr>
             {shouldRenderPostTaxDeductions &&
               <>
@@ -384,16 +390,16 @@ function Paycheck() {
                 {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
                   <tr>
                     <td>{key}</td>
-                    <td>{formatCurrency(postTaxTableMap[key][0])}</td>
-                    <td>{formatCurrency(postTaxTableMap[key][1])}</td>
+                    <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
                   </tr>
                 ))}
               </>
             }
             <tr>
               <td className={styles.thicc}>Take Home Pay</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
+              <td>{formatCurrency(takeHomePay_annual)}</td>
+              <td>{formatCurrency(takeHomePay_paycheck)}</td>
             </tr>
           </tbody>
         </Table>
