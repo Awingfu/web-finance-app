@@ -2,8 +2,25 @@ import React from 'react';
 import { Form, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import { Header, Footer, TooltipOnHover } from '../src/components';
-import { determineStateTaxesWithheld, determineFICATaxesWithheld, determineFederalTaxesWithheld, determineMedicareTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
-import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHEDULE, PAY_SCHEDULE_TO_ANNUM, } from '../src/utils/constants';
+import { 
+  TAX_CLASSES, 
+  FREQUENCIES, 
+  FREQUENCY_TO_ANNUM, 
+  ALL_FREQUENCIES, 
+  PAY_SCHEDULE, 
+  PAY_SCHEDULE_TO_ANNUM, 
+} from '../src/utils/constants';
+import { 
+  determineStateTaxesWithheld, 
+  determineFICATaxesWithheld, 
+  determineFederalTaxesWithheld, 
+  determineMedicareTaxesWithheld, 
+  US_STATES_MAP, 
+  instanceOfTaxUnknown, 
+  formatCurrency, 
+  maxFICAContribution,
+  getFICAtax 
+} from '../src/utils';
 
 /**
  * TODO: 
@@ -101,8 +118,25 @@ function Paycheck() {
   const federalWithholding_annual = determineFederalTaxesWithheld(taxableIncome_annual, taxClass)
   const federalWithholding_paycheck = convertAnnualAmountToPaySchedule(federalWithholding_annual, paySchedule);
 
-  const ficaWithholding_annual = determineFICATaxesWithheld(taxableIncome_annual, taxClass);
-  const ficaWithholding_paycheck = convertAnnualAmountToPaySchedule(ficaWithholding_annual, paySchedule);
+  const ficaWithholding_annual = determineFICATaxesWithheld(taxableIncome_annual);
+  let ficaWithholding_paycheck = convertAnnualAmountToPaySchedule(ficaWithholding_annual, paySchedule);
+  const ficaMaxedIcon = '\u2020'; // dagger
+  const ficaMaxedNote = ficaMaxedIcon + 
+    " You will pay the maximum FICA tax of " + formatCurrency(maxFICAContribution) + 
+    " this year. Once you have withheld the maximum, which is after withholding for " + 
+    Math.ceil(maxFICAContribution / (taxableIncome_paycheck * getFICAtax)) +
+    " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
+  let ficaMaxedAlert = <></>;
+  let ficaMaxedAlertTableFooter = <></>;
+  let fica_key = "FICA"
+  const isFICAMaxed = ficaWithholding_annual === maxFICAContribution;
+  if (isFICAMaxed) {
+    console.log("FICA is maxed")
+    ficaMaxedAlert = <>{ficaMaxedIcon}</>;
+    ficaMaxedAlertTableFooter = <Alert className='mb-3' variant="secondary">{ficaMaxedNote}</Alert>;
+    fica_key = "FICA" + ficaMaxedIcon;
+    ficaWithholding_paycheck = Math.min(taxableIncome_paycheck * getFICAtax, maxFICAContribution);
+  }
 
   const medicareWithholding_annual = determineMedicareTaxesWithheld(taxableIncome_annual, taxClass);
   const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(medicareWithholding_annual, paySchedule);
@@ -118,7 +152,7 @@ function Paycheck() {
   // used to remove tax rows in table with $0 contributions
   const taxTableMap: { [key: string]: any } = {
     "Federal Withholding": [federalWithholding_annual, federalWithholding_paycheck],
-    "FICA": [ficaWithholding_annual, ficaWithholding_paycheck],
+    [fica_key]: [ficaWithholding_annual, ficaWithholding_paycheck],
     "Medicare": [medicareWithholding_annual, medicareWithholding_paycheck],
     [stateWithholding_key]: [stateWithholding_annual, stateWithholding_paycheck],
   }
@@ -178,7 +212,7 @@ function Paycheck() {
 
   const updateContribution = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
     let value = parseInt((e.target as HTMLInputElement).value);
-    if (value < 0) {
+    if (isNaN(value) || value < 0) {
       value = 0;
     } else if (value > 90) {
       value = 90;
@@ -334,13 +368,12 @@ function Paycheck() {
       </Form>
 
       <div className={styles.table}>
-        <Table hover responsive size="sm">
+        <Table hover responsive size="sm" className='mb-3'>
           <thead>
             <tr>
               <th></th>
               <th>Annual</th>
               <th className={styles.specialHeaderWidth}>Paycheck - {paySchedule}</th>
-              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -348,7 +381,6 @@ function Paycheck() {
               <td className={styles.thicc}>Gross Income</td>
               <td>{formatCurrency(salary)}</td>
               <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
-              <td></td>
             </tr>
             {shouldRenderPreTaxDeductions &&
               <>
@@ -360,14 +392,12 @@ function Paycheck() {
                     <td>{key}</td>
                     <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
                     <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
-                    <td></td>
                   </tr>
                 ))}
                 <tr>
                   <td>Taxable Pay</td>
                   <td>{formatCurrency(taxableIncome_annual)}</td>
                   <td>{formatCurrency(taxableIncome_paycheck)}</td>
-                  <td></td>
                 </tr>
               </>
             }
@@ -380,14 +410,12 @@ function Paycheck() {
                 <td>{key}</td>
                 <td>{formatCurrency(-taxTableMap[key][0])}</td>
                 <td>{formatCurrency(-taxTableMap[key][1])}</td>
-                <td></td>
               </tr>
             ))}
             <tr>
               <td>Net Pay</td>
               <td>{formatCurrency(netPay_annual)}</td>
               <td>{formatCurrency(netPay_paycheck)}</td>
-              <td></td>
             </tr>
             {shouldRenderPostTaxDeductions &&
               <>
@@ -399,7 +427,6 @@ function Paycheck() {
                     <td>{key}</td>
                     <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
                     <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
-                    <td></td>
                   </tr>
                 ))}
               </>
@@ -408,10 +435,17 @@ function Paycheck() {
               <td className={styles.thicc}>Take Home Pay</td>
               <td>{formatCurrency(takeHomePay_annual)}</td>
               <td>{formatCurrency(takeHomePay_paycheck)}</td>
-              <td></td>
             </tr>
+            {isFICAMaxed && 
+              <tr>
+                <td>Take Home Pay after maxing FICA{ficaMaxedIcon}</td>
+                <td></td>
+                <td>{formatCurrency(takeHomePay_paycheck + ficaWithholding_paycheck)}</td>
+              </tr>
+            }
           </tbody>
         </Table>
+        {ficaMaxedAlertTableFooter}
       </div>
       <Footer />
     </div>
