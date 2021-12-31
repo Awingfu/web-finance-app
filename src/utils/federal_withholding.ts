@@ -1,21 +1,18 @@
 // 2022
 // Source: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf page 11 W4 after 2020
+// This file contains Federal withholding, FICA withholding and Medicare withholding
+import { TAX_CLASSES } from "./constants";
 
-enum TAX_CLASSES {
-    SINGLE = "Single", 
-    MARRIED_FILING_JOINTLY = "Married Filing Jointly", 
-    MARRIED_FILING_SEPARATELY = "Married Filing Separatly", 
-    HEAD_OF_HOUSEHOLD = "Head of Household"
-};
-
-interface Withholding { 
+interface Withholding {
     [key: string]: number[][]
 }
 
 // Calculate (cumulative from previous tax rows) and push into rows. Array modification is by reference
 // Input withholding should be in the format [min income, max income, withholding rate]
 // Output withholding will be in the format [min income, max income, withholding rate, cumulative withholding from above rows]
-const addCumulativeColumn = (withholding_table : Withholding) => {
+const addCumulativeColumn = (withholding_table: Withholding) => {
+    console.log(withholding_table[TAX_CLASSES.SINGLE][0].length)
+    if (withholding_table[TAX_CLASSES.SINGLE][0].length > 3) return; // we must have already added the needed column
     for (let tax_class in withholding_table) {
         let last_sum = 0;
         let current_sum = 0;
@@ -31,9 +28,9 @@ const addCumulativeColumn = (withholding_table : Withholding) => {
     }
 }
 
-const federal_withholding : Withholding = 
+const raw_federal_withholding: Withholding =
 {
-    [TAX_CLASSES.SINGLE] : [
+    [TAX_CLASSES.SINGLE]: [
         [0, 6275, 0.0],
         [6275, 11250, 0.10],
         [11250, 26538, 0.12],
@@ -43,7 +40,7 @@ const federal_withholding : Withholding =
         [110988, 268075, 0.35],
         [268075, Infinity, 0.37],
     ],
-    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : [
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
         [0, 12550, 0.0],
         [12550, 22500, 0.10],
         [22500, 53075, 0.12],
@@ -53,7 +50,17 @@ const federal_withholding : Withholding =
         [221975, 326700, 0.35],
         [326700, Infinity, 0.37],
     ],
-    [TAX_CLASSES.HEAD_OF_HOUSEHOLD] : [
+    [TAX_CLASSES.MARRIED_FILING_SEPARATELY]: [
+        [0, 6275, 0.0],
+        [6275, 11250, 0.10],
+        [11250, 26538, 0.12],
+        [26538, 49463, 0.22],
+        [49463, 88738, 0.24],
+        [88738, 110988, 0.32],
+        [110988, 268075, 0.35],
+        [268075, Infinity, 0.37],
+    ],
+    [TAX_CLASSES.HEAD_OF_HOUSEHOLD]: [
         [0, 9400, 0.0],
         [9400, 16500, 0.10],
         [16500, 36500, 0.12],
@@ -64,44 +71,92 @@ const federal_withholding : Withholding =
         [271200, Infinity, 0.37],
     ],
 };
-federal_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(federal_withholding);
+
+const processedFederalWithholding = (): Withholding => {
+    addCumulativeColumn(raw_federal_withholding);
+    return raw_federal_withholding
+}
+
+export const determineFederalTaxesWithheld = (taxableAnnualIncome: number, tax_class: TAX_CLASSES): number => {
+    let withholdingBrackets = processedFederalWithholding()[tax_class];
+    for (let row = 0; row < withholdingBrackets.length; row++) {
+        // if we're at the last bracket or the max at the current bracket is higher than income
+        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+            // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
+            console.log("You're at the " + withholdingBrackets[row][2] * 100 + "% Federal withholding bracket.");
+            return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+        }
+    }
+    console.log("Unreachable code reached, returning 0 for federal withholding.")
+    return 0;
+};
 
 // https://www.nerdwallet.com/article/taxes/fica-tax-withholding
-// This is done individually so tax class doesn't matter
-const social_security_withholding : Withholding = 
+// This is done individually so tax class doesn't matter. AKA Social Security withholding
+const raw_fica_withholding: Withholding =
 {
-    [TAX_CLASSES.SINGLE] : [
+    [TAX_CLASSES.SINGLE]: [
         [0, 142800, 0.062],
         [142800, Infinity, 0.0],
     ]
 };
-social_security_withholding[TAX_CLASSES.MARRIED_FILING_SEPARATELY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
-social_security_withholding[TAX_CLASSES.MARRIED_FILING_JOINTLY] = [...federal_withholding[TAX_CLASSES.SINGLE]];
-social_security_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...federal_withholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(social_security_withholding);
+
+const processedFICAWithholding = (): Withholding => {
+    addCumulativeColumn(raw_fica_withholding);
+    return raw_fica_withholding
+}
+
+export const determineFICATaxesWithheld = (taxableAnnualIncome: number): number => {
+    let withholdingBrackets = processedFICAWithholding()[TAX_CLASSES.SINGLE];
+    for (let row = 0; row < withholdingBrackets.length; row++) {
+        // if we're at the last bracket or the max at the current bracket is higher than income
+        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+            // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
+            return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+        }
+    }
+    console.log("Unreachable code reached, returning 0 for FICA withholding.")
+    return 0;
+};
+
+export const maxFICAContribution = processedFICAWithholding()[TAX_CLASSES.SINGLE][1][3];
+export const getFICAtax = raw_fica_withholding[TAX_CLASSES.SINGLE][0][2];
 
 // Source https://www.irs.gov/taxtopics/tc560
-const medicare_withholding : Withholding = 
+const raw_medicare_withholding: Withholding =
 {
-    [TAX_CLASSES.SINGLE] : [
+    [TAX_CLASSES.SINGLE]: [
         [0, 200000, 0.0145],
         [200000, Infinity, 0.0235],
     ],
-    [TAX_CLASSES.MARRIED_FILING_JOINTLY] : [
+    [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
         [0, 250000, 0.0145],
         [250000, Infinity, 0.0235],
     ],
-    [TAX_CLASSES.MARRIED_FILING_SEPARATELY] : [
+    [TAX_CLASSES.MARRIED_FILING_SEPARATELY]: [
         [0, 125000, 0.0145],
         [125000, Infinity, 0.0235],
     ],
+    [TAX_CLASSES.HEAD_OF_HOUSEHOLD]: [
+        [0, 200000, 0.0145],
+        [200000, Infinity, 0.0235],
+    ],
 };
-medicare_withholding[TAX_CLASSES.HEAD_OF_HOUSEHOLD] = [...medicare_withholding[TAX_CLASSES.SINGLE]];
-addCumulativeColumn(medicare_withholding);
 
-export {
-    social_security_withholding,
-    medicare_withholding,
-    federal_withholding,
+const processedMedicareWithholding = (): Withholding => {
+    addCumulativeColumn(raw_medicare_withholding);
+    return raw_medicare_withholding;
 }
+
+export const determineMedicareTaxesWithheld = (taxableAnnualIncome: number, tax_class: TAX_CLASSES): number => {
+    let withholdingBrackets = processedMedicareWithholding()[tax_class];
+    for (let row = 0; row < withholdingBrackets.length; row++) {
+        // if we're at the last bracket or the max at the current bracket is higher than income
+        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+            // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
+            return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+        }
+    }
+    console.log("Unreachable code reached, returning 0 for Medicare withholding.")
+    return 0;
+};

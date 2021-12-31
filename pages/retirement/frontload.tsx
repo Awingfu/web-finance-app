@@ -1,9 +1,7 @@
 import type { NextPage } from 'next';
-import Header from '../../src/Header';
-import Footer from '../../src/Footer';
+import { Header, Footer } from '../../src/components';
 // TODO change styles
-import styles from '../../styles/Home.module.css'
-
+import styles from '../../styles/Home.module.scss'
 
 /**
  * Goals

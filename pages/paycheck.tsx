@@ -1,10 +1,26 @@
 import React from 'react';
-import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown } from 'react-bootstrap';
+import { Form, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
-import Header from '../src/Header';
-import Footer from '../src/Footer';
-import { social_security_withholding, medicare_withholding, federal_withholding } from '../src/utils';
-import { TAX_CLASSES } from '../src/utils/constants';
+import { Header, Footer, TooltipOnHover } from '../src/components';
+import { 
+  TAX_CLASSES, 
+  FREQUENCIES, 
+  FREQUENCY_TO_ANNUM, 
+  ALL_FREQUENCIES, 
+  PAY_SCHEDULE, 
+  PAY_SCHEDULE_TO_ANNUM, 
+} from '../src/utils/constants';
+import { 
+  determineStateTaxesWithheld, 
+  determineFICATaxesWithheld, 
+  determineFederalTaxesWithheld, 
+  determineMedicareTaxesWithheld, 
+  US_STATES_MAP, 
+  instanceOfTaxUnknown, 
+  formatCurrency, 
+  maxFICAContribution,
+  getFICAtax 
+} from '../src/utils';
 
 /**
  * TODO: 
@@ -13,60 +29,12 @@ import { TAX_CLASSES } from '../src/utils/constants';
  *  - Company match
  *  - Other tax deductions, company match on HSA/FSA
  *  - multiple states
- *  - accounting format to have withholdings show as red and in parentheses
  *  - side by side view
- * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
- * 3. Split form and table + functions to separate files
+ *  - maximums on FICA, 401k, IRA
+ * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
+ * 3. Split form and table to separate components
+ * 4. save info to local storage + clear data button -> so we don't lose data on refresh
  */
-
-const formatCurrency = (num: number): string => {
-  let formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    // These options are needed to round to whole numbers if that's what you want.
-    //minimumFractionDigits: 0, // (this suffices for whole numbers, but will print 2500.10 as $2,500.1)
-    //maximumFractionDigits: 0, // (causes 2500.99 to be printed as $2,501)
-  });
-
-  return formatter.format(num);
-};
-
-// Contribution frequencies
-enum FREQUENCIES {
-  PAYCHECK = "Paycheck",
-  DAY = "Day",
-  WEEK = "Week",
-  MONTH = "Month",
-  ANNUM = "Annum",
-}
-
-const FREQUENCY_TO_ANNUM = {
-  [FREQUENCIES.PAYCHECK]: 0, // this shouldn't be used
-  [FREQUENCIES.DAY]: 365, // simple assumption
-  [FREQUENCIES.WEEK]: 52,
-  [FREQUENCIES.MONTH]: 12,
-  [FREQUENCIES.ANNUM]: 1,
-}
-
-const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
-// console.log(ALL_FREQUENCIES)
-
-// Types of pay schedules
-enum PAY_SCHEDULE {
-  WEEKLY = "Weekly",
-  BIWEEKLY = "Biweekly",
-  BIMONTHLY = "Bimonthly",
-  MONTHLY = "Monthly",
-}
-
-const PAY_SCHEDULE_TO_ANNUM = {
-  [PAY_SCHEDULE.WEEKLY]: 52,
-  [PAY_SCHEDULE.BIWEEKLY]: 26,
-  [PAY_SCHEDULE.BIMONTHLY]: 24,
-  [PAY_SCHEDULE.MONTHLY]: 12,
-}
-
-const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
 const calculateContributionFromPercentage = (salary: number, contributionPercentage: number): number => {
   return salary * (contributionPercentage / 100);
@@ -86,20 +54,7 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
   }
 }
 
-// Tooltips
-const renderTooltip = (props: any) => (
-  <Tooltip id="button-tooltip" {...props}>
-    {props.text}
-  </Tooltip>
-);
-
-/** enter salary
- * 3 col table
- * Radio button for paycheck frequency
- * $ total HSA conribution
- * % selection for 401k, roth 401k, after tax 401k (mega),
- * % selection for tIRA, roth IRA
- * Table formatting in globals.scss
+/** 
  * 
  * Next goals:
  * State income tax withholding
@@ -111,7 +66,7 @@ function Paycheck() {
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
   const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE);
-
+  const [usState, changeUSState] = React.useState(US_STATES_MAP["None"].abbreviation);
 
   // Pre Tax
   const [t401kContribution, changeT401kContribution] = React.useState(0);
@@ -152,14 +107,60 @@ function Paycheck() {
     "Other Pre-Tax": [otherPreTax_annual, otherPreTax_paycheck],
   }
 
-  const taxableIncome_annual = salary - t401k_annual - tIRA_annual - medical_annual - commuter_annual - hsa_annual - otherPreTax_annual;
+  // if all Pre tax deductions are 0, dont render the section at all
+  const shouldRenderPreTaxDeductions = !!Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).length;
+
+  const sumOfPreTaxContributions_annual = Object.keys(preTaxTableMap).reduce((prev, curr) => prev + preTaxTableMap[curr][0], 0)
+  const taxableIncome_annual = salary - sumOfPreTaxContributions_annual;
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
 
-  // Taxes Withheld
+  // Taxes Withheld, should use taxableIncome_annual over salary
+  const federalWithholding_annual = determineFederalTaxesWithheld(taxableIncome_annual, taxClass)
+  const federalWithholding_paycheck = convertAnnualAmountToPaySchedule(federalWithholding_annual, paySchedule);
 
+  const ficaWithholding_annual = determineFICATaxesWithheld(taxableIncome_annual);
+  let ficaWithholding_paycheck = convertAnnualAmountToPaySchedule(ficaWithholding_annual, paySchedule);
+  const ficaMaxedIcon = '\u2020'; // dagger
+  const ficaMaxedNote = ficaMaxedIcon + 
+    " You will pay the maximum FICA tax of " + formatCurrency(maxFICAContribution) + 
+    " this year. Once you have withheld the maximum, which is after withholding for " + 
+    Math.ceil(maxFICAContribution / (taxableIncome_paycheck * getFICAtax)) +
+    " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
+  let ficaMaxedAlert = <></>;
+  let ficaMaxedAlertTableFooter = <></>;
+  let fica_key = "FICA"
+  const isFICAMaxed = ficaWithholding_annual === maxFICAContribution;
+  if (isFICAMaxed) {
+    console.log("FICA is maxed")
+    ficaMaxedAlert = <>{ficaMaxedIcon}</>;
+    ficaMaxedAlertTableFooter = <Alert className='mb-3' variant="secondary">{ficaMaxedNote}</Alert>;
+    fica_key = "FICA" + ficaMaxedIcon;
+    ficaWithholding_paycheck = Math.min(taxableIncome_paycheck * getFICAtax, maxFICAContribution);
+  }
 
+  const medicareWithholding_annual = determineMedicareTaxesWithheld(taxableIncome_annual, taxClass);
+  const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(medicareWithholding_annual, paySchedule);
 
-  // Post Tax
+  let stateTaxInvalidAlert = <></>;
+  if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
+    stateTaxInvalidAlert = <Alert className='mb-3' variant="danger"> {US_STATES_MAP[usState].name} State Tax Withholding has not been defined! Assuming $0. </Alert>
+  }
+  const stateWithholding_annual = determineStateTaxesWithheld(usState, taxableIncome_annual, taxClass);
+  const stateWithholding_paycheck = convertAnnualAmountToPaySchedule(stateWithholding_annual, paySchedule);
+  const stateWithholding_key = US_STATES_MAP[usState].abbreviation + " State Withholding";
+
+  // used to remove tax rows in table with $0 contributions
+  const taxTableMap: { [key: string]: any } = {
+    "Federal Withholding": [federalWithholding_annual, federalWithholding_paycheck],
+    [fica_key]: [ficaWithholding_annual, ficaWithholding_paycheck],
+    "Medicare": [medicareWithholding_annual, medicareWithholding_paycheck],
+    [stateWithholding_key]: [stateWithholding_annual, stateWithholding_paycheck],
+  }
+
+  const netPay_annual = taxableIncome_annual - federalWithholding_annual - ficaWithholding_annual - medicareWithholding_paycheck - stateWithholding_annual;
+  const netPay_paycheck = convertAnnualAmountToPaySchedule(netPay_annual, paySchedule);
+
+  // Post Tax, uses salary for calculations instead of taxableIncome_annual
   const [r401kContribution, changeR401kContribution] = React.useState(0);
   const r401k_annual = calculateContributionFromPercentage(salary, r401kContribution);
   const r401k_paycheck = convertAnnualAmountToPaySchedule(r401k_annual, paySchedule);
@@ -179,6 +180,14 @@ function Paycheck() {
     "Roth IRA": [rIRA_annual, rIRA_paycheck],
     "Other Post-Tax": [otherPostTax_annual, otherPostTax_paycheck],
   }
+
+  // if all post tax deductions are 0, dont render the section at all
+  const shouldRenderPostTaxDeductions = !!Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).length;
+
+  const sumOfPostTaxContributions_annual = Object.keys(postTaxTableMap).reduce((prev, curr) => prev + postTaxTableMap[curr][0], 0)
+
+  const takeHomePay_annual = netPay_annual - sumOfPostTaxContributions_annual;
+  const takeHomePay_paycheck = convertAnnualAmountToPaySchedule(takeHomePay_annual, paySchedule);
 
   // helper map for forms with custom frequencies
   const customWithholdings: { [key: string]: any } = {
@@ -203,7 +212,7 @@ function Paycheck() {
 
   const updateContribution = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
     let value = parseInt((e.target as HTMLInputElement).value);
-    if (value < 0) {
+    if (isNaN(value) || value < 0) {
       value = 0;
     } else if (value > 90) {
       value = 90;
@@ -242,11 +251,7 @@ function Paycheck() {
         <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
           <Form.Label> Paycheck Frequency </Form.Label>
           <br />
-          <OverlayTrigger
-            placement="bottom"
-            delay={{ show: 150, hide: 200 }}
-            overlay={renderTooltip({ text: "Every two weeks" })}
-          >
+          <TooltipOnHover text="Every two weeks" nest={
             <Form.Check
               inline
               defaultChecked
@@ -255,13 +260,8 @@ function Paycheck() {
               name="paycheck_schedule"
               type="radio"
               id="paycheck-schedule-radio-1"
-            />
-          </OverlayTrigger>
-          <OverlayTrigger
-            placement="bottom"
-            delay={{ show: 150, hide: 200 }}
-            overlay={renderTooltip({ text: "Twice a month" })}
-          >
+            />} />
+          <TooltipOnHover text="Twice a month" nest={
             <Form.Check
               inline
               label={PAY_SCHEDULE.BIMONTHLY}
@@ -269,8 +269,7 @@ function Paycheck() {
               name="paycheck_schedule"
               type="radio"
               id="paycheck-schedule-radio-2"
-            />
-          </OverlayTrigger>
+            />} />
           <Form.Check
             inline
             label={PAY_SCHEDULE.MONTHLY}
@@ -303,56 +302,48 @@ function Paycheck() {
           />
         </Form.Group>
 
+        <Form.Label>US State Withholding Tax</Form.Label>
+        <DropdownButton className="mb-3" id="us-state-dropdown-button" title={US_STATES_MAP[usState].name} variant="secondary" onSelect={e => updateWithEventKey(e, changeUSState)}>
+          {Object.keys(US_STATES_MAP).map((key) => (
+            <Dropdown.Item eventKey={key} key={key}>{key}</Dropdown.Item>
+          ))}
+        </DropdownButton>
+        {stateTaxInvalidAlert}
+
         <Form.Label>401k Contribution</Form.Label>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Traditional:</InputGroup.Text>
             <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        } />
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Roth:</InputGroup.Text>
             <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
+        } />
 
         <Form.Label>IRA Contribution</Form.Label>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Traditional:</InputGroup.Text>
             <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        } />
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Roth:</InputGroup.Text>
             <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
+        } />
 
         {Object.keys(customWithholdings).map((key) => (
-          <>
+          <div key={key}>
             <Form.Label>{key} Contribution</Form.Label>
             <InputGroup className="mb-3 w-100">
               <InputGroup.Text>$</InputGroup.Text>
@@ -372,13 +363,12 @@ function Paycheck() {
                 })}
               </DropdownButton>
             </InputGroup>
-          </>
+          </div>
         ))}
-
       </Form>
 
       <div className={styles.table}>
-        <Table hover responsive size="sm">
+        <Table hover responsive size="sm" className='mb-3'>
           <thead>
             <tr>
               <th></th>
@@ -392,66 +382,70 @@ function Paycheck() {
               <td>{formatCurrency(salary)}</td>
               <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
             </tr>
+            {shouldRenderPreTaxDeductions &&
+              <>
+                <tr>
+                  <td colSpan={4} className={styles.thicc}>Pre-Tax Deductions</td>
+                </tr>
+                {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
+                  <tr key={key}>
+                    <td>{key}</td>
+                    <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td>Taxable Pay</td>
+                  <td>{formatCurrency(taxableIncome_annual)}</td>
+                  <td>{formatCurrency(taxableIncome_paycheck)}</td>
+                </tr>
+              </>
+            }
+
             <tr>
-              <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
+              <td colSpan={4} className={styles.thicc}>Tax Withholdings</td>
             </tr>
-            {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
-              <tr>
+            {Object.keys(taxTableMap).filter((key) => taxTableMap[key][0] != 0).map((key) => (
+              <tr key={key}>
                 <td>{key}</td>
-                <td>{formatCurrency(preTaxTableMap[key][0])}</td>
-                <td>{formatCurrency(preTaxTableMap[key][1])}</td>
+                <td>{formatCurrency(-taxTableMap[key][0])}</td>
+                <td>{formatCurrency(-taxTableMap[key][1])}</td>
               </tr>
             ))}
-            <tr>
-              <td>Taxable Pay</td>
-              <td>{formatCurrency(taxableIncome_annual)}</td>
-              <td>{formatCurrency(taxableIncome_paycheck)}</td>
-            </tr>
-            <tr>
-              <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
-            </tr>
-            <tr>
-              <td>Federal Withholding</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>FICA</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>Medicare</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
-            <tr>
-              <td>State Withholding</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
-            </tr>
             <tr>
               <td>Net Pay</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
+              <td>{formatCurrency(netPay_annual)}</td>
+              <td>{formatCurrency(netPay_paycheck)}</td>
             </tr>
-            <tr>
-              <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
-            </tr>
-            {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
-              <tr>
-                <td>{key}</td>
-                <td>{formatCurrency(postTaxTableMap[key][0])}</td>
-                <td>{formatCurrency(postTaxTableMap[key][1])}</td>
-              </tr>
-            ))}
+            {shouldRenderPostTaxDeductions &&
+              <>
+                <tr>
+                  <td colSpan={4} className={styles.thicc}>Post-Tax Deductions</td>
+                </tr>
+                {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
+                  <tr>
+                    <td>{key}</td>
+                    <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
+                  </tr>
+                ))}
+              </>
+            }
             <tr>
               <td className={styles.thicc}>Take Home Pay</td>
-              <td>placeholder</td>
-              <td>placeholder</td>
+              <td>{formatCurrency(takeHomePay_annual)}</td>
+              <td>{formatCurrency(takeHomePay_paycheck)}</td>
             </tr>
+            {isFICAMaxed && 
+              <tr>
+                <td>Take Home Pay after maxing FICA{ficaMaxedIcon}</td>
+                <td></td>
+                <td>{formatCurrency(takeHomePay_paycheck + ficaWithholding_paycheck)}</td>
+              </tr>
+            }
           </tbody>
         </Table>
+        {ficaMaxedAlertTableFooter}
       </div>
       <Footer />
     </div>

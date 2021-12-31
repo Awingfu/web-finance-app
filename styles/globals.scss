@@ -15,20 +15,43 @@ a {
   box-sizing: border-box;
 }
 
-// tr > th:not(:first-child) {
-//   text-align: center;
-// }
+.dropdown-menu {
+  max-height: 200px;
+  overflow-y: auto;
+}
 
-// tr > td:not(:first-child) {
-//   text-align: center;
-// }
+tr > th:not(:first-child) {
+  text-align: right;
+}
+
+tr > td:not(:first-child) {
+  text-align: right;
+}
+
+footer {
+  display: flex;
+  flex: 1;
+  padding: 1rem 0;
+  border-top: 1px solid #eaeaea;
+  justify-content: center;
+  align-items: center;
+}
+
+footer a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
 
 $primary: #06A77D;
 $secondary: #052F5F;
+$danger: red;
 
 $theme-colors: (
   primary: $primary,
   secondary: $secondary,
+  danger: $danger
 );
 
 $medium: 1024px;
