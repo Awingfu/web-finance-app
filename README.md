@@ -16,6 +16,8 @@ Planned features
 
 Favicon from https://favicon.io/emoji-favicons/wind-chime
 
+Deployment to GH Pages from this guide: https://www.linkedin.com/pulse/deploy-nextjs-app-github-pages-federico-antu%C3%B1a/
+
 ## Getting Started
 
 First, run the development server:

@@ -10,6 +10,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      NEXT_PUBLIC_BASE_PATH: /web-finance-app
 
     strategy:
       matrix:
