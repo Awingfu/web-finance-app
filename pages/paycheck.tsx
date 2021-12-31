@@ -1,8 +1,9 @@
 import React from 'react';
-import { Form, OverlayTrigger, Tooltip, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
+import { Form, Table, InputGroup, DropdownButton, Dropdown, Alert } from 'react-bootstrap';
 import styles from '../styles/Paycheck.module.scss';
 import Header from '../src/Header';
 import Footer from '../src/Footer';
+import TooltipOnHover from '../src/TooltipOnHover';
 import { determineStateTaxesWithheld, US_STATES_MAP, instanceOfTaxUnknown, formatCurrency } from '../src/utils';
 import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHEDULE, PAY_SCHEDULE_TO_ANNUM, } from '../src/utils/constants';
 
@@ -15,7 +16,7 @@ import { TAX_CLASSES, FREQUENCIES, FREQUENCY_TO_ANNUM, ALL_FREQUENCIES, PAY_SCHE
  *  - multiple states
  *  - accounting format to have withholdings show as red and in parentheses
  *  - side by side view
- * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SSN)
+ * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
  * 3. Split form and table + functions to separate files
  */
 
@@ -37,13 +38,6 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
   }
 }
 
-// Tooltips
-const renderTooltip = (props: any) => (
-  <Tooltip id="button-tooltip" {...props}>
-    {props.text}
-  </Tooltip>
-);
-
 /** enter salary
  * 3 col table
  * Radio button for paycheck frequency
@@ -61,7 +55,7 @@ function Paycheck() {
   // Form States
   const [salary, changeSalary] = React.useState(50000);
   const [paySchedule, changePaySchedule] = React.useState(PAY_SCHEDULE.BIWEEKLY);
-  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE); 
+  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE);
   const [usState, changeUSState] = React.useState(US_STATES_MAP["None"].abbreviation);
 
   // Pre Tax
@@ -205,11 +199,7 @@ function Paycheck() {
         <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
           <Form.Label> Paycheck Frequency </Form.Label>
           <br />
-          <OverlayTrigger
-            placement="bottom"
-            delay={{ show: 150, hide: 200 }}
-            overlay={renderTooltip({ text: "Every two weeks" })}
-          >
+          <TooltipOnHover text="Every two weeks" nest={
             <Form.Check
               inline
               defaultChecked
@@ -218,13 +208,8 @@ function Paycheck() {
               name="paycheck_schedule"
               type="radio"
               id="paycheck-schedule-radio-1"
-            />
-          </OverlayTrigger>
-          <OverlayTrigger
-            placement="bottom"
-            delay={{ show: 150, hide: 200 }}
-            overlay={renderTooltip({ text: "Twice a month" })}
-          >
+            />} />
+          <TooltipOnHover text="Twice a month" nest={
             <Form.Check
               inline
               label={PAY_SCHEDULE.BIMONTHLY}
@@ -232,8 +217,7 @@ function Paycheck() {
               name="paycheck_schedule"
               type="radio"
               id="paycheck-schedule-radio-2"
-            />
-          </OverlayTrigger>
+            />} />
           <Form.Check
             inline
             label={PAY_SCHEDULE.MONTHLY}
@@ -275,52 +259,36 @@ function Paycheck() {
         {stateTaxInvalidAlert}
 
         <Form.Label>401k Contribution</Form.Label>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Traditional:</InputGroup.Text>
             <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        } />
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Roth:</InputGroup.Text>
             <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
+        } />
 
         <Form.Label>IRA Contribution</Form.Label>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Traditional:</InputGroup.Text>
             <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
-        <OverlayTrigger
-          placement="bottom"
-          delay={{ show: 150, hide: 200 }}
-          overlay={renderTooltip({ text: "% of gross income between 0 and 90." })}
-        >
+        } />
+        <TooltipOnHover text="% of gross income between 0 and 90." nest={
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>Roth:</InputGroup.Text>
             <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)} />
             <InputGroup.Text>%</InputGroup.Text>
           </InputGroup>
-        </OverlayTrigger>
+        } />
 
         {Object.keys(customWithholdings).map((key) => (
           <div key={key}>
@@ -345,7 +313,6 @@ function Paycheck() {
             </InputGroup>
           </div>
         ))}
-
       </Form>
 
       <div className={styles.table}>
@@ -363,26 +330,26 @@ function Paycheck() {
               <td>{formatCurrency(salary)}</td>
               <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
             </tr>
-            {shouldRenderPreTaxDeductions && 
-            <>
-              <tr>
-              <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
-              </tr>
-              {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
-                <tr key={key}>
-                  <td>{key}</td>
-                  <td>{formatCurrency(preTaxTableMap[key][0])}</td>
-                  <td>{formatCurrency(preTaxTableMap[key][1])}</td>
+            {shouldRenderPreTaxDeductions &&
+              <>
+                <tr>
+                  <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
                 </tr>
-              ))}
-              <tr>
-                <td>Taxable Pay</td>
-                <td>{formatCurrency(taxableIncome_annual)}</td>
-                <td>{formatCurrency(taxableIncome_paycheck)}</td>
-              </tr>
-            </>
+                {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
+                  <tr key={key}>
+                    <td>{key}</td>
+                    <td>{formatCurrency(preTaxTableMap[key][0])}</td>
+                    <td>{formatCurrency(preTaxTableMap[key][1])}</td>
+                  </tr>
+                ))}
+                <tr>
+                  <td>Taxable Pay</td>
+                  <td>{formatCurrency(taxableIncome_annual)}</td>
+                  <td>{formatCurrency(taxableIncome_paycheck)}</td>
+                </tr>
+              </>
             }
-            
+
             <tr>
               <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
             </tr>
@@ -411,7 +378,7 @@ function Paycheck() {
               <td>placeholder</td>
               <td>placeholder</td>
             </tr>
-            {shouldRenderPostTaxDeductions && 
+            {shouldRenderPostTaxDeductions &&
               <>
                 <tr>
                   <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
