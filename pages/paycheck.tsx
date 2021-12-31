@@ -113,13 +113,14 @@ function Paycheck() {
   }
   const stateWithholding_annual = determineStateTaxesWithheld(usState, taxableIncome_annual, taxClass);
   const stateWithholding_paycheck = convertAnnualAmountToPaySchedule(stateWithholding_annual, paySchedule);
+  const stateWithholding_key = US_STATES_MAP[usState].abbreviation + " State Withholding";
 
   // used to remove tax rows in table with $0 contributions
   const taxTableMap: { [key: string]: any } = {
     "Federal Withholding": [federalWithholding_annual, federalWithholding_paycheck],
     "FICA": [ficaWithholding_annual, ficaWithholding_paycheck],
     "Medicare": [medicareWithholding_annual, medicareWithholding_paycheck],
-    "State Withholding": [stateWithholding_annual, stateWithholding_paycheck],
+    [stateWithholding_key]: [stateWithholding_annual, stateWithholding_paycheck],
   }
 
   const netPay_annual = taxableIncome_annual - federalWithholding_annual - ficaWithholding_annual - medicareWithholding_paycheck - stateWithholding_annual;
@@ -339,6 +340,7 @@ function Paycheck() {
               <th></th>
               <th>Annual</th>
               <th className={styles.specialHeaderWidth}>Paycheck - {paySchedule}</th>
+              <th></th>
             </tr>
           </thead>
           <tbody>
@@ -346,52 +348,58 @@ function Paycheck() {
               <td className={styles.thicc}>Gross Income</td>
               <td>{formatCurrency(salary)}</td>
               <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
+              <td></td>
             </tr>
             {shouldRenderPreTaxDeductions &&
               <>
                 <tr>
-                  <td colSpan={3} className={styles.thicc}>Pre-Tax Deductions</td>
+                  <td colSpan={4} className={styles.thicc}>Pre-Tax Deductions</td>
                 </tr>
                 {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
                   <tr key={key}>
                     <td>{key}</td>
                     <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
                     <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
+                    <td></td>
                   </tr>
                 ))}
                 <tr>
                   <td>Taxable Pay</td>
                   <td>{formatCurrency(taxableIncome_annual)}</td>
                   <td>{formatCurrency(taxableIncome_paycheck)}</td>
+                  <td></td>
                 </tr>
               </>
             }
 
             <tr>
-              <td colSpan={3} className={styles.thicc}>Tax Withholdings</td>
+              <td colSpan={4} className={styles.thicc}>Tax Withholdings</td>
             </tr>
             {Object.keys(taxTableMap).filter((key) => taxTableMap[key][0] != 0).map((key) => (
               <tr key={key}>
                 <td>{key}</td>
                 <td>{formatCurrency(-taxTableMap[key][0])}</td>
                 <td>{formatCurrency(-taxTableMap[key][1])}</td>
+                <td></td>
               </tr>
             ))}
             <tr>
               <td>Net Pay</td>
               <td>{formatCurrency(netPay_annual)}</td>
               <td>{formatCurrency(netPay_paycheck)}</td>
+              <td></td>
             </tr>
             {shouldRenderPostTaxDeductions &&
               <>
                 <tr>
-                  <td colSpan={3} className={styles.thicc}>Post-Tax Deductions</td>
+                  <td colSpan={4} className={styles.thicc}>Post-Tax Deductions</td>
                 </tr>
                 {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
                   <tr>
                     <td>{key}</td>
                     <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
                     <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
+                    <td></td>
                   </tr>
                 ))}
               </>
@@ -400,6 +408,7 @@ function Paycheck() {
               <td className={styles.thicc}>Take Home Pay</td>
               <td>{formatCurrency(takeHomePay_annual)}</td>
               <td>{formatCurrency(takeHomePay_paycheck)}</td>
+              <td></td>
             </tr>
           </tbody>
         </Table>
