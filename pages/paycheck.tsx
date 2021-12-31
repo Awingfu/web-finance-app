@@ -241,211 +241,213 @@ function Paycheck() {
         </p>
       </main>
 
-      <Form className={styles.paycheckForm}>
-        <Form.Label>Annual Salary</Form.Label>
-        <InputGroup className="mb-3 w-100">
-          <InputGroup.Text>$</InputGroup.Text>
-          <Form.Control type="number" value={salary} onChange={e => updateAmount(e, changeSalary)} />
-        </InputGroup>
+      <div className={styles.content}>
+        <Form className={styles.paycheckForm}>
+          <Form.Label>Annual Salary</Form.Label>
+          <InputGroup className="mb-3 w-100">
+            <InputGroup.Text>$</InputGroup.Text>
+            <Form.Control type="number" value={salary} onChange={e => updateAmount(e, changeSalary)} />
+          </InputGroup>
 
-        <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
-          <Form.Label> Paycheck Frequency </Form.Label>
-          <br />
-          <TooltipOnHover text="Every two weeks" nest={
+          <Form.Group className="mb-3" onChange={e => update(e, changePaySchedule)}>
+            <Form.Label> Paycheck Frequency </Form.Label>
+            <br />
+            <TooltipOnHover text="Every two weeks" nest={
+              <Form.Check
+                inline
+                defaultChecked
+                label={PAY_SCHEDULE.BIWEEKLY}
+                value={PAY_SCHEDULE.BIWEEKLY}
+                name="paycheck_schedule"
+                type="radio"
+                id="paycheck-schedule-radio-1"
+              />} />
+            <TooltipOnHover text="Twice a month" nest={
+              <Form.Check
+                inline
+                label={PAY_SCHEDULE.BIMONTHLY}
+                value={PAY_SCHEDULE.BIMONTHLY}
+                name="paycheck_schedule"
+                type="radio"
+                id="paycheck-schedule-radio-2"
+              />} />
             <Form.Check
               inline
+              label={PAY_SCHEDULE.MONTHLY}
+              value={PAY_SCHEDULE.MONTHLY}
+              name="paycheck_schedule"
+              type="radio"
+              id="paycheck-schedule-radio-3"
+            />
+          </Form.Group>
+
+          <Form.Group className="mb-3" onChange={e => update(e, changeTaxClass)}>
+            <Form.Label> Tax Filing Status </Form.Label>
+            <br />
+            <Form.Check
+              inline
+              label={TAX_CLASSES.SINGLE}
+              value={TAX_CLASSES.SINGLE}
               defaultChecked
-              label={PAY_SCHEDULE.BIWEEKLY}
-              value={PAY_SCHEDULE.BIWEEKLY}
-              name="paycheck_schedule"
+              name="tax_class"
               type="radio"
-              id="paycheck-schedule-radio-1"
-            />} />
-          <TooltipOnHover text="Twice a month" nest={
+              id="tax-class-radio-1"
+            />
             <Form.Check
               inline
-              label={PAY_SCHEDULE.BIMONTHLY}
-              value={PAY_SCHEDULE.BIMONTHLY}
-              name="paycheck_schedule"
+              label={TAX_CLASSES.MARRIED_FILING_JOINTLY}
+              value={TAX_CLASSES.MARRIED_FILING_JOINTLY}
+              name="tax_class"
               type="radio"
-              id="paycheck-schedule-radio-2"
-            />} />
-          <Form.Check
-            inline
-            label={PAY_SCHEDULE.MONTHLY}
-            value={PAY_SCHEDULE.MONTHLY}
-            name="paycheck_schedule"
-            type="radio"
-            id="paycheck-schedule-radio-3"
-          />
-        </Form.Group>
+              id="tax-class-radio-2"
+            />
+          </Form.Group>
 
-        <Form.Group className="mb-3" onChange={e => update(e, changeTaxClass)}>
-          <Form.Label> Tax Filing Status </Form.Label>
-          <br />
-          <Form.Check
-            inline
-            label={TAX_CLASSES.SINGLE}
-            value={TAX_CLASSES.SINGLE}
-            defaultChecked
-            name="tax_class"
-            type="radio"
-            id="tax-class-radio-1"
-          />
-          <Form.Check
-            inline
-            label={TAX_CLASSES.MARRIED_FILING_JOINTLY}
-            value={TAX_CLASSES.MARRIED_FILING_JOINTLY}
-            name="tax_class"
-            type="radio"
-            id="tax-class-radio-2"
-          />
-        </Form.Group>
-
-        <Form.Label>US State Withholding Tax</Form.Label>
-        <DropdownButton className="mb-3" id="us-state-dropdown-button" title={US_STATES_MAP[usState].name} variant="secondary" onSelect={e => updateWithEventKey(e, changeUSState)}>
-          {Object.keys(US_STATES_MAP).map((key) => (
-            <Dropdown.Item eventKey={key} key={key}>{key}</Dropdown.Item>
-          ))}
-        </DropdownButton>
-        {stateTaxInvalidAlert}
-
-        <Form.Label>401k Contribution</Form.Label>
-        <TooltipOnHover text="% of gross income between 0 and 90." nest={
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>Traditional:</InputGroup.Text>
-            <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)} />
-            <InputGroup.Text>%</InputGroup.Text>
-          </InputGroup>
-        } />
-        <TooltipOnHover text="% of gross income between 0 and 90." nest={
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>Roth:</InputGroup.Text>
-            <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)} />
-            <InputGroup.Text>%</InputGroup.Text>
-          </InputGroup>
-        } />
-
-        <Form.Label>IRA Contribution</Form.Label>
-        <TooltipOnHover text="% of gross income between 0 and 90." nest={
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>Traditional:</InputGroup.Text>
-            <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)} />
-            <InputGroup.Text>%</InputGroup.Text>
-          </InputGroup>
-        } />
-        <TooltipOnHover text="% of gross income between 0 and 90." nest={
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>Roth:</InputGroup.Text>
-            <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)} />
-            <InputGroup.Text>%</InputGroup.Text>
-          </InputGroup>
-        } />
-
-        {Object.keys(customWithholdings).map((key) => (
-          <div key={key}>
-            <Form.Label>{key} Contribution</Form.Label>
-            <InputGroup className="mb-3 w-100">
-              <InputGroup.Text>$</InputGroup.Text>
-              <Form.Control type="number" value={customWithholdings[key][0]} onChange={e => updateAmount(e, customWithholdings[key][1])} />
-              <InputGroup.Text>per</InputGroup.Text>
-              <DropdownButton
-                variant="secondary"
-                title={customWithholdings[key][2]}
-                id={key.replace(' ', '-') + "-frequency-dropdown"}
-                onSelect={e => updateWithEventKey(e, customWithholdings[key][3])}
-              >
-                {ALL_FREQUENCIES.map((freq) => {
-                  let frequencyValue = FREQUENCIES[freq as keyof typeof FREQUENCIES];
-                  return (
-                    <Dropdown.Item eventKey={frequencyValue} key={frequencyValue}>{frequencyValue}</Dropdown.Item>
-                  )
-                })}
-              </DropdownButton>
-            </InputGroup>
-          </div>
-        ))}
-      </Form>
-
-      <div className={styles.table}>
-        <Table hover responsive size="sm" className='mb-3'>
-          <thead>
-            <tr>
-              <th></th>
-              <th>Annual</th>
-              <th className={styles.specialHeaderWidth}>Paycheck - {paySchedule}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td className={styles.thicc}>Gross Income</td>
-              <td>{formatCurrency(salary)}</td>
-              <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
-            </tr>
-            {shouldRenderPreTaxDeductions &&
-              <>
-                <tr>
-                  <td colSpan={4} className={styles.thicc}>Pre-Tax Deductions</td>
-                </tr>
-                {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
-                  <tr key={key}>
-                    <td>{key}</td>
-                    <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
-                    <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
-                  </tr>
-                ))}
-                <tr>
-                  <td>Taxable Pay</td>
-                  <td>{formatCurrency(taxableIncome_annual)}</td>
-                  <td>{formatCurrency(taxableIncome_paycheck)}</td>
-                </tr>
-              </>
-            }
-
-            <tr>
-              <td colSpan={4} className={styles.thicc}>Tax Withholdings</td>
-            </tr>
-            {Object.keys(taxTableMap).filter((key) => taxTableMap[key][0] != 0).map((key) => (
-              <tr key={key}>
-                <td>{key}</td>
-                <td>{formatCurrency(-taxTableMap[key][0])}</td>
-                <td>{formatCurrency(-taxTableMap[key][1])}</td>
-              </tr>
+          <Form.Label>US State Withholding Tax</Form.Label>
+          <DropdownButton className="mb-3" id="us-state-dropdown-button" title={US_STATES_MAP[usState].name} variant="secondary" onSelect={e => updateWithEventKey(e, changeUSState)}>
+            {Object.keys(US_STATES_MAP).map((key) => (
+              <Dropdown.Item eventKey={key} key={key}>{key}</Dropdown.Item>
             ))}
-            <tr>
-              <td>Net Pay</td>
-              <td>{formatCurrency(netPay_annual)}</td>
-              <td>{formatCurrency(netPay_paycheck)}</td>
-            </tr>
-            {shouldRenderPostTaxDeductions &&
-              <>
-                <tr>
-                  <td colSpan={4} className={styles.thicc}>Post-Tax Deductions</td>
-                </tr>
-                {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
-                  <tr>
-                    <td>{key}</td>
-                    <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
-                    <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
-                  </tr>
-                ))}
-              </>
-            }
-            <tr>
-              <td className={styles.thicc}>Take Home Pay</td>
-              <td>{formatCurrency(takeHomePay_annual)}</td>
-              <td>{formatCurrency(takeHomePay_paycheck)}</td>
-            </tr>
-            {isFICAMaxed && 
+          </DropdownButton>
+          {stateTaxInvalidAlert}
+
+          <Form.Label>401k Contribution</Form.Label>
+          <TooltipOnHover text="% of gross income between 0 and 90." nest={
+            <InputGroup className="mb-3 w-100">
+              <InputGroup.Text>Traditional:</InputGroup.Text>
+              <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)} />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+          } />
+          <TooltipOnHover text="% of gross income between 0 and 90." nest={
+            <InputGroup className="mb-3 w-100">
+              <InputGroup.Text>Roth:</InputGroup.Text>
+              <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)} />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+          } />
+
+          <Form.Label>IRA Contribution</Form.Label>
+          <TooltipOnHover text="% of gross income between 0 and 90." nest={
+            <InputGroup className="mb-3 w-100">
+              <InputGroup.Text>Traditional:</InputGroup.Text>
+              <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)} />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+          } />
+          <TooltipOnHover text="% of gross income between 0 and 90." nest={
+            <InputGroup className="mb-3 w-100">
+              <InputGroup.Text>Roth:</InputGroup.Text>
+              <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)} />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+          } />
+
+          {Object.keys(customWithholdings).map((key) => (
+            <div key={key}>
+              <Form.Label>{key} Contribution</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control type="number" value={customWithholdings[key][0]} onChange={e => updateAmount(e, customWithholdings[key][1])} />
+                <InputGroup.Text>per</InputGroup.Text>
+                <DropdownButton
+                  variant="secondary"
+                  title={customWithholdings[key][2]}
+                  id={key.replace(' ', '-') + "-frequency-dropdown"}
+                  onSelect={e => updateWithEventKey(e, customWithholdings[key][3])}
+                >
+                  {ALL_FREQUENCIES.map((freq) => {
+                    let frequencyValue = FREQUENCIES[freq as keyof typeof FREQUENCIES];
+                    return (
+                      <Dropdown.Item eventKey={frequencyValue} key={frequencyValue}>{frequencyValue}</Dropdown.Item>
+                    )
+                  })}
+                </DropdownButton>
+              </InputGroup>
+            </div>
+          ))}
+        </Form>
+
+        <div className={styles.table}>
+          <Table hover responsive size="sm" className='mb-3'>
+            <thead>
               <tr>
-                <td>Take Home Pay after maxing FICA{ficaMaxedIcon}</td>
-                <td></td>
-                <td>{formatCurrency(takeHomePay_paycheck + ficaWithholding_paycheck)}</td>
+                <th></th>
+                <th>Annual</th>
+                <th>Paycheck - {paySchedule}</th>
               </tr>
-            }
-          </tbody>
-        </Table>
-        {ficaMaxedAlertTableFooter}
+            </thead>
+            <tbody>
+              <tr>
+                <td className={styles.thicc}>Gross Income</td>
+                <td>{formatCurrency(salary)}</td>
+                <td>{formatCurrency(convertAnnualAmountToPaySchedule(salary, paySchedule))}</td>
+              </tr>
+              {shouldRenderPreTaxDeductions &&
+                <>
+                  <tr>
+                    <td colSpan={4} className={styles.thicc}>Pre-Tax Deductions</td>
+                  </tr>
+                  {Object.keys(preTaxTableMap).filter((key) => preTaxTableMap[key][0] != 0).map((key) => (
+                    <tr key={key}>
+                      <td>{key}</td>
+                      <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
+                      <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <td>Taxable Pay</td>
+                    <td>{formatCurrency(taxableIncome_annual)}</td>
+                    <td>{formatCurrency(taxableIncome_paycheck)}</td>
+                  </tr>
+                </>
+              }
+
+              <tr>
+                <td colSpan={4} className={styles.thicc}>Tax Withholdings</td>
+              </tr>
+              {Object.keys(taxTableMap).filter((key) => taxTableMap[key][0] != 0).map((key) => (
+                <tr key={key}>
+                  <td>{key}</td>
+                  <td>{formatCurrency(-taxTableMap[key][0])}</td>
+                  <td>{formatCurrency(-taxTableMap[key][1])}</td>
+                </tr>
+              ))}
+              <tr>
+                <td>Net Pay</td>
+                <td>{formatCurrency(netPay_annual)}</td>
+                <td>{formatCurrency(netPay_paycheck)}</td>
+              </tr>
+              {shouldRenderPostTaxDeductions &&
+                <>
+                  <tr>
+                    <td colSpan={4} className={styles.thicc}>Post-Tax Deductions</td>
+                  </tr>
+                  {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
+                    <tr>
+                      <td>{key}</td>
+                      <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
+                      <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
+                    </tr>
+                  ))}
+                </>
+              }
+              <tr>
+                <td className={styles.thicc}>Take Home Pay</td>
+                <td>{formatCurrency(takeHomePay_annual)}</td>
+                <td>{formatCurrency(takeHomePay_paycheck)}</td>
+              </tr>
+              {isFICAMaxed && 
+                <tr>
+                  <td>Take Home Pay after maxing FICA{ficaMaxedIcon}</td>
+                  <td></td>
+                  <td>{formatCurrency(takeHomePay_paycheck + ficaWithholding_paycheck)}</td>
+                </tr>
+              }
+            </tbody>
+          </Table>
+          {ficaMaxedAlertTableFooter}
+        </div>
       </div>
       <Footer />
     </div>
