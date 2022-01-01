@@ -20,6 +20,25 @@ $desktop: 1200px;
     font-weight: bold;
 }
 
+.width48 {
+    width: 48%;
+}
+
+.width250px {
+    width: 250px;
+}
+
+.specialTableHeaderWidth {
+    min-width: 200px;
+}
+
+.inlineChildren {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
 .paycheckForm {
 
     @media screen and (min-width: $desktop) {

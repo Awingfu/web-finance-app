@@ -1,6 +1,6 @@
 // 2022
 // Source: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf page 11 W4 after 2020
-// This file contains Federal withholding, FICA withholding and Medicare withholding
+// This file contains Federal withholding, SocialSecurity withholding and Medicare withholding
 import { TAX_CLASSES } from "./constants";
 
 interface Withholding {
@@ -11,7 +11,6 @@ interface Withholding {
 // Input withholding should be in the format [min income, max income, withholding rate]
 // Output withholding will be in the format [min income, max income, withholding rate, cumulative withholding from above rows]
 const addCumulativeColumn = (withholding_table: Withholding) => {
-    console.log(withholding_table[TAX_CLASSES.SINGLE][0].length)
     if (withholding_table[TAX_CLASSES.SINGLE][0].length > 3) return; // we must have already added the needed column
     for (let tax_class in withholding_table) {
         let last_sum = 0;
@@ -92,8 +91,8 @@ export const determineFederalTaxesWithheld = (taxableAnnualIncome: number, tax_c
 };
 
 // https://www.nerdwallet.com/article/taxes/fica-tax-withholding
-// This is done individually so tax class doesn't matter. AKA Social Security withholding
-const raw_fica_withholding: Withholding =
+// This is done individually so tax class doesn't matter.
+const raw_social_security_withholding: Withholding =
 {
     [TAX_CLASSES.SINGLE]: [
         [0, 142800, 0.062],
@@ -101,26 +100,26 @@ const raw_fica_withholding: Withholding =
     ]
 };
 
-const processedFICAWithholding = (): Withholding => {
-    addCumulativeColumn(raw_fica_withholding);
-    return raw_fica_withholding
+const processedSocialSecurityWithholding = (): Withholding => {
+    addCumulativeColumn(raw_social_security_withholding);
+    return raw_social_security_withholding
 }
 
-export const determineFICATaxesWithheld = (taxableAnnualIncome: number): number => {
-    let withholdingBrackets = processedFICAWithholding()[TAX_CLASSES.SINGLE];
+export const determineSocialSecurityTaxesWithheld = (grossAnnualIncome: number): number => {
+    let withholdingBrackets = processedSocialSecurityWithholding()[TAX_CLASSES.SINGLE];
     for (let row = 0; row < withholdingBrackets.length; row++) {
         // if we're at the last bracket or the max at the current bracket is higher than income
-        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > grossAnnualIncome) {
             // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
-            return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+            return withholdingBrackets[row][3] + (grossAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
         }
     }
-    console.log("Unreachable code reached, returning 0 for FICA withholding.")
+    console.log("Unreachable code reached, returning 0 for SS withholding.")
     return 0;
 };
 
-export const maxFICAContribution = processedFICAWithholding()[TAX_CLASSES.SINGLE][1][3];
-export const getFICAtax = raw_fica_withholding[TAX_CLASSES.SINGLE][0][2];
+export const maxSocialSecurityContribution = processedSocialSecurityWithholding()[TAX_CLASSES.SINGLE][1][3];
+export const getSocialSecuritytax = raw_social_security_withholding[TAX_CLASSES.SINGLE][0][2];
 
 // Source https://www.irs.gov/taxtopics/tc560
 const raw_medicare_withholding: Withholding =
@@ -148,13 +147,13 @@ const processedMedicareWithholding = (): Withholding => {
     return raw_medicare_withholding;
 }
 
-export const determineMedicareTaxesWithheld = (taxableAnnualIncome: number, tax_class: TAX_CLASSES): number => {
+export const determineMedicareTaxesWithheld = (grossAnnualIncome: number, tax_class: TAX_CLASSES): number => {
     let withholdingBrackets = processedMedicareWithholding()[tax_class];
     for (let row = 0; row < withholdingBrackets.length; row++) {
         // if we're at the last bracket or the max at the current bracket is higher than income
-        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+        if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > grossAnnualIncome) {
             // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
-            return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+            return withholdingBrackets[row][3] + (grossAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
         }
     }
     console.log("Unreachable code reached, returning 0 for Medicare withholding.")
