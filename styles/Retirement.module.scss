@@ -1,0 +1,58 @@
+$medium: 1080px;
+$desktop: 1200px;
+
+.container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.main {
+    padding: 2rem 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.thicc {
+    font-weight: bold;
+}
+
+.inlineChildren {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.table {
+    margin-top: 4rem;
+
+    @media screen and (min-width: $desktop) {
+        width: 40%;
+        margin: 0 2%;
+    }
+
+    @media screen and (min-width: $medium) and (max-width: $desktop) {
+        margin-left: 20%;
+        margin-right: 20%;
+        padding: 0 100px;
+    }
+
+    @media screen and (max-width: $medium) {
+        margin-left: 100px;
+        margin-right: 100px;
+    }
+    
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    @media screen and (min-width: $desktop) {
+        flex-direction: row;
+        justify-content: space-evenly;
+    }
+}

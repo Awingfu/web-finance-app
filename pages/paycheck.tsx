@@ -52,6 +52,11 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
   }
 }
 
+// remove preceeding 0's
+const formatStateValue = (value: string | number): string => {
+  return Number(value).toString();
+}
+
 /** 
  * 
  * Next goals:
@@ -179,6 +184,11 @@ function Paycheck() {
   const rIRA_annual = calculateContributionFromPercentage(totalCompensation_annual, rIRAContribution);
   const rIRA_paycheck = convertAnnualAmountToPaySchedule(rIRA_annual, paySchedule);
 
+  // stock purchase plans which are usually percentages and after tax
+  const [sppContribution, changeSPPContribution] = React.useState(0);
+  const stockPurchasePlan_annual = calculateContributionFromPercentage(totalCompensation_annual, sppContribution);
+  const stockPurchasePlan_paycheck = convertAnnualAmountToPaySchedule(stockPurchasePlan_annual, paySchedule);
+
   const [otherPostTaxContribution, changeOtherPostTaxContribution] = React.useState(0);
   const [otherPostTaxContributionFrequency, changeOtherPostTaxContributionFrequency] = React.useState(FREQUENCIES.PAYCHECK);
   const otherPostTax_annual = calculateAnnualFromAmountAndFrequency(otherPostTaxContribution, otherPostTaxContributionFrequency, paySchedule);
@@ -188,6 +198,7 @@ function Paycheck() {
   const postTaxTableMap: { [key: string]: any } = {
     "Roth 401k": [r401k_annual, r401k_paycheck],
     "Roth IRA": [rIRA_annual, rIRA_paycheck],
+    "Stock Purchase Plan": [stockPurchasePlan_annual, stockPurchasePlan_paycheck],
     "Other Post-Tax": [otherPostTax_annual, otherPostTax_paycheck],
   }
 
@@ -243,13 +254,8 @@ function Paycheck() {
       <Header titleName='Paycheck Calculator' />
 
       <main className={styles.main}>
-        <h1 className={styles.title}>
-          Paycheck Calculator
-        </h1>
-
-        <p className={styles.description}>
-          Here we will estimate your take home pay (for 2022)!
-        </p>
+        <h1>Paycheck Calculator</h1>
+        <p>Here we will estimate your take home pay (for 2022)!</p>
       </main>
 
       <div className={styles.content}>
@@ -257,7 +263,7 @@ function Paycheck() {
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control type="number" value={Number(salary).toString()} onChange={e => updateAmount(e, changeSalary)} />
+            <Form.Control type="number" value={formatStateValue(salary)} onChange={e => updateAmount(e, changeSalary)} />
           </InputGroup>
 
           <Form.Group className="mb-3">
@@ -265,7 +271,7 @@ function Paycheck() {
             <div className={styles.inlineChildren}>
               <InputGroup className={styles.width48}>
                 <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control type="number" value={Number(bonus).toString()} onChange={e => updateAmount(e, changeBonus)} />
+                <Form.Control type="number" value={formatStateValue(bonus)} onChange={e => updateAmount(e, changeBonus)} />
               </InputGroup>
               <TooltipOnHover text="Check if bonus is eligible for 401k and other contributions. If unchecked, bonus will be added at Taxable Income step." nest={
                 <Form.Check className={styles.width250px} type="checkbox" onChange={() => changeBonusEligible(!bonusEligible)} label="Eligible For Contributions" checked={bonusEligible} />
@@ -341,14 +347,14 @@ function Paycheck() {
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.width48}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
-                  <Form.Control type="number" value={t401kContribution} onChange={e => updateContribution(e, changeT401kContribution)} />
+                  <Form.Control type="number" value={formatStateValue(t401kContribution)} onChange={e => updateContribution(e, changeT401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.width48}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
-                  <Form.Control type="number" value={r401kContribution} onChange={e => updateContribution(e, changeR401kContribution)} />
+                  <Form.Control type="number" value={formatStateValue(r401kContribution)} onChange={e => updateContribution(e, changeR401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
@@ -361,26 +367,35 @@ function Paycheck() {
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.width48}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
-                  <Form.Control type="number" value={tIRAContribution} onChange={e => updateContribution(e, changeTIRAContribution)} />
+                  <Form.Control type="number" value={formatStateValue(tIRAContribution)} onChange={e => updateContribution(e, changeTIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.width48}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
-                  <Form.Control type="number" value={rIRAContribution} onChange={e => updateContribution(e, changeRIRAContribution)} />
+                  <Form.Control type="number" value={formatStateValue(rIRAContribution)} onChange={e => updateContribution(e, changeRIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
             </div>
           </Form.Group>
 
+          <Form.Label>Stock Purchase Plan Contribution</Form.Label>
+          <TooltipOnHover text="% of gross income between 0 and 90." nest={
+            <InputGroup className='mb-3 w-100'>
+              <InputGroup.Text>$</InputGroup.Text>
+              <Form.Control type="number" value={formatStateValue(sppContribution)} onChange={e => updateContribution(e, changeSPPContribution)} />
+              <InputGroup.Text>%</InputGroup.Text>
+            </InputGroup>
+          } />
+
           {Object.keys(customWithholdings).map((key) => (
             <div key={key}>
               <Form.Label>{key} Contribution</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control type="number" value={Number(customWithholdings[key][0]).toString()} onChange={e => updateAmount(e, customWithholdings[key][1])} />
+                <Form.Control type="number" value={formatStateValue(customWithholdings[key][0])} onChange={e => updateAmount(e, customWithholdings[key][1])} />
                 <InputGroup.Text>per</InputGroup.Text>
                 <DropdownButton
                   variant="secondary"

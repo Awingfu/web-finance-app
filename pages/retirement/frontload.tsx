@@ -1,7 +1,6 @@
 import type { NextPage } from 'next';
 import { Header, Footer } from '../../src/components';
-// TODO change styles
-import styles from '../../styles/Home.module.scss'
+import styles from '../../styles/Retirement.module.scss'
 
 /**
  * Goals
@@ -13,16 +12,12 @@ const Frontload: NextPage = () => {
     return (
       <div className={styles.container}>
         <Header titleName='Frontload Calculator' />
-  
+
         <main className={styles.main}>
-          <h1 className={styles.title}>
-            Frontload Calculator
-          </h1>
-  
-          <p className={styles.description}>
-            Here we will try to optimize maxing your 401k
-          </p>
+          <h1>Frontload Calculator</h1>
+          <p>Here we will try to optimize maxing your 401k Frontloading</p>
         </main>
+  
 
   
         <Footer />

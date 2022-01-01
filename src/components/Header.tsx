@@ -14,7 +14,7 @@ const Header = (props : HeaderProps) => {
     return (
         <React.Fragment>
             <Head>
-                <title>Lui Finance App {titleSuffix} </title>
+                <title> Finance App {titleSuffix} </title>
                 <meta name="description" content={metadataContent} />
                 <link rel="icon" href={`${prefix}/favicon.ico`} />
             </Head>
