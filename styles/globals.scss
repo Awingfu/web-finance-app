@@ -37,11 +37,8 @@ footer {
   align-items: center;
 }
 
-footer a {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-grow: 1;
+footer p {
+  margin: 0;
 }
 
 $primary: #06A77D;
@@ -54,6 +51,9 @@ $theme-colors: (
   danger: $danger
 );
 
-$medium: 1024px;
-
 @import "bootstrap";
+
+.form-check-input:checked {
+  border-color: $secondary;
+  background-color: $secondary;
+}
