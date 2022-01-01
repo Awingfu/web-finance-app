@@ -14,6 +14,8 @@ interface US_STATE_TAX_UNKNOWN extends US_STATE_BASIC {
     brackets?: never
     marriedBrackets?: never
     flatTax?: never
+    standardDeduction?: never
+    marriedStandardDeduction?: never
 };
 
 export function instanceOfTaxUnknown(object: any): object is US_STATE_TAX_UNKNOWN {
@@ -22,6 +24,8 @@ export function instanceOfTaxUnknown(object: any): object is US_STATE_TAX_UNKNOW
 
 interface US_STATE_TAX_BRACKETS extends US_STATE_BASIC {
     flatTax?: never
+    standardDeduction?: number
+    marriedStandardDeduction?: number
     brackets : number[][] // format of bracket [min, max, tax bracket]
     marriedBrackets? : number[][]
 };
@@ -32,6 +36,8 @@ export function instanceOfFlatTax(object: any): object is US_STATE_TAX_FLAT {
 
 interface US_STATE_TAX_FLAT extends US_STATE_BASIC {
     flatTax: number // should be a decimal fraction
+    standardDeduction?: number
+    marriedStandardDeduction?: number
     brackets? : never,
     marriedBrackets?: never
 };
@@ -68,13 +74,20 @@ const addCumulativeColumn = (withholding_table : number[][]) => {
 // main function to export
 export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAnnualIncome: number, taxClass: TAX_CLASSES): number => {
     let us_state_object = US_STATES_MAP[stateAbbreviation];
+    let income = taxableAnnualIncome;
+    if (us_state_object.marriedStandardDeduction && taxClass === TAX_CLASSES.MARRIED_FILING_JOINTLY) {
+        income = taxableAnnualIncome - us_state_object.marriedStandardDeduction;
+    } else if (us_state_object.standardDeduction) {
+        income = taxableAnnualIncome - us_state_object.standardDeduction;
+    }
+
     if (instanceOfTaxUnknown(us_state_object)) {
         console.log(us_state_object.name + " State's taxes are not defined, returning 0.");
         return 0;
     }
     if (instanceOfFlatTax(us_state_object)) {
         console.log(us_state_object.name + " State has a flat tax of " + us_state_object.flatTax + "%");
-        return us_state_object.flatTax * taxableAnnualIncome;
+        return us_state_object.flatTax * income;
     }
     if (instanceOfTaxBrackets(us_state_object)) {
         let withholdingBrackets = us_state_object.brackets;
@@ -84,10 +97,10 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
         addCumulativeColumn(withholdingBrackets) // add 4th column which is cumulative of taxes from rows above
         for (let row = 0; row < withholdingBrackets.length; row++) {
             // if we're at the last bracket or the max at the current bracket is higher than income
-            if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > taxableAnnualIncome) {
+            if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > income) {
                 // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
                 console.log("You're at the " + withholdingBrackets[row][2]*100 +"% tax bracket for " + us_state_object.name + " State");
-                return withholdingBrackets[row][3] + (taxableAnnualIncome - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
+                return withholdingBrackets[row][3] + (income - withholdingBrackets[row][0]) * withholdingBrackets[row][2];
             }
         }
     }
@@ -109,7 +122,9 @@ export const US_STATES_MAP : US_STATE_MAP = {
         name: 'California', 
         abbreviation: 'CA',
         // 2021 withholding source: https://nfc.usda.gov/Publications/HR_Payroll/Taxes/Bulletins/2021/TAXES-21-15.htm
-        // we're ignoring standard deductions, itemized deductions, credits, allowances, and low income exemptions...
+        // we're ignoring itemized deductions, credits, allowances, and low income exemptions...
+        standardDeduction: 4601,
+        marriedStandardDeduction: 4601,
         brackets: [
             [0, 8932, 0.011],
             [8932, 21175, 0.022],
@@ -265,6 +280,9 @@ export const US_STATES_MAP : US_STATE_MAP = {
         name: 'Virginia', 
         abbreviation: 'VA', 
         // 2021 source https://www.nerdwallet.com/article/taxes/virginia-state-tax
+        // ignoring exemptions
+        standardDeduction: 4500,
+        marriedStandardDeduction: 9000,
         brackets: [
             [0, 3000, 0.02],
             [3000, 5000, 0.03],
