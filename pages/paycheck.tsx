@@ -135,14 +135,15 @@ function Paycheck() {
   const federalWithholding_annual = determineFederalTaxesWithheld(taxableIncome_annual, taxClass)
   const federalWithholding_paycheck = convertAnnualAmountToPaySchedule(federalWithholding_annual, paySchedule);
 
-  const grossTaxableIncome = salary + bonus;
-  const socialSecurityWithholding_annual = determineSocialSecurityTaxesWithheld(grossTaxableIncome);
+  const grossTaxableIncome_annual = salary + bonus;
+  const grossTaxableIncome_paycheck = convertAnnualAmountToPaySchedule(grossTaxableIncome_annual, paySchedule);
+  const socialSecurityWithholding_annual = determineSocialSecurityTaxesWithheld(grossTaxableIncome_annual);
   let socialSecurityWithholding_paycheck = convertAnnualAmountToPaySchedule(socialSecurityWithholding_annual, paySchedule);
   const socialSecurityMaxedIcon = '\u2020'; // dagger
   const socialSecurityMaxedNote = socialSecurityMaxedIcon +
     " You will pay the maximum Social Security tax of " + formatCurrency(maxSocialSecurityContribution) +
     " this year. Once you have withheld the maximum, which is after withholding for " +
-    Math.ceil(maxSocialSecurityContribution / (taxableIncome_paycheck * getSocialSecuritytax)) +
+    Math.ceil(maxSocialSecurityContribution / (grossTaxableIncome_paycheck * getSocialSecuritytax)) +
     " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
   let socialSecurityMaxedAlertTableFooter = <></>;
   let socialSecurity_key = "Social Security"
@@ -150,10 +151,10 @@ function Paycheck() {
   if (isSocialSecurityMaxed) {
     socialSecurityMaxedAlertTableFooter = <Alert className='mb-3' variant="secondary">{socialSecurityMaxedNote}</Alert>;
     socialSecurity_key = "Social Security" + socialSecurityMaxedIcon;
-    socialSecurityWithholding_paycheck = Math.min(taxableIncome_paycheck * getSocialSecuritytax, maxSocialSecurityContribution);
+    socialSecurityWithholding_paycheck = Math.min(grossTaxableIncome_paycheck * getSocialSecuritytax, maxSocialSecurityContribution);
   }
 
-  const medicareWithholding_annual = determineMedicareTaxesWithheld(grossTaxableIncome, taxClass);
+  const medicareWithholding_annual = determineMedicareTaxesWithheld(grossTaxableIncome_annual, taxClass);
   const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(medicareWithholding_annual, paySchedule);
 
   let stateTaxInvalidAlert = <></>;
