@@ -172,13 +172,18 @@ function Paycheck() {
     [stateWithholding_key]: [stateWithholding_annual, stateWithholding_paycheck],
   }
 
-  const netPay_annual = taxableIncome_annual - federalWithholding_annual - socialSecurityWithholding_annual - medicareWithholding_paycheck - stateWithholding_annual;
+  const netPay_annual = taxableIncome_annual - federalWithholding_annual - socialSecurityWithholding_annual - medicareWithholding_annual - stateWithholding_annual;
   const netPay_paycheck = convertAnnualAmountToPaySchedule(netPay_annual, paySchedule);
 
   // Post Tax, uses totalCompensation_annual for calculations instead of taxableIncome_annual
   const [r401kContribution, changeR401kContribution] = React.useState(0);
   const r401k_annual = calculateContributionFromPercentage(totalCompensation_annual, r401kContribution);
   const r401k_paycheck = convertAnnualAmountToPaySchedule(r401k_annual, paySchedule);
+
+  // After tax 401k
+  const [at401kContribution, changeAT401kContribution] = React.useState(0);
+  const at401k_annual = calculateContributionFromPercentage(totalCompensation_annual, at401kContribution);
+  const at401k_paycheck = convertAnnualAmountToPaySchedule(at401k_annual, paySchedule); 
 
   const [rIRAContribution, changeRIRAContribution] = React.useState(0);
   const rIRA_annual = calculateContributionFromPercentage(totalCompensation_annual, rIRAContribution);
@@ -197,6 +202,7 @@ function Paycheck() {
   // used to remove post tax rows in table with $0 contributions
   const postTaxTableMap: { [key: string]: any } = {
     "Roth 401k": [r401k_annual, r401k_paycheck],
+    "After Tax 401k": [at401k_annual, at401k_paycheck],
     "Roth IRA": [rIRA_annual, rIRA_paycheck],
     "Stock Purchase Plan": [stockPurchasePlan_annual, stockPurchasePlan_paycheck],
     "Other Post-Tax": [otherPostTax_annual, otherPostTax_paycheck],
@@ -210,7 +216,7 @@ function Paycheck() {
   const takeHomePay_annual = netPay_annual - sumOfPostTaxContributions_annual;
   const takeHomePay_paycheck = convertAnnualAmountToPaySchedule(takeHomePay_annual, paySchedule);
 
-  // helper map for forms with custom frequencies
+  // helper map for form fields with custom frequencies
   const customWithholdings: { [key: string]: any } = {
     "Medical Insurance": [medicalContribution, changeMedicalContribution, medicalContributionFrequency, changeMedicalContributionFrequency],
     "Commuter Benefits": [commuterContribution, changeCommuterContribution, commuterContributionFrequency, changeCommuterContributionFrequency],
@@ -267,7 +273,7 @@ function Paycheck() {
           </InputGroup>
 
           <Form.Group className="mb-3">
-            <Form.Label>Annual Bonus</Form.Label>
+            <Form.Label className={styles.inlineGroupFormLabel}>Annual Bonus</Form.Label>
             <div className={styles.inlineGroup}>
               <InputGroup className={styles.inlineChildren}>
                 <InputGroup.Text>$</InputGroup.Text>
@@ -344,7 +350,7 @@ function Paycheck() {
           {stateTaxInvalidAlert}
 
           <Form.Group className="mb-3">
-            <Form.Label>401k Contribution</Form.Label>
+            <Form.Label className={styles.inlineGroupFormLabel}>401k Contribution</Form.Label>
             <div className={styles.inlineGroup}>
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>
@@ -360,11 +366,18 @@ function Paycheck() {
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
+              <TooltipOnHover text="% of gross income between 0 and 90. This is the Mega Backdoor Roth." nest={
+                <InputGroup className={styles.inlineChildren}>
+                  <InputGroup.Text>After Tax:</InputGroup.Text>
+                  <Form.Control type="number" value={formatStateValue(at401kContribution)} onChange={e => updateContribution(e, changeAT401kContribution)} />
+                  <InputGroup.Text>%</InputGroup.Text>
+                </InputGroup>
+              } />
             </div>
           </Form.Group>
 
           <Form.Group className="mb-3">
-            <Form.Label>IRA Contribution</Form.Label>
+            <Form.Label className={styles.inlineGroupFormLabel}>IRA Contribution</Form.Label>
             <div className={styles.inlineGroup}>
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>

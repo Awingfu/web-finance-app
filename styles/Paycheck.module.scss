@@ -30,6 +30,10 @@ $desktop: 1200px;
     min-width: 200px;
 }
 
+.inlineGroupFormLabel {
+    margin: 0;
+}
+
 .inlineGroup {
     display: flex;
     
@@ -37,7 +41,7 @@ $desktop: 1200px;
         flex-direction: row;        
         justify-content: space-between;
         align-items: center;
-        overflow: auto;
+        flex-wrap: wrap;
     }
     
     @media screen and (max-width: $extraSmall) {
@@ -47,6 +51,8 @@ $desktop: 1200px;
 
 // assuming only 2 inline children per group
 .inlineChildren {
+    margin-top: 0.5rem;
+
     @media screen and (min-width: $extraSmall) {
         width: 48%;
     }
