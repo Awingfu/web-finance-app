@@ -175,7 +175,22 @@ export const US_STATES_MAP : US_STATE_MAP = {
     },
     'CO': { name: 'Colorado', abbreviation: 'CO', flatTax: 0.0455},
     'CT': { name: 'Connecticut', abbreviation: 'CT' },
-    'DE': { name: 'Delaware', abbreviation: 'DE' },
+    'DE': { 
+        name: 'Delaware', 
+        abbreviation: 'DE',
+        standardDeduction: 3250,
+        marriedStandardDeduction: 6500,
+        // 2020 data excluding exemptions: https://nfc.usda.gov/Publications/HR_Payroll/Taxes/Bulletins/2020/TAXES-20-29.htm
+        brackets: [
+            [0, 2000, 0],
+            [2000, 5000, 0.022],
+            [5000, 10000, 0.039],
+            [10000, 20000, 0.048],
+            [20000, 25000, 0.052],
+            [25000, 60000, 0.0555],
+            [60000, Infinity, 0.066],
+        ]
+     },
     'DC': { 
         name: 'District Of Columbia', 
         abbreviation: 'DC',

@@ -268,14 +268,16 @@ function Paycheck() {
 
           <Form.Group className="mb-3">
             <Form.Label>Annual Bonus</Form.Label>
-            <div className={styles.inlineChildren}>
-              <InputGroup className={styles.width48}>
+            <div className={styles.inlineGroup}>
+              <InputGroup className={styles.inlineChildren}>
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control type="number" value={formatStateValue(bonus)} onChange={e => updateAmount(e, changeBonus)} />
               </InputGroup>
-              <TooltipOnHover text="Check if bonus is eligible for 401k and other contributions. If unchecked, bonus will be added at Taxable Income step." nest={
-                <Form.Check className={styles.width250px} type="checkbox" onChange={() => changeBonusEligible(!bonusEligible)} label="Eligible For Contributions" checked={bonusEligible} />
-              } />
+              <InputGroup className={styles.inlineChildren}>
+                <TooltipOnHover text="Check if bonus is eligible for 401k and other contributions. If unchecked, bonus will be added at Taxable Income step." nest={
+                  <Form.Check className={styles.width250px} type="checkbox" onChange={() => changeBonusEligible(!bonusEligible)} label="Eligible For Contributions" checked={bonusEligible} />
+                } />
+              </InputGroup>
             </div>
           </Form.Group>
 
@@ -343,16 +345,16 @@ function Paycheck() {
 
           <Form.Group className="mb-3">
             <Form.Label>401k Contribution</Form.Label>
-            <div className={styles.inlineChildren}>
+            <div className={styles.inlineGroup}>
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
-                <InputGroup className={styles.width48}>
+                <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
                   <Form.Control type="number" value={formatStateValue(t401kContribution)} onChange={e => updateContribution(e, changeT401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
-                <InputGroup className={styles.width48}>
+                <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
                   <Form.Control type="number" value={formatStateValue(r401kContribution)} onChange={e => updateContribution(e, changeR401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
@@ -363,16 +365,16 @@ function Paycheck() {
 
           <Form.Group className="mb-3">
             <Form.Label>IRA Contribution</Form.Label>
-            <div className={styles.inlineChildren}>
+            <div className={styles.inlineGroup}>
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
-                <InputGroup className={styles.width48}>
+                <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
                   <Form.Control type="number" value={formatStateValue(tIRAContribution)} onChange={e => updateContribution(e, changeTIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
-                <InputGroup className={styles.width48}>
+                <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
                   <Form.Control type="number" value={formatStateValue(rIRAContribution)} onChange={e => updateContribution(e, changeRIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
