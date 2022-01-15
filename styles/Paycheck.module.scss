@@ -1,3 +1,5 @@
+$extraSmall: 480px;
+$small: 720px;
 $medium: 1080px;
 $desktop: 1200px;
 
@@ -20,10 +22,6 @@ $desktop: 1200px;
     font-weight: bold;
 }
 
-.width48 {
-    width: 48%;
-}
-
 .width250px {
     width: 250px;
 }
@@ -32,11 +30,30 @@ $desktop: 1200px;
     min-width: 200px;
 }
 
-.inlineChildren {
+.inlineGroup {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    
+    @media screen and (min-width: $extraSmall) {
+        flex-direction: row;        
+        justify-content: space-between;
+        align-items: center;
+        overflow: auto;
+    }
+    
+    @media screen and (max-width: $extraSmall) {
+        flex-direction: column;
+    }
+}
+
+// assuming only 2 inline children per group
+.inlineChildren {
+    @media screen and (min-width: $extraSmall) {
+        width: 48%;
+    }
+
+    @media screen and (max-width: $extraSmall) {
+        width: 100%;
+    }
 }
 
 .paycheckForm {
@@ -51,8 +68,12 @@ $desktop: 1200px;
         padding: 0 100px;
     }
 
-    @media screen and (max-width: $medium) {
+    @media screen and (min-width: $small) and (max-width: $medium) {
         margin: 0 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin: 0 20px;
     }
     
 }
@@ -71,9 +92,14 @@ $desktop: 1200px;
         padding: 0 100px;
     }
 
-    @media screen and (max-width: $medium) {
+    @media screen and (min-width: $small) and (max-width: $medium) {
         margin-left: 100px;
         margin-right: 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin-left: 20px;
+        margin-right: 20px;
     }
     
 }
