@@ -1,3 +1,5 @@
+$extraSmall: 480px;
+$small: 720px;
 $medium: 1080px;
 $desktop: 1200px;
 
@@ -20,11 +22,66 @@ $desktop: 1200px;
     font-weight: bold;
 }
 
-.inlineChildren {
+.width250px {
+    width: 250px;
+}
+
+.specialTableHeaderWidth {
+    min-width: 200px;
+}
+
+.inlineGroupFormLabel {
+    margin: 0;
+}
+
+.inlineGroup {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    
+    @media screen and (min-width: $extraSmall) {
+        flex-direction: row;        
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    @media screen and (max-width: $extraSmall) {
+        flex-direction: column;
+    }
+}
+
+// assuming only 2 inline children per group
+.inlineChildren {
+    margin-top: 0.5rem;
+
+    @media screen and (min-width: $extraSmall) {
+        width: 48%;
+    }
+
+    @media screen and (max-width: $extraSmall) {
+        width: 100%;
+    }
+}
+
+.paycheckForm {
+
+    @media screen and (min-width: $desktop) {
+        width: 40%;
+        margin: 0 2%;
+    }
+
+    @media screen and (min-width: $medium) and (max-width: $desktop) {
+        margin: 0 20%;
+        padding: 0 100px;
+    }
+
+    @media screen and (min-width: $small) and (max-width: $medium) {
+        margin: 0 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin: 0 20px;
+    }
+    
 }
 
 .table {
@@ -41,9 +98,14 @@ $desktop: 1200px;
         padding: 0 100px;
     }
 
-    @media screen and (max-width: $medium) {
+    @media screen and (min-width: $small) and (max-width: $medium) {
         margin-left: 100px;
         margin-right: 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin-left: 20px;
+        margin-right: 20px;
     }
     
 }
@@ -55,4 +117,8 @@ $desktop: 1200px;
         flex-direction: row;
         justify-content: space-evenly;
     }
+}
+
+.red {
+    color: red;
 }
