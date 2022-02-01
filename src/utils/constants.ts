@@ -44,6 +44,24 @@ export const PAY_SCHEDULE_TO_ANNUM = {
 
 export const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
+// Types of pay schedules
+export enum MONTH_NAMES {
+    JANUARY = "January",
+    FEBRUARY = "February",
+    MARCH = "March",
+    APRIL = "April",
+    MAY = "May",
+    JUNE = "June",
+    JULY = "July",
+    AUGUST = "August",
+    SEPTEMBER = "September",
+    OCTOBER = "October",
+    NOVEMBER = "November",
+    DECEMBER = "December"
+}
+
+export const ALL_MONTH_NAMES = Object.keys(MONTH_NAMES);
+
 // Only assuming traditional 401k (which is the same for 403b, tsp, etc.)
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits
 export const _401k_maximum_contribution_individual = 20500; // 2022

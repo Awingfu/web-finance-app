@@ -1,20 +1,25 @@
 import React from "react";
 import { Dropdown, DropdownButton, Form, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
-import { US_STATES_MAP, formatCurrency } from "../../src/utils";
-import { PAY_SCHEDULE, TAX_CLASSES, ALL_FREQUENCIES, FREQUENCIES } from "../../src/utils/constants";
+import { US_STATES_MAP, formatCurrency, formatPercent, formatStateValue } from "../../src/utils";
+import { MONTH_NAMES, ALL_MONTH_NAMES } from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
-
-
-const formatStateValue = (value: string | number): string => {
-  return Number(value).toString();
-}
 
 
 /**
  * Goals
  * 1. different frontloading strategies inc company match and 401k true limit
  * 2. cost analysis with fv assumption for each strategy
+ * 
+ * MVP
+ * Input: 
+ * Salary, Bonus, Bonus Month, 401k Max, 401k max contribution
+ * 
+ * 
+ * Stretch:
+ * Input, 
+ * Ending salary (raise) and which month, company match, mega backdoor availability
+ * 
  * @returns
  */
 
@@ -23,6 +28,27 @@ function Frontload() {
   const [salary, changeSalary] = React.useState(50000);
   const [bonus, changeBonus] = React.useState(0);
   const [bonusEligible, changeBonusEligible] = React.useState(false);
+
+  // TODO, update so bonus only gets added to a specific month thats customizable
+  const monthly_compensation = (salary + bonus) / 12;
+
+
+  // TODO, we have to dynamically max 401k and whatnot
+  const hardCodedMatch = .10;
+
+  const month_rows: { [key: string]: any } = {};
+
+  ALL_MONTH_NAMES.forEach((month_key, index) => {
+    let prev_row_key = MONTH_NAMES[ALL_MONTH_NAMES[index-1] as keyof typeof MONTH_NAMES];
+    let key = MONTH_NAMES[month_key as keyof typeof MONTH_NAMES];
+    let monthly_contribution = hardCodedMatch * monthly_compensation;
+
+    month_rows[key] = 
+    [monthly_compensation, 
+      hardCodedMatch, 
+      monthly_contribution, 
+      month_rows[prev_row_key]? month_rows[prev_row_key][3] + monthly_contribution : monthly_contribution ] //if prev row exists, add it to monthly contribution, else use monthly contribution
+  });
 
 
   const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
@@ -113,17 +139,21 @@ function Frontload() {
               <tr>
                 <th>Month</th>
                 <th>Annual Salary</th>
-                <th>% Match</th>
-                <th>Amount/month</th>
+                <th>Percent Match</th>
+                <th>Amount/Month</th>
                 <th>Cumulative Contributed</th>
               </tr>
             </thead>
             <tbody>
-              <tr>
-                <td className={styles.thicc}>Gross Income</td>
-                <td></td>
-                <td></td>
-              </tr>
+              {Object.keys(month_rows).map((key) => (
+                <tr key={key}>
+                  <td className={styles.thicc}>{key}</td>
+                  <td>{formatCurrency(month_rows[key][0])}</td>
+                  <td>{formatPercent(month_rows[key][1])}</td>
+                  <td>{formatCurrency(month_rows[key][2])}</td>
+                  <td>{formatCurrency(month_rows[key][3])}</td>
+                </tr>
+              ))}
             </tbody>
           </Table>
         </div>

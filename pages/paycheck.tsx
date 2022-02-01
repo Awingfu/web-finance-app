@@ -18,6 +18,7 @@ import {
   US_STATES_MAP,
   instanceOfTaxUnknown,
   formatCurrency,
+  formatStateValue,
   maxSocialSecurityContribution,
   getSocialSecuritytax
 } from '../src/utils';
@@ -50,11 +51,6 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
   } else {
     return contributionAmount * FREQUENCY_TO_ANNUM[frequency]
   }
-}
-
-// remove preceeding 0's
-const formatStateValue = (value: string | number): string => {
-  return Number(value).toString();
 }
 
 /** 

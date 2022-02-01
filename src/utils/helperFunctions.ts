@@ -14,9 +14,14 @@ export const formatCurrency = (num: number): string => {
     return formatter.format(num);
 };
 
+export const formatPercent = (num: number): string => num * 100 + "%";
 
+export const formatStateValue = (value: string | number): string => {
+  return Number(value).toString();
+}
+
+// Not finished
+// Gets all paydays based on pay period and current year
 const getPayDays = (paycheckFrequency: FREQUENCIES, year: number, payBeforeHolidays: boolean = true, payBeforeWeekends: boolean = true): Date[] => {
   return [new Date()];
 }
-
-export default getPayDays;
