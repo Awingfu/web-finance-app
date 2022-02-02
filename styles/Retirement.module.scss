@@ -1,3 +1,5 @@
+$extraSmall: 480px;
+$small: 720px;
 $medium: 1080px;
 $desktop: 1200px;
 
@@ -16,15 +18,26 @@ $desktop: 1200px;
     align-items: center;
 }
 
-.thicc {
-    font-weight: bold;
-}
+.form {
 
-.inlineChildren {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
+    @media screen and (min-width: $desktop) {
+        width: 40%;
+        margin: 0 2%;
+    }
+
+    @media screen and (min-width: $medium) and (max-width: $desktop) {
+        margin: 0 20%;
+        padding: 0 100px;
+    }
+
+    @media screen and (min-width: $small) and (max-width: $medium) {
+        margin: 0 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin: 0 20px;
+    }
+    
 }
 
 .table {
@@ -41,9 +54,14 @@ $desktop: 1200px;
         padding: 0 100px;
     }
 
-    @media screen and (max-width: $medium) {
+    @media screen and (min-width: $small) and (max-width: $medium) {
         margin-left: 100px;
         margin-right: 100px;
+    }
+
+    @media screen and (max-width: $small) {
+        margin-left: 20px;
+        margin-right: 20px;
     }
     
 }

@@ -31,6 +31,7 @@ export const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
 export enum PAY_SCHEDULE {
     WEEKLY = "Weekly",
     BIWEEKLY = "Biweekly",
+    BIWEEKLY_1 = "Biweekly Offset 1",
     BIMONTHLY = "Bimonthly",
     MONTHLY = "Monthly",
 }
@@ -38,11 +39,30 @@ export enum PAY_SCHEDULE {
 export const PAY_SCHEDULE_TO_ANNUM = {
     [PAY_SCHEDULE.WEEKLY]: 52,
     [PAY_SCHEDULE.BIWEEKLY]: 26,
+    [PAY_SCHEDULE.BIWEEKLY_1]: 26,
     [PAY_SCHEDULE.BIMONTHLY]: 24,
     [PAY_SCHEDULE.MONTHLY]: 12,
 }
 
 export const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
+
+// Types of pay schedules
+export enum MONTH_NAMES {
+    JANUARY = "January",
+    FEBRUARY = "February",
+    MARCH = "March",
+    APRIL = "April",
+    MAY = "May",
+    JUNE = "June",
+    JULY = "July",
+    AUGUST = "August",
+    SEPTEMBER = "September",
+    OCTOBER = "October",
+    NOVEMBER = "November",
+    DECEMBER = "December"
+}
+
+export const ALL_MONTH_NAMES = Object.keys(MONTH_NAMES);
 
 // Only assuming traditional 401k (which is the same for 403b, tsp, etc.)
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits
