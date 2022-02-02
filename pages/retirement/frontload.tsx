@@ -202,11 +202,11 @@ function Frontload() {
 
       <main className={styles.main}>
         <h1>Frontload Calculator</h1>
-        <p>Here we will try to optimize maxing your 401k Frontloading</p>
+        <p>Here we will optimize your 401k by frontloading and getting maximum matching</p>
       </main>
 
       <div className={styles.content}>
-        <Form className={styles.paycheckForm}>
+        <Form className={styles.form}>
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
