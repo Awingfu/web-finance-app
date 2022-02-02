@@ -1,15 +1,7 @@
 import React from "react";
-import {
-  Alert,
-  Dropdown,
-  DropdownButton,
-  Form,
-  InputGroup,
-  Table,
-} from "react-bootstrap";
+import { Alert, Form, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
 import {
-  US_STATES_MAP,
   formatCurrency,
   formatPercent,
   formatStateValue,
@@ -22,19 +14,16 @@ import {
 import styles from "../../styles/Retirement.module.scss";
 
 /**
- * Goals
- * 1. different frontloading strategies inc company match and 401k true limit
- * 2. cost analysis with fv assumption for each strategy
+ * Future Goals
+ * 1. Differing pay periods
+ * 2. New inputs: Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
+ * 2. different frontloading strategies inc company match and 401k true limit
+ * 3. cost analysis with fv assumption for each strategy
  *
- * MVP
+ * Current:
  * Input:
  * Salary,401k Max, 401k max contribution, min contribution to get match
  *
- *
- * Stretch:
- * 1. Input:
- * Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
- * 2. Different pay periods
  * @returns
  */
 
@@ -49,15 +38,16 @@ function Frontload() {
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
 
-  const _401kMaxNotReachedIcon = '\u2020'; // dagger
-  const _401kMaxNotReachedNote = _401kMaxNotReachedIcon +
+  const _401kMaxNotReachedIcon = "\u2020"; // dagger
+  const _401kMaxNotReachedNote =
+    _401kMaxNotReachedIcon +
     " If your company automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
-  const _401kMaxReachedEarlyIcon = '\u2021'; // double dagger
-  const _401kMaxReachedEarlyNote = _401kMaxReachedEarlyIcon +
-  " You will reach your maximum contribution early even with minimum matching available. Congrats. All future contributions will not be possible if your employer caps your contributions";
+  const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
+  const _401kMaxReachedEarlyNote =
+    _401kMaxReachedEarlyIcon +
+    " You will reach your maximum contribution early even with minimum matching available. Congrats. All future contributions will not be possible if your employer caps your contributions";
   let isMaxedEarly = false;
 
-  // TODO, update so bonus only gets added to a specific month thats customizable
   const numberOfPaychecks = 12;
 
   const month_rows: { [key: string]: any } = {};
@@ -94,12 +84,13 @@ function Frontload() {
       numberOfPaychecks *
       100
   );
-  const singleContributionAmount = singleContributionPercent / 100 * salary / numberOfPaychecks;
+  const singleContributionAmount =
+    ((singleContributionPercent / 100) * salary) / numberOfPaychecks;
 
   // map for table
   ALL_MONTH_NAMES.forEach((month_key, index) => {
     let match = minContributionForMatch / 100;
-    let contributionAmount = match * salary / numberOfPaychecks;
+    let contributionAmount = (match * salary) / numberOfPaychecks;
     // suffix on key name for notes
 
     // do max contribution, then single contributions, then default to min for full match
@@ -126,15 +117,23 @@ function Frontload() {
       concatKey += _401kMaxReachedEarlyIcon;
       cumulativeAmount = _401kMaximum;
       contributionAmount = month_rows[prevRowKey]
-      ? _401kMaximum - month_rows[prevRowKey][4]
-      : _401kMaximum;
+        ? _401kMaximum - month_rows[prevRowKey][4]
+        : _401kMaximum;
     }
 
     // last index check for dagger + note
-    const isLastIndex = key === MONTH_NAMES[ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES];
-    // check numberOfMaxContributions < numberOfPaychecks is true, 
+    const isLastIndex =
+      key ===
+      MONTH_NAMES[
+        ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES
+      ];
+    // check numberOfMaxContributions < numberOfPaychecks is true,
     // otherwise you're unable to hit maximum contribution
-    if (isLastIndex && Math.round(cumulativeAmount) != _401kMaximum && numberOfMaxContributions < numberOfPaychecks) {
+    if (
+      isLastIndex &&
+      Math.round(cumulativeAmount) != _401kMaximum &&
+      numberOfMaxContributions < numberOfPaychecks
+    ) {
       concatKey += _401kMaxNotReachedIcon;
     }
 
@@ -144,20 +143,31 @@ function Frontload() {
       salary / numberOfPaychecks,
       match,
       contributionAmount,
-      cumulativeAmount, 
-    ]; 
+      cumulativeAmount,
+    ];
   });
 
   let _401kMaxNotReachedAlertHTML = <></>;
-  const lastMonth = MONTH_NAMES[ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES];
+  const lastMonth =
+    MONTH_NAMES[
+      ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES
+    ];
   const is401kMaxed = Math.round(month_rows[lastMonth][4]) == _401kMaximum;
   if (!is401kMaxed && numberOfMaxContributions < numberOfPaychecks) {
-    _401kMaxNotReachedAlertHTML = <Alert className='mb-3' variant="secondary">{_401kMaxNotReachedNote}</Alert>;
+    _401kMaxNotReachedAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {_401kMaxNotReachedNote}
+      </Alert>
+    );
   }
-  
+
   let _401kMaxReachedEarlyAlertHTML = <></>;
   if (isMaxedEarly) {
-    _401kMaxNotReachedAlertHTML = <Alert className='mb-3' variant="secondary">{_401kMaxReachedEarlyNote}</Alert>;
+    _401kMaxNotReachedAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {_401kMaxReachedEarlyNote}
+      </Alert>
+    );
   }
 
   const updateAmount = (
