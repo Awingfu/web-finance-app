@@ -202,7 +202,7 @@ function Frontload() {
 
       <main className={styles.main}>
         <h1>Frontload Calculator</h1>
-        <p>Here we will optimize your 401k by frontloading and getting maximum matching</p>
+        <p>Here we will optimize your 401k by frontloading and getting full employer matching</p>
       </main>
 
       <div className={styles.content}>
