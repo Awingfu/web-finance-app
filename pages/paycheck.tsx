@@ -396,7 +396,6 @@ function Paycheck() {
           <Form.Label>Stock Purchase Plan Contribution</Form.Label>
           <TooltipOnHover text="% of gross income between 0 and 90." nest={
             <InputGroup className='mb-3 w-100'>
-              <InputGroup.Text>$</InputGroup.Text>
               <Form.Control type="number" value={formatStateValue(sppContribution)} onChange={e => updateContribution(e, changeSPPContribution)} />
               <InputGroup.Text>%</InputGroup.Text>
             </InputGroup>

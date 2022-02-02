@@ -1,61 +1,169 @@
 import React from "react";
-import { Dropdown, DropdownButton, Form, InputGroup, Table } from "react-bootstrap";
+import {
+  Alert,
+  Dropdown,
+  DropdownButton,
+  Form,
+  InputGroup,
+  Table,
+} from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
-import { US_STATES_MAP, formatCurrency, formatPercent, formatStateValue } from "../../src/utils";
-import { MONTH_NAMES, ALL_MONTH_NAMES } from "../../src/utils/constants";
+import {
+  US_STATES_MAP,
+  formatCurrency,
+  formatPercent,
+  formatStateValue,
+} from "../../src/utils";
+import {
+  MONTH_NAMES,
+  ALL_MONTH_NAMES,
+  _401k_maximum_contribution_individual,
+} from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
-
 
 /**
  * Goals
  * 1. different frontloading strategies inc company match and 401k true limit
  * 2. cost analysis with fv assumption for each strategy
- * 
+ *
  * MVP
- * Input: 
- * Salary, Bonus, Bonus Month, 401k Max, 401k max contribution
- * 
- * 
+ * Input:
+ * Salary,401k Max, 401k max contribution, min contribution to get match
+ *
+ *
  * Stretch:
- * Input, 
- * Ending salary (raise) and which month, company match, mega backdoor availability
- * 
+ * 1. Input:
+ * Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
+ * 2. Different pay periods
  * @returns
  */
 
 function Frontload() {
-
   const [salary, changeSalary] = React.useState(50000);
-  const [bonus, changeBonus] = React.useState(0);
-  const [bonusEligible, changeBonusEligible] = React.useState(false);
+  // const [bonus, changeBonus] = React.useState(0);
+  const [_401kMaximum, change401kMaximum] = React.useState(
+    _401k_maximum_contribution_individual
+  );
+  const [minContributionForMatch, changeMinContributionForMatch] =
+    React.useState(5);
+  const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
+    React.useState(90);
+
+  const _401kMaxNotReachedIcon = '\u2020'; // dagger
+  const _401kMaxNotReachedNote = _401kMaxNotReachedIcon +
+    " If your company automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+  const _401kMaxReachedEarlyIcon = '\u2021'; // double dagger
+  const _401kMaxReachedEarlyNote = _401kMaxReachedEarlyIcon +
+  " You will reach your maximum contribution early even with minimum matching available. Congrats. All future contributions will not be possible if your employer caps your contributions";
+  let isMaxedEarly = false;
 
   // TODO, update so bonus only gets added to a specific month thats customizable
-  const monthly_compensation = (salary + bonus) / 12;
-
-
-  // TODO, we have to dynamically max 401k and whatnot
-  const hardCodedMatch = .10;
+  const numberOfPaychecks = 12;
 
   const month_rows: { [key: string]: any } = {};
 
-  ALL_MONTH_NAMES.forEach((month_key, index) => {
-    let prev_row_key = MONTH_NAMES[ALL_MONTH_NAMES[index-1] as keyof typeof MONTH_NAMES];
-    let key = MONTH_NAMES[month_key as keyof typeof MONTH_NAMES];
-    let monthly_contribution = hardCodedMatch * monthly_compensation;
+  // Calculations
+  const maxContributionAmount =
+    ((maxContributionFromPaycheck / 100) * salary) / numberOfPaychecks;
+  const contributionAmountForFullMatch =
+    ((minContributionForMatch / 100) * salary) / numberOfPaychecks;
 
-    month_rows[key] = 
-    [monthly_compensation, 
-      hardCodedMatch, 
-      monthly_contribution, 
-      month_rows[prev_row_key]? month_rows[prev_row_key][3] + monthly_contribution : monthly_contribution ] //if prev row exists, add it to monthly contribution, else use monthly contribution
+  // TODO maybe use these in form
+  const amountContributedSoFar = 0;
+  const numberOfContributionsSoFar = 0;
+
+  const numberOfMaxContributions = Math.floor(
+    (amountContributedSoFar -
+      _401kMaximum +
+      contributionAmountForFullMatch *
+        (numberOfPaychecks - numberOfContributionsSoFar)) /
+      (contributionAmountForFullMatch - maxContributionAmount)
+  );
+  // console.log(numberOfMaxContributions + " = " +
+  // amountContributedSoFar + " - " + _401kMaximum + " + (" + contributionAmountForFullMatch + " * (" + numberOfPaychecks + " - " + numberOfContributionsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
+  const singleContributionPercent = Math.floor(
+    ((_401kMaximum -
+      (amountContributedSoFar +
+        numberOfMaxContributions * maxContributionAmount +
+        (numberOfPaychecks -
+          numberOfMaxContributions -
+          numberOfContributionsSoFar -
+          1) *
+          contributionAmountForFullMatch)) /
+      salary) *
+      numberOfPaychecks *
+      100
+  );
+  const singleContributionAmount = singleContributionPercent / 100 * salary / numberOfPaychecks;
+
+  // map for table
+  ALL_MONTH_NAMES.forEach((month_key, index) => {
+    let match = minContributionForMatch / 100;
+    let contributionAmount = match * salary / numberOfPaychecks;
+    // suffix on key name for notes
+
+    // do max contribution, then single contributions, then default to min for full match
+    if (index < numberOfMaxContributions) {
+      match = maxContributionFromPaycheck / 100;
+      contributionAmount = maxContributionAmount;
+    } else if (index == numberOfMaxContributions) {
+      match = singleContributionPercent / 100;
+      contributionAmount = singleContributionAmount;
+    }
+
+    const prevRowKey =
+      MONTH_NAMES[ALL_MONTH_NAMES[index - 1] as keyof typeof MONTH_NAMES];
+    const key = MONTH_NAMES[month_key as keyof typeof MONTH_NAMES];
+    let concatKey = key.toString();
+    //if prev row exists, add value to monthly contribution, else use monthly contribution
+    let cumulativeAmount = month_rows[prevRowKey]
+      ? month_rows[prevRowKey][4] + contributionAmount
+      : contributionAmount;
+
+    // check for too much comp
+    if (cumulativeAmount > _401kMaximum) {
+      isMaxedEarly = true;
+      concatKey += _401kMaxReachedEarlyIcon;
+      cumulativeAmount = _401kMaximum;
+      contributionAmount = month_rows[prevRowKey]
+      ? _401kMaximum - month_rows[prevRowKey][4]
+      : _401kMaximum;
+    }
+
+    // last index check for dagger + note
+    const isLastIndex = key === MONTH_NAMES[ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES];
+    // check numberOfMaxContributions < numberOfPaychecks is true, 
+    // otherwise you're unable to hit maximum contribution
+    if (isLastIndex && Math.round(cumulativeAmount) != _401kMaximum && numberOfMaxContributions < numberOfPaychecks) {
+      concatKey += _401kMaxNotReachedIcon;
+    }
+
+    // Month : compensation, match, contribution, cumulative
+    month_rows[key] = [
+      concatKey, // for naming purposes
+      salary / numberOfPaychecks,
+      match,
+      contributionAmount,
+      cumulativeAmount, 
+    ]; 
   });
 
+  let _401kMaxNotReachedAlertHTML = <></>;
+  const lastMonth = MONTH_NAMES[ALL_MONTH_NAMES[ALL_MONTH_NAMES.length - 1] as keyof typeof MONTH_NAMES];
+  const is401kMaxed = Math.round(month_rows[lastMonth][4]) == _401kMaximum;
+  if (!is401kMaxed && numberOfMaxContributions < numberOfPaychecks) {
+    _401kMaxNotReachedAlertHTML = <Alert className='mb-3' variant="secondary">{_401kMaxNotReachedNote}</Alert>;
+  }
+  
+  let _401kMaxReachedEarlyAlertHTML = <></>;
+  if (isMaxedEarly) {
+    _401kMaxNotReachedAlertHTML = <Alert className='mb-3' variant="secondary">{_401kMaxReachedEarlyNote}</Alert>;
+  }
 
-  const update = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
-    changeFunction((e.target as HTMLInputElement).value);
-  };
-
-  const updateAmount = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+  const updateAmount = (
+    e: React.FormEvent<HTMLElement>,
+    changeFunction: { (value: React.SetStateAction<any>): void }
+  ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < 0) {
       value = 0;
@@ -65,7 +173,10 @@ function Frontload() {
     changeFunction(value);
   };
 
-  const updateContribution = (e: React.FormEvent<HTMLElement>, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
+  const updateContribution = (
+    e: React.FormEvent<HTMLElement>,
+    changeFunction: { (value: React.SetStateAction<any>): void }
+  ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < 0) {
       value = 0;
@@ -74,12 +185,6 @@ function Frontload() {
     }
     changeFunction(value);
   };
-
-  const updateWithEventKey = (e: string | null, changeFunction: { (value: React.SetStateAction<any>): void; }) => {
-    if (e)
-      changeFunction(e);
-    else console.log("Null event key");
-  }
 
   return (
     <div className={styles.container}>
@@ -102,35 +207,49 @@ function Frontload() {
             />
           </InputGroup>
 
-          <Form.Group className="mb-3">
-            <Form.Label className={styles.inlineGroupFormLabel}>
-              Annual Bonus
-            </Form.Label>
-            <div className={styles.inlineGroup}>
-              <InputGroup className={styles.inlineChildren}>
-                <InputGroup.Text>$</InputGroup.Text>
+          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
+          <InputGroup className="mb-3 w-100">
+            <InputGroup.Text>$</InputGroup.Text>
+            <Form.Control
+              type="number"
+              value={formatStateValue(_401kMaximum)}
+              onChange={(e) => updateAmount(e, change401kMaximum)}
+            />
+          </InputGroup>
+
+          <Form.Label>401k Contribution for Full Employer Match</Form.Label>
+          <TooltipOnHover
+            text="% of gross income between 0 and 90."
+            nest={
+              <InputGroup className="mb-3 w-100">
                 <Form.Control
                   type="number"
-                  value={formatStateValue(bonus)}
-                  onChange={(e) => updateAmount(e, changeBonus)}
-                />
-              </InputGroup>
-              <InputGroup className={styles.inlineChildren}>
-                <TooltipOnHover
-                  text="Check if bonus is eligible for 401k and other contributions. If unchecked, bonus will be added at Taxable Income step."
-                  nest={
-                    <Form.Check
-                      className={styles.width250px}
-                      type="checkbox"
-                      onChange={() => changeBonusEligible(!bonusEligible)}
-                      label="Eligible For Contributions"
-                      checked={bonusEligible}
-                    />
+                  value={formatStateValue(minContributionForMatch)}
+                  onChange={(e) =>
+                    updateContribution(e, changeMinContributionForMatch)
                   }
                 />
+                <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
-            </div>
-          </Form.Group>
+            }
+          />
+
+          <Form.Label>Maximum Paycheck Contribution for 401k</Form.Label>
+          <TooltipOnHover
+            text="% of gross income between 0 and 90."
+            nest={
+              <InputGroup className="mb-3 w-100">
+                <Form.Control
+                  type="number"
+                  value={formatStateValue(maxContributionFromPaycheck)}
+                  onChange={(e) =>
+                    updateContribution(e, changeMaxContributionFromPaycheck)
+                  }
+                />
+                <InputGroup.Text>%</InputGroup.Text>
+              </InputGroup>
+            }
+          />
         </Form>
 
         <div className={styles.table}>
@@ -138,30 +257,32 @@ function Frontload() {
             <thead>
               <tr>
                 <th>Month</th>
-                <th>Annual Salary</th>
-                <th>Percent Match</th>
-                <th>Amount/Month</th>
+                <th>Monthly Salary</th>
+                <th>Match</th>
+                <th>Amount per Month</th>
                 <th>Cumulative Contributed</th>
               </tr>
             </thead>
             <tbody>
               {Object.keys(month_rows).map((key) => (
                 <tr key={key}>
-                  <td className={styles.thicc}>{key}</td>
-                  <td>{formatCurrency(month_rows[key][0])}</td>
-                  <td>{formatPercent(month_rows[key][1])}</td>
-                  <td>{formatCurrency(month_rows[key][2])}</td>
+                  <td className={styles.thicc}>{month_rows[key][0]}</td>
+                  <td>{formatCurrency(month_rows[key][1])}</td>
+                  <td>{formatPercent(month_rows[key][2])}</td>
                   <td>{formatCurrency(month_rows[key][3])}</td>
+                  <td>{formatCurrency(month_rows[key][4])}</td>
                 </tr>
               ))}
             </tbody>
           </Table>
+          {_401kMaxNotReachedAlertHTML}
+          {_401kMaxReachedEarlyAlertHTML}
         </div>
       </div>
 
       <Footer />
     </div>
   );
-};
+}
 
 export default Frontload;

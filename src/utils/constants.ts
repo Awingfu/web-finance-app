@@ -31,6 +31,7 @@ export const ALL_FREQUENCIES = Object.keys(FREQUENCIES);
 export enum PAY_SCHEDULE {
     WEEKLY = "Weekly",
     BIWEEKLY = "Biweekly",
+    BIWEEKLY_1 = "Biweekly Offset 1",
     BIMONTHLY = "Bimonthly",
     MONTHLY = "Monthly",
 }
@@ -38,6 +39,7 @@ export enum PAY_SCHEDULE {
 export const PAY_SCHEDULE_TO_ANNUM = {
     [PAY_SCHEDULE.WEEKLY]: 52,
     [PAY_SCHEDULE.BIWEEKLY]: 26,
+    [PAY_SCHEDULE.BIWEEKLY_1]: 26,
     [PAY_SCHEDULE.BIMONTHLY]: 24,
     [PAY_SCHEDULE.MONTHLY]: 12,
 }
