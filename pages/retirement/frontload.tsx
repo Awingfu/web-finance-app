@@ -84,17 +84,11 @@ function Frontload() {
 
     // edge cases to just insert 0
     if (i < numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)"
-      table_rows.push([
-        concatKey,
-        salary / numberOfPayPeriods,
-        0,
-        0,
-        0,
-      ]);
+      concatKey += " (Already passed)";
+      table_rows.push([concatKey, salary / numberOfPayPeriods, 0, 0, 0]);
       continue;
     } else if (i == numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)"
+      concatKey += " (Already passed)";
       table_rows.push([
         concatKey,
         salary / numberOfPayPeriods,
@@ -180,13 +174,15 @@ function Frontload() {
 
   const updateContribution = (
     e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    changeFunction: { (value: React.SetStateAction<any>): void },
+    min: number = 0,
+    max: number = 100
   ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
-    if (isNaN(value) || value < 0) {
-      value = 0;
-    } else if (value > 90) {
-      value = 90;
+    if (isNaN(value) || value < min) {
+      value = min;
+    } else if (value > max) {
+      value = max;
     }
     changeFunction(value);
   };
@@ -227,7 +223,7 @@ function Frontload() {
           </InputGroup>
 
           <Form.Label>
-            Number of Pay Periods you have received so far.
+            Number of Pay Periods you have received so far
           </Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
@@ -244,7 +240,7 @@ function Frontload() {
             />
           </InputGroup>
 
-          <Form.Label>Amount Contributed to 401k so far.</Form.Label>
+          <Form.Label>Amount Contributed to 401k so far</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
@@ -258,18 +254,25 @@ function Frontload() {
           </InputGroup>
 
           <Form.Label>401k Maximum for Individual Contribution</Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control
-              type="number"
-              value={formatStateValue(_401kMaximum)}
-              onChange={(e) => updateAmount(e, change401kMaximum)}
-            />
-          </InputGroup>
-
-          <Form.Label>401k Contribution for Full Employer Match</Form.Label>
           <TooltipOnHover
-            text="% of gross income between 0 and 90."
+            text="The maximum in 2022 is $20500. You can decrease this if you have contributed to another 401k."
+            nest={
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  value={formatStateValue(_401kMaximum)}
+                  onChange={(e) => updateAmount(e, change401kMaximum)}
+                />
+              </InputGroup>
+            }
+          />
+
+          <Form.Label>
+            Paycheck Contribution for Full Employer 401k Match
+          </Form.Label>
+          <TooltipOnHover
+            text="% of income between 0 and 100."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -284,9 +287,11 @@ function Frontload() {
             }
           />
 
-          <Form.Label>Maximum Paycheck Contribution for 401k</Form.Label>
+          <Form.Label>
+            Maximum Paycheck Contribution Allowed for 401k
+          </Form.Label>
           <TooltipOnHover
-            text="% of gross income between 0 and 90."
+            text="% of income between 0 and 100. You can also just put the maximum amount you are comfortable contributing."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
