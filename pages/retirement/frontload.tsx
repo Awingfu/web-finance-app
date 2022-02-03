@@ -18,6 +18,7 @@ import styles from "../../styles/Retirement.module.scss";
  * 1. Differing pay periods
  * 2. New inputs: Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
  * 2. different frontloading strategies inc company match and 401k true limit
+ * a. max, then match. b. flat amount. c. pure max and ignore match 
  * 3. cost analysis with fv assumption for each strategy
  *
  * Current:
