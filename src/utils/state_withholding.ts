@@ -149,29 +149,6 @@ export const US_STATES_MAP : US_STATE_MAP = {
             [1000000, 1198024, 0.1353],
             [1198024, Infinity, 0.1463],
         ]
-        // 2021 tax source: https://www.nerdwallet.com/article/taxes/california-state-tax
-        // brackets: [
-        //     [0, 9325, 0.01],
-        //     [9325, 22107, 0.02],
-        //     [22107, 34892, 0.04],
-        //     [34892, 48435, 0.06],
-        //     [48435, 61214, 0.08],
-        //     [61214, 312686, 0.093],
-        //     [312686, 375221, 0.103],
-        //     [375221, 625369, 0.113],
-        //     [625369, Infinity, 0.123],
-        // ],
-        // marriedBrackets: [
-        //     [0, 18650, 0.01],
-        //     [18650, 44214, 0.02],
-        //     [44214, 69784, 0.04],
-        //     [69784, 96870, 0.06],
-        //     [96870, 122428, 0.08],
-        //     [122428, 625372, 0.093],
-        //     [625372, 750442, 0.103],
-        //     [750442, 1250738, 0.113],
-        //     [1250738, Infinity, 0.123],
-        // ]
     },
     'CO': { name: 'Colorado', abbreviation: 'CO', flatTax: 0.0455},
     'CT': { name: 'Connecticut', abbreviation: 'CT' },
@@ -271,9 +248,62 @@ export const US_STATES_MAP : US_STATE_MAP = {
     'NE': { name: 'Nebraska', abbreviation: 'NE' },
     'NV': { name: 'Nevada', abbreviation: 'NV', flatTax: 0},
     'NH': { name: 'New Hampshire', abbreviation: 'NH', flatTax: 0 }, // 5% on dividends and interest, TODO
-    'NJ': { name: 'New Jersey', abbreviation: 'NJ' },
+    'NJ': { 
+        name: 'New Jersey', 
+        abbreviation: 'NJ',
+        // 2021 source: https://www.forbes.com/advisor/taxes/new-jersey-state-tax/
+        // ignoring deductions and minimum income for tax
+        brackets: [
+            [0, 20000, 0.014],
+            [20000, 35000, 0.0175],
+            [35000, 40000, 0.035],
+            [40000, 75000, 0.05525],
+            [75000, 500000, 0.0637],
+            [500000, 5000000, 0.0897],
+            [5000000, Infinity, 0.1075]
+        ],
+        marriedBrackets: [
+            [0, 20000, 0.014],
+            [20000, 50000, 0.0175],
+            [50000, 70000, 0.0245],
+            [70000, 80000, 0.035],
+            [80000, 150000, 0.05525],
+            [150000, 500000, 0.0637],
+            [500000, 5000000, 0.0897],
+            [5000000, Infinity, 0.1075]
+        ]
+    },
     'NM': { name: 'New Mexico', abbreviation: 'NM' },
-    'NY': { name: 'New York', abbreviation: 'NY' },
+    'NY': { 
+        name: 'New York', 
+        abbreviation: 'NY',
+        // source: https://www.nerdwallet.com/article/taxes/new-york-state-tax
+        // ignoring deductions and minimum income for tax
+        brackets: [
+            [0, 8500, 0.04],
+            [8500, 11700, 0.045],
+            [11700, 13900, 0.0525],
+            [13900, 21400, 0.059],
+            [21400, 80650, 0.0597],
+            [80650, 215400, 0.0633],
+            [215400, 1077550, 0.0685],
+            [1077550, 5000000, 0.0965],
+            [5000000, 25000000, 0.103],
+            [25000000, Infinity, 0.109]
+        ],
+        marriedBrackets: [
+            [0, 17150, 0.04],
+            [17150, 23600, 0.045],
+            [23600, 27900, 0.0525],
+            [27900, 43000, 0.059],
+            [43000, 161550, 0.0597],
+            [161550, 323200, 0.0633],
+            [323200, 2155350, 0.0685],
+            [2155350, 5000000, 0.0965],
+            [5000000, 25000000, 0.103],
+            [25000000, Infinity, 0.109]
+        ]
+    },
     'NC': { name: 'North Carolina', abbreviation: 'NC', flatTax: 0.0525 },
     'ND': { name: 'North Dakota', abbreviation: 'ND' },
     'MP': { name: 'Northern Mariana Islands', abbreviation: 'MP' },
@@ -307,6 +337,22 @@ export const US_STATES_MAP : US_STATE_MAP = {
     },
     'WA': { name: 'Washington', abbreviation: 'WA', flatTax: 0},
     'WV': { name: 'West Virginia', abbreviation: 'WV' },
-    'WI': { name: 'Wisconsin', abbreviation: 'WI' },
+    'WI': { 
+        name: 'Wisconsin', 
+        abbreviation: 'WI',
+        // https://www.bankrate.com/taxes/wisconsin-state-taxes/
+        brackets: [
+            [0, 11090, 0.04],
+            [11090, 22190, 0.0584],
+            [22190, 244270, 0.0627],
+            [244270, Infinity, 0.0765],
+        ],
+        marriedBrackets: [
+            [0, 14790, 0.04],
+            [14790, 29580, 0.0584],
+            [29580, 325700, 0.0627],
+            [325700, Infinity, 0.0765],
+        ]
+    },
     'WY': { name: 'Wyoming', abbreviation: 'WY', flatTax: 0 }
 };

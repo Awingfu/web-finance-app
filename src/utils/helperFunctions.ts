@@ -14,7 +14,10 @@ export const formatCurrency = (num: number): string => {
     return formatter.format(num);
 };
 
-export const formatPercent = (num: number): string => num * 100 + "%";
+export const formatPercent = (num: number, round: boolean = true): string => {
+  const percentNumber = round ? Math.round(num * 100) : num * 100;
+  return percentNumber + "%";
+}
 
 export const formatStateValue = (value: string | number): string => {
   return Number(value).toString();
