@@ -13,13 +13,12 @@ import styles from "../../styles/Retirement.module.scss";
  * Future Goals
  * 1. New inputs: Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
  * 2. different frontloading strategies inc company match and 401k true limit
- * a. max, then match. b. flat amount. c. pure max and ignore match
+ * a. max, then match. (current) b. flat amount. c. pure max and ignore match
  * 3. cost analysis with fv assumption for each strategy
  */
 
 function Frontload() {
   const [salary, changeSalary] = React.useState(50000);
-  // const [bonus, changeBonus] = React.useState(0);
   const [_401kMaximum, change401kMaximum] = React.useState(
     _401k_maximum_contribution_individual
   );
@@ -28,6 +27,7 @@ function Frontload() {
     React.useState(0);
   const [amountContributedSoFar, changeAmountContributedSoFar] =
     React.useState(0);
+  // make sure to divide minContributionForMatch and maxContributionFromPaycheck by 100 to get percentage
   const [minContributionForMatch, changeMinContributionForMatch] =
     React.useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
@@ -81,7 +81,6 @@ function Frontload() {
   for (let i = 0; i < numberOfPayPeriods; i++) {
     // key for paycheck number. Index start at 1 cuz finance
     let concatKey = (i + 1).toString();
-
     // edge cases to just insert 0
     if (i < numberOfPayPeriodsSoFar - 1) {
       concatKey += " (Already passed)";
@@ -102,7 +101,7 @@ function Frontload() {
     let match = minContributionForMatch / 100;
     let contributionAmount = (match * salary) / numberOfPayPeriods;
 
-    // do max contribution, then single contributions, then default to min for full match
+    // do max contributions, then single contribution, then default to min match
     if (i - numberOfPayPeriodsSoFar < numberOfMaxContributions) {
       match = maxContributionFromPaycheck / 100;
       contributionAmount = maxContributionAmount;
@@ -144,7 +143,7 @@ function Frontload() {
       concatKey += _401kMaxNotReachedIcon;
     }
 
-    // key, compensation, match, contribution, cumulative
+    // row values: key, compensation, match, contribution, cumulative
     table_rows.push([
       concatKey,
       salary / numberOfPayPeriods,
@@ -154,6 +153,15 @@ function Frontload() {
     ]);
   }
 
+  /**
+   * @param e event handler
+   * @param changeFunction change function that updates float values
+   * @param min if event value is NaN or less than min, set to min
+   * @param max if event value is greater than max, set to max
+   * If changeFunction is changeNumber of PayPeriods,
+   * ensure payPeriodsSoFar is less.
+   * If payPeriodsSoFar is 0, set amountContributedSoFar to 0
+   */
   const updateAmount = (
     e: React.FormEvent<HTMLElement>,
     changeFunction: { (value: React.SetStateAction<any>): void },
@@ -166,12 +174,29 @@ function Frontload() {
     } else if (value > max) {
       value = max;
     }
-    if (changeFunction === changeNumberofPayPeriodsSoFar && value === 0) {
-      changeAmountContributedSoFar(0);
+    if (
+      changeFunction === changeNumberOfPayPeriods &&
+      value <= numberOfPayPeriodsSoFar
+    ) {
+      changeNumberofPayPeriodsSoFar(value - 1);
+      if (value === 1) {
+        changeAmountContributedSoFar(0);
+      }
+    }
+    if (changeFunction === changeNumberofPayPeriodsSoFar) {
+      if (value === 0) {
+        changeAmountContributedSoFar(0);        
+      }
     }
     changeFunction(value);
   };
 
+  /**
+   * @param e event handler
+   * @param changeFunction change function that updates integer values
+   * @param min if event value is NaN or less than min, set to min
+   * @param max if event value is greater than max, set to max
+   */
   const updateContribution = (
     e: React.FormEvent<HTMLElement>,
     changeFunction: { (value: React.SetStateAction<any>): void },

@@ -19,6 +19,11 @@ const renderTooltip = (props: TooltipProps) => (
   </Tooltip>
 );
 
+/**
+ * This React component wraps any JSX with an OverlayTrigger (Tooltip on Hover)
+ * @param props props.text should contain tooltip text, props.nest should contain nested JSX
+ * @returns Tooltip on Hover around nested JSX
+ */
 const TooltipOnHover = (props: TooltipOnHoverProps) => {
   return (
     <OverlayTrigger
