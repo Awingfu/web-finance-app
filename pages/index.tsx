@@ -10,7 +10,7 @@ const Home: NextPage = () => {
 
       <main className={styles.main}>
         <h1 className={styles.title}>
-          Welcome to the Finance App.
+          Welcome to the Finance Tools App.
         </h1>
 
         <p className={styles.description}>
@@ -21,14 +21,14 @@ const Home: NextPage = () => {
           <Link href="/paycheck">
             <a className={styles.card}>
               <h2>Paycheck Calculator &rarr;</h2>
-              <p>Estimate your take home pay!</p>
+              <p>Estimate your take home pay</p>
             </a>
           </Link>
 
           <Link href="/retirement/frontload">
-            <a href="https://nextjs.org/learn" className={styles.card}>
+            <a className={styles.card}>
               <h2>401k Frontloader &rarr;</h2>
-              <p>Plan your 401k maximum</p>
+              <p>Plan your 401k frontloading strategy</p>
             </a>
           </Link>
 

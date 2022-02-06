@@ -2,15 +2,29 @@
 
 ## What is this
 
-This is a tool that will do random finance stuff such as:
+This is a NextJS/React app that contains tools that will do random finance stuff such as:
 
 1. Paycheck Calculator
+2. 401k Frontloading
 
 Planned features
 
-1. 401k Frontloading
-2. 401k Roth vs Traditional
-3. Budgeting
+1. 401k Roth vs Traditional
+2. Budgeting
+
+## Technology
+
+This app uses NextJS React with Typescript and SASS for component level styling.
+
+Upon merge to `main` branch, github actions will autodeploy this site to <https://awingfu.github.io/web-finance-app>.
+
+## How to Contribute
+
+`/pages` contains all of the React components in route form e.g. `pages/index.tsx` contains the home page and `pages/paycheck.tsx` contains the `<url>/paycheck` route.
+
+`src/components` contains all of the resusable React components used throughout the app such as header, tooltip wrapper, footer, and navigation bar.
+
+`src/utls` contains all of the constants, helper functions, and other useful items to import into the React components.
 
 ## References
 
@@ -32,10 +46,6 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -44,9 +54,3 @@ To learn more about Next.js, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
