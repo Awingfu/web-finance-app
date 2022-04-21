@@ -25,6 +25,13 @@ const Home: NextPage = () => {
             </a>
           </Link>
 
+          <Link href="/expenses">
+            <a className={styles.card}>
+              <h2>Expense Planner &rarr;</h2>
+              <p>Plan your expenses</p>
+            </a>
+          </Link>
+
           <Link href="/retirement/frontload">
             <a className={styles.card}>
               <h2>401k Frontloader &rarr;</h2>
