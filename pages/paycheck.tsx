@@ -57,13 +57,6 @@ const formatStateValue = (value: string | number): string => {
   return Number(value).toString();
 }
 
-/** 
- * 
- * Next goals:
- * State income tax withholding
- * save info to local storage + clear data button -> so we don't lose data on refresh
- * 
- * */
 function Paycheck() {
   // Form States
   const [salary, changeSalary] = React.useState(50000);
