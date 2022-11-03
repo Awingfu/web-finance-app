@@ -35,7 +35,19 @@ Deployment to GH Pages from this guide: https://www.linkedin.com/pulse/deploy-ne
 
 ## Getting Started
 
-First, run the development server:
+Download the repo locally:
+
+```
+git clone https://github.com/Awingfu/web-finance-app.git
+```
+
+Change directory into the app, and install npm packages
+
+```
+cd web-finance-app && npm i
+```
+
+Run the development server which auto updates on file edits:
 
 ```bash
 npm run dev
@@ -44,8 +56,6 @@ yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
 
 ## Learn More
 
