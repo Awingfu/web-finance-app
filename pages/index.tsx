@@ -25,10 +25,10 @@ const Home: NextPage = () => {
             </a>
           </Link>
           
-          <Link href="/retirement/optimizer">
+          <Link href="/retirement/maximizer">
             <a className={styles.card}>
               <h2>401k Optimizer &rarr;</h2>
-              <p>Plan your 401k contributions</p>
+              <p>Maximize your 401k contributions</p>
             </a>
           </Link>
 

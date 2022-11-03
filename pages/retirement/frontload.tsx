@@ -110,7 +110,7 @@ function Frontload() {
       contributionAmount = singleContributionAmount;
     }
 
-    //if prev row exists, add value to monthly contribution, else use monthly contribution
+    //if prev row exists, add value to period contribution, else use period contribution
     let cumulativeAmount: number =
       i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
@@ -269,7 +269,7 @@ function Frontload() {
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
-              readOnly={numberOfPayPeriodsSoFar === 0}
+              disabled={numberOfPayPeriodsSoFar === 0}
               type="number" onWheel={e => e.currentTarget.blur()}
               value={formatStateValue(amountContributedSoFar)}
               onChange={(e) =>
@@ -294,7 +294,7 @@ function Frontload() {
           />
 
           <Form.Label>
-            Paycheck Contribution for Full Employer 401k Match
+            Minimum Paycheck Contribution for Full Employer 401k Match
           </Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100."

@@ -21,8 +21,8 @@ const NavigationBar = () => {
                     <Link href="/paycheck" passHref>
                         <Nav.Link> Paycheck </Nav.Link>
                     </Link>
-                    <Link href="/retirement/optimizer" passHref>
-                        <Nav.Link> 401k Optimizer </Nav.Link>
+                    <Link href="/retirement/maximizer" passHref>
+                        <Nav.Link> 401k Maximizer </Nav.Link>
                     </Link>
                     <Link href="/retirement/frontload" passHref>
                         <Nav.Link> 401k Frontload </Nav.Link>

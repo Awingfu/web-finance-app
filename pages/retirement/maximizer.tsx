@@ -9,8 +9,7 @@ import {
 import { _401k_maximum_contribution_individual, _401k_maximum_contribution_total } from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
 
-
-function Optimizer() {
+function Maximizer() {
   const [salary, changeSalary] = React.useState(50000);
   const [_401kMaximumIndividual, change401kMaximumIndividual] = React.useState(
     _401k_maximum_contribution_individual
@@ -21,17 +20,22 @@ function Optimizer() {
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
   const [numberOfPayPeriodsSoFar, changeNumberofPayPeriodsSoFar] =
     React.useState(0);
-  const [amountContributedSoFar, changeAmountContributedSoFar] =
+  const [amountContributedSoFarIndividual, changeAmountContributedSoFarIndividual] =
     React.useState(0);
-  // make sure to divide minContributionForMatch and maxContributionFromPaycheck by 100 to get percentage
-  const [minContributionForMatch, changeMinContributionForMatch] =
-    React.useState(5);
+  const [amountContributedSoFarCompany, changeAmountContributedSoFarCompany] =
+    React.useState(0);
+  const [amountContributedSoFarMBD, changeAmountContributedSoFarMBD] =
+    React.useState(0);
+  // make sure to divide minContributionForMaxMatch, maxContributionFromPaycheck, 
+  // and companyMatch by 100 to get percentage
+  // const [minContributionForMaxMatch, changeMinContributionForMaxMatch] =
+  //   React.useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
+  const [companyMatch, changeCompanyMatch] = React.useState(5);
 
-  // Divide these by 100, too
-  const [companyMatchPercent, changeCompanyMatchPercent] = React.useState(50)
-  const [companyMatchUpToPercent, changeCompanyMatchUpToPercent] = React.useState(50)
+  // Toggle
+  const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);
   
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
@@ -46,93 +50,61 @@ function Optimizer() {
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
   // Calculations
-  const maxContributionAmount =
-    ((maxContributionFromPaycheck / 100) * salary) / numberOfPayPeriods;
-  const contributionAmountForFullMatch =
-    ((minContributionForMatch / 100) * salary) / numberOfPayPeriods;
+  const payPerPayPeriod = salary / numberOfPayPeriods;
+  const numberOfPayPeriodsLeft = numberOfPayPeriods - numberOfPayPeriodsSoFar;
+  const amountLeftToContributeIndividual = _401kMaximumIndividual - amountContributedSoFarIndividual;
+  const contributionPerRemainingPeriodIndividual = amountLeftToContributeIndividual / numberOfPayPeriodsLeft;
+  // This is rounded down since most companies won't let you select exact percentage
+  const matchPercentIndividual = Math.floor((contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100) / 100;
 
-  const numberOfMaxContributions = Math.floor(
-    (amountContributedSoFar -
-      _401kMaximumIndividual +
-      contributionAmountForFullMatch *
-        (numberOfPayPeriods - numberOfPayPeriodsSoFar)) /
-      (contributionAmountForFullMatch - maxContributionAmount)
-  );
-
-  // console.log(numberOfMaxContributions + " = " +
-  // amountContributedSoFar + " - " + _401kMaximumIndividual + " + (" + contributionAmountForFullMatch + " * (" + numberOfPayPeriods + " - " + numberOfPayPeriodsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
-  const singleContributionPercent = Math.floor(
-    ((_401kMaximumIndividual -
-      (amountContributedSoFar +
-        numberOfMaxContributions * maxContributionAmount +
-        (numberOfPayPeriods -
-          numberOfMaxContributions -
-          numberOfPayPeriodsSoFar -
-          1) *
-          contributionAmountForFullMatch)) /
-      salary) *
-      numberOfPayPeriods *
-      100
-  );
-  const singleContributionAmount =
-    ((singleContributionPercent / 100) * salary) / numberOfPayPeriods;
-
+  // Data for table
   const table_rows: any[][] = [];
   for (let i = 0; i < numberOfPayPeriods; i++) {
     // key for paycheck number. Index start at 1 cuz finance
     let concatKey = (i + 1).toString();
+
     // edge cases to just insert 0
     if (i < numberOfPayPeriodsSoFar - 1) {
       concatKey += " (Already passed)";
-      table_rows.push([concatKey, salary / numberOfPayPeriods, 0, 0, 0]);
+      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0, 0, 0]);
       continue;
     } else if (i == numberOfPayPeriodsSoFar - 1) {
       concatKey += " (Already passed)";
       table_rows.push([
         concatKey,
-        salary / numberOfPayPeriods,
+        payPerPayPeriod,
         0,
-        amountContributedSoFar,
-        amountContributedSoFar,
+        amountContributedSoFarIndividual,
+        amountContributedSoFarIndividual,
+        amountContributedSoFarCompany,
+        amountContributedSoFarCompany,
+        amountContributedSoFarCompany + amountContributedSoFarIndividual,
       ]);
       continue;
     }
 
-    let match = minContributionForMatch / 100;
+    let match = matchPercentIndividual;
     let contributionAmount = (match * salary) / numberOfPayPeriods;
 
-    // do max contributions, then single contribution, then default to min match
-    if (i - numberOfPayPeriodsSoFar < numberOfMaxContributions) {
-      match = maxContributionFromPaycheck / 100;
-      contributionAmount = maxContributionAmount;
-    } else if (i - numberOfPayPeriodsSoFar === numberOfMaxContributions) {
-      match = singleContributionPercent / 100;
-      contributionAmount = singleContributionAmount;
-    }
+    // TODO Fancy math to ensure it doesnt exceed max
+    let companyMatchAmount = companyMatch / 100 * payPerPayPeriod; 
 
-    //if prev row exists, add value to monthly contribution, else use monthly contribution
-    let cumulativeAmount: number =
+    //if prev row exists, add value to period contribution, else use period contribution
+    let cumulativeAmountIndividual: number =
       i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
-    // check for too much comp
-    if (Math.floor(cumulativeAmount) > _401kMaximumIndividual) {
-      _401kMaxNotReachedAlertHTML = (
-        <Alert className="mb-3" variant="secondary">
-          {_401kMaxReachedEarlyNote}
-        </Alert>
-      );
-      concatKey += _401kMaxReachedEarlyIcon;
-      cumulativeAmount = _401kMaximumIndividual;
-      contributionAmount =
-        i != 0 ? _401kMaximumIndividual - table_rows[i - 1][4] : _401kMaximumIndividual;
-    }
+    let cumulativeAmountCompany: number =
+      i != 0 ? table_rows[i - 1][6] + companyMatchAmount : companyMatchAmount;
+
+    let cumulativeAmountTotal: number = 
+      i != 0 ? table_rows[i - 1][7] + contributionAmount + companyMatchAmount : contributionAmount + companyMatchAmount;
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
     // with the last check meaning you're unable to hit maximum contribution limit,
     // add dagger to let user know to bump up contribution
     if (
       i === numberOfPayPeriods - 1 &&
-      Math.round(cumulativeAmount) != _401kMaximumIndividual &&
+      Math.round(cumulativeAmountIndividual) != _401kMaximumIndividual &&
       match != maxContributionFromPaycheck / 100
     ) {
       _401kMaxNotReachedAlertHTML = (
@@ -149,7 +121,10 @@ function Optimizer() {
       salary / numberOfPayPeriods,
       match,
       contributionAmount,
-      cumulativeAmount,
+      cumulativeAmountIndividual,
+      companyMatchAmount,
+      cumulativeAmountCompany,
+      cumulativeAmountTotal
     ]);
   }
 
@@ -160,7 +135,7 @@ function Optimizer() {
    * @param max if event value is greater than max, set to max
    * If changeFunction is changeNumber of PayPeriods,
    * ensure payPeriodsSoFar is less.
-   * If payPeriodsSoFar is 0, set amountContributedSoFar to 0
+   * If payPeriodsSoFar is 0, set amountContributedSoFarIndividual to 0
    */
   const updateAmount = (
     e: React.FormEvent<HTMLElement>,
@@ -180,12 +155,16 @@ function Optimizer() {
     ) {
       changeNumberofPayPeriodsSoFar(value - 1);
       if (value === 1) {
-        changeAmountContributedSoFar(0);
+        changeAmountContributedSoFarIndividual(0);
+        changeAmountContributedSoFarCompany(0);
+        changeAmountContributedSoFarMBD(0);
       }
     }
     if (changeFunction === changeNumberofPayPeriodsSoFar) {
       if (value === 0) {
-        changeAmountContributedSoFar(0);        
+        changeAmountContributedSoFarIndividual(0);  
+        changeAmountContributedSoFarCompany(0);      
+        changeAmountContributedSoFarMBD(0);
       }
     }
     changeFunction(value);
@@ -214,28 +193,74 @@ function Optimizer() {
 
   return (
     <div className={styles.container}>
-      <Header titleName="Frontload Calculator" />
+      <Header titleName="401k Optimizer" />
 
       <main className={styles.main}>
-        <h1>Frontload Calculator</h1>
+        <h1>401k Optimizer</h1>
         <p>
-          Here we will optimize your 401k match by frontloading the maximum
-          amount while maximizing employer matching throughout the year.
+          Here we will maximize your 401k contribution assuming equal period contributions and assuming your plan does not automatically stop contributions.
         </p>
       </main>
 
       <div className={styles.content}>
         <Form className={styles.form}>
-          <Form.Label>Annual Salary</Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
-              value={formatStateValue(salary)}
-              onChange={(e) => updateAmount(e, changeSalary)}
-            />
-          </InputGroup>
 
+          <TooltipOnHover
+              text="Check this if you are able to do an After-Tax Traditional Contribution with In Plan Conversion to Roth."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                <Form.Check type="checkbox" onChange={() => changeMegabackdoorEligible(!megabackdoorEligible)} label="Eligible For Mega Backdoor Roth" checked={megabackdoorEligible} />
+                </InputGroup>
+              }
+            />
+
+          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
+            <TooltipOnHover
+              text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(_401kMaximumIndividual)}
+                    onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
+                  />
+                </InputGroup>
+              }
+            />
+          
+          {megabackdoorEligible &&
+          <Form.Group>
+          <Form.Label>401k Maximum for Total Contribution</Form.Label>
+            <TooltipOnHover
+              text="The maximum in 2023 is $66000. You can decrease this if you have contributed to another 401k."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(_401kMaximum)}
+                    onChange={(e) => updateAmount(e, change401kMaximum)}
+                  />
+                </InputGroup>
+              }
+            /></Form.Group>
+          }
+
+          <Form.Label>Annual Base Salary</Form.Label>
+          <TooltipOnHover
+              text="Enter your compensation that is eligible for 401k contributions."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(salary)}
+                    onChange={(e) => updateAmount(e, changeSalary)}
+                  />
+                </InputGroup>
+              }
+            />
           <Form.Label>Number of Pay Periods this year</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
@@ -265,36 +290,34 @@ function Optimizer() {
             />
           </InputGroup>
 
-          <Form.Label>Amount Contributed to 401k so far</Form.Label>
+          <Form.Label>Individual Contributions to 401k so far</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
-              readOnly={numberOfPayPeriodsSoFar === 0}
+              disabled={numberOfPayPeriodsSoFar === 0}
               type="number" onWheel={e => e.currentTarget.blur()}
-              value={formatStateValue(amountContributedSoFar)}
+              value={formatStateValue(amountContributedSoFarIndividual)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFar, 0, _401kMaximumIndividual)
+                updateAmount(e, changeAmountContributedSoFarIndividual, 0, _401kMaximumIndividual)
               }
             />
           </InputGroup>
 
-          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
-          <TooltipOnHover
-            text="The maximum in 2022 is $20500. You can decrease this if you have contributed to another 401k."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
-                  value={formatStateValue(_401kMaximumIndividual)}
-                  onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
-                />
-              </InputGroup>
-            }
-          />
+          <Form.Label>Company Contributions to 401k so far</Form.Label>
+          <InputGroup className="mb-3 w-100">
+            <InputGroup.Text>$</InputGroup.Text>
+            <Form.Control
+              disabled={numberOfPayPeriodsSoFar === 0}
+              type="number" onWheel={e => e.currentTarget.blur()}
+              value={formatStateValue(amountContributedSoFarCompany)}
+              onChange={(e) =>
+                updateAmount(e, changeAmountContributedSoFarCompany, 0, _401kMaximum - _401kMaximumIndividual)
+              }
+            />
+          </InputGroup>
 
           <Form.Label>
-            Paycheck Contribution for Full Employer 401k Match
+            Effective Company 401k Match
           </Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100."
@@ -302,9 +325,9 @@ function Optimizer() {
               <InputGroup className="mb-3 w-100">
                 <Form.Control
                   type="number" onWheel={e => e.currentTarget.blur()}
-                  value={formatStateValue(minContributionForMatch)}
+                  value={formatStateValue(companyMatch)}
                   onChange={(e) =>
-                    updateContribution(e, changeMinContributionForMatch)
+                    updateContribution(e, changeCompanyMatch)
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
@@ -337,10 +360,14 @@ function Optimizer() {
             <thead>
               <tr>
                 <th>Pay Period</th>
-                <th>Compensation</th>
-                <th>Match</th>
-                <th>Contribution</th>
-                <th>Cumulative Contributed</th>
+                <th>Pay</th>
+                <th>Individual Contribution %</th>
+                <th>Individual Contribution $</th>
+                <th>Individual Cumulative Contribution</th>
+                <th>Company Contribution $</th>
+                <th>Company Cumulative Contribution</th>
+                <th>Total Cumulative Contributed</th>
+                
               </tr>
             </thead>
             <tbody>
@@ -351,6 +378,9 @@ function Optimizer() {
                   <td>{formatPercent(row[2])}</td>
                   <td>{formatCurrency(row[3])}</td>
                   <td>{formatCurrency(row[4])}</td>
+                  <td>{formatCurrency(row[5])}</td>
+                  <td>{formatCurrency(row[6])}</td>
+                  <td>{formatCurrency(row[7])}</td>
                 </tr>
               ))}
             </tbody>
@@ -365,4 +395,4 @@ function Optimizer() {
   );
 }
 
-export default Optimizer;
+export default Maximizer;
