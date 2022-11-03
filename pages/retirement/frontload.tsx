@@ -33,15 +33,23 @@ function Frontload() {
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
 
+  const [_401kAutoCap, change401kAutoCap] = React.useState(false);
+
+  const payPeriodAlreadyPassedIcon = "\u203E"; // overline
+  const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     _401kMaxNotReachedIcon +
-    " If your company automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+    " If your employer automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+  const _401kMaxReachedWithAutoCapNote =
+    _401kMaxNotReachedIcon +
+    " Since your employer automatically caps your 401k contribution, this last contribution should max out your contributions.";
   const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     _401kMaxReachedEarlyIcon +
     " You will reach your maximum contribution early even with minimum matching available. Congrats. Future contributions for the year will not be possible if your employer caps your contributions";
 
+  let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
@@ -61,6 +69,14 @@ function Frontload() {
       (contributionAmountForFullMatch - maxContributionAmount)
   );
 
+  if (numberOfPayPeriodsSoFar > 0) {
+    payPeriodAlreadyPassedAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {payPeriodAlreadyPassedText}
+      </Alert>
+    );
+  }
+
   // console.log(numberOfMaxContributions + " = " +
   // amountContributedSoFar + " - " + _401kMaximum + " + (" + contributionAmountForFullMatch + " * (" + numberOfPayPeriods + " - " + numberOfPayPeriodsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
   const singleContributionPercent = Math.floor(
@@ -79,17 +95,18 @@ function Frontload() {
   const singleContributionAmount =
     (singleContributionPercent / 100) * payPerPayPeriod;
 
+  // data for table
   const table_rows: any[][] = [];
   for (let i = 0; i < numberOfPayPeriods; i++) {
     // key for paycheck number. Index start at 1 cuz finance
     let concatKey = (i + 1).toString();
     // edge cases to just insert 0
     if (i < numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)";
+      concatKey += payPeriodAlreadyPassedIcon;
       table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0]);
       continue;
     } else if (i == numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)";
+      concatKey += payPeriodAlreadyPassedIcon;
       table_rows.push([
         concatKey,
         payPerPayPeriod,
@@ -110,6 +127,17 @@ function Frontload() {
     } else if (i - numberOfPayPeriodsSoFar === numberOfMaxContributions) {
       match = singleContributionPercent / 100;
       contributionAmount = singleContributionAmount;
+    }
+
+    if (_401kAutoCap && i > 0 && i == numberOfPayPeriods - 1) {
+      contributionAmount =_401k_maximum_contribution_individual - table_rows[i - 1][4];
+      match = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
+      _401kMaxNotReachedAlertHTML = (
+        <Alert className="mb-3" variant="secondary">
+          {_401kMaxReachedWithAutoCapNote}
+        </Alert>
+      );
+      concatKey += _401kMaxNotReachedIcon;
     }
 
     //if prev row exists, add value to period contribution, else use period contribution
@@ -329,6 +357,15 @@ function Frontload() {
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
+              </InputGroup>
+            }
+          />
+
+          <TooltipOnHover
+            text="Check this if your 401k automatically caps contributions at limits."
+            nest={
+              <InputGroup className="mb-3 w-75">
+              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
               </InputGroup>
             }
           />

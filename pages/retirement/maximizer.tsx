@@ -269,14 +269,14 @@ function Maximizer() {
       <div className={styles.content}>
         <Form className={styles.form}>
 
-          <TooltipOnHover
+          {/* <TooltipOnHover
               text="Check this if you are able to do an After-Tax Traditional Contribution with In Plan Conversion to Roth."
               nest={
                 <InputGroup className="mb-3 w-50">
                 <Form.Check type="checkbox" onChange={() => changeMegabackdoorEligible(!megabackdoorEligible)} label="Eligible For Mega Backdoor Roth" checked={megabackdoorEligible} />
                 </InputGroup>
               }
-            />
+            /> */}
 
           <TooltipOnHover
             text="Check this if your 401k automatically caps contributions at limits."
