@@ -9,8 +9,12 @@ import {
 import { _401k_maximum_contribution_individual, _401k_maximum_contribution_total } from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
 
+/**
+ * TODO's:
+ * - allow user to choose between maximize and frontload
+ */
 function Maximizer() {
-  const [salary, changeSalary] = React.useState(50000);
+  const [salary, changeSalary] = React.useState(60000);
   const [_401kMaximumIndividual, change401kMaximumIndividual] = React.useState(
     _401k_maximum_contribution_individual
   );
@@ -22,30 +26,34 @@ function Maximizer() {
     React.useState(0);
   const [amountContributedSoFarIndividual, changeAmountContributedSoFarIndividual] =
     React.useState(0);
-  const [amountContributedSoFarCompany, changeAmountContributedSoFarCompany] =
+  const [amountContributedSoFarEmployer, changeAmountContributedSoFarEmployer] =
     React.useState(0);
   const [amountContributedSoFarMBD, changeAmountContributedSoFarMBD] =
     React.useState(0);
   // make sure to divide minContributionForMaxMatch, maxContributionFromPaycheck, 
-  // and companyMatch by 100 to get percentage
+  // and employerMatch by 100 to get percentage
   // const [minContributionForMaxMatch, changeMinContributionForMaxMatch] =
   //   React.useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
-  const [companyMatch, changeCompanyMatch] = React.useState(5);
+  const [employerMatch, changeEmployerMatch] = React.useState(5);
 
   // Toggle
   const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);
+  const [_401kAutoCap, change401kAutoCap] = React.useState(false);
   
+  const payPeriodAlreadyPassedIcon = "\u203E"; // overline
+  const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     _401kMaxNotReachedIcon +
-    " If your company automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+    " If your employer automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
   const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     _401kMaxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Congrats. All future contributions will not be possible if your employer caps your contributions";
+    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer caps your contributions. You may miss out on some employer match, but check with your employer if there is an employer true-up match to compensate.";
 
+  let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
@@ -55,54 +63,107 @@ function Maximizer() {
   const amountLeftToContributeIndividual = _401kMaximumIndividual - amountContributedSoFarIndividual;
   const contributionPerRemainingPeriodIndividual = amountLeftToContributeIndividual / numberOfPayPeriodsLeft;
   // This is rounded down since most companies won't let you select exact percentage
-  const matchPercentIndividual = Math.floor((contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100) / 100;
+  const matchPercentIndividualRaw = (contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100;
+  const matchPercentIndividualRawRounded = _401kAutoCap ? Math.ceil(matchPercentIndividualRaw) : Math.floor(matchPercentIndividualRaw);
+  const matchPercentIndividual = Math.min(matchPercentIndividualRawRounded, maxContributionFromPaycheck) / 100;
 
+  if (numberOfPayPeriodsSoFar > 0) {
+    payPeriodAlreadyPassedAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {payPeriodAlreadyPassedText}
+      </Alert>
+    );
+  }
   // Data for table
   const table_rows: any[][] = [];
+
+  let match = 0;
+  let contributionAmount = 0;
+  let employerMatchAmount = 0;
+  let cumulativeAmountIndividual: number = 0;
+  let cumulativeAmountEmployer: number = 0;
+  let cumulativeAmountTotal: number = 0;
+
   for (let i = 0; i < numberOfPayPeriods; i++) {
     // key for paycheck number. Index start at 1 cuz finance
     let concatKey = (i + 1).toString();
+    match = matchPercentIndividual;
+    contributionAmount = (match * salary) / numberOfPayPeriods;
 
-    // edge cases to just insert 0
+    // base cases to just insert 0 if pay period has passed
     if (i < numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)";
-      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0, 0, 0]);
+      concatKey += payPeriodAlreadyPassedIcon;
+      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0, 0, 0, 0]);
       continue;
-    } else if (i == numberOfPayPeriodsSoFar - 1) {
-      concatKey += " (Already passed)";
+    }
+    // base case to add amounts contributed so far
+    if (i == numberOfPayPeriodsSoFar - 1) {
+      concatKey += payPeriodAlreadyPassedIcon;
       table_rows.push([
         concatKey,
         payPerPayPeriod,
         0,
         amountContributedSoFarIndividual,
         amountContributedSoFarIndividual,
-        amountContributedSoFarCompany,
-        amountContributedSoFarCompany,
-        amountContributedSoFarCompany + amountContributedSoFarIndividual,
+        amountContributedSoFarEmployer,
+        amountContributedSoFarEmployer,
+        amountContributedSoFarEmployer + amountContributedSoFarIndividual,
       ]);
       continue;
     }
 
-    let match = matchPercentIndividual;
-    let contributionAmount = (match * salary) / numberOfPayPeriods;
+    // if previous row is above max individual contribution, stop
+    // else if new contribution will push over the limit and we auto cap, adjust
+    if (i > 0 && table_rows[i - 1][4] >= _401kMaximumIndividual) {
+      match = 0;
+      contributionAmount = 0;
+      concatKey += _401kMaxReachedEarlyIcon;
+    } else if (i > 0 && _401kAutoCap && table_rows[i - 1][4] + contributionAmount >= _401kMaximumIndividual) {
+      contributionAmount = Math.max(0, _401kMaximumIndividual - table_rows[i - 1][4])
+      match = Math.ceil(contributionAmount / (payPerPayPeriod) * 100) / 100;
+      concatKey += _401kMaxReachedEarlyIcon;
+      _401kMaxReachedEarlyAlertHTML = (
+        <Alert className="mb-3" variant="secondary">
+          {_401kMaxReachedEarlyNote}
+        </Alert>
+      );
+    }
 
-    // TODO Fancy math to ensure it doesnt exceed max
-    let companyMatchAmount = companyMatch / 100 * payPerPayPeriod; 
+    // edge case for last paycheck and autocap is true
+    // TODO Add double dagger
+    // if (_401kAutoCap && i == numberOfPayPeriods - 1) {
+    //   contributionAmount = Math.min(
+    //     _401k_maximum_contribution_individual - cumulativeAmountIndividual, 
+    //     _401k_maximum_contribution_total - cumulativeAmountTotal, 
+    //     (maxContributionFromPaycheck / 100 * payPerPayPeriod));
+    //   match = Math.ceil(contributionAmount / (salary / numberOfPayPeriods) * 100) / 100;
+    // }
+
+    // Employer match cannot exceed contribution amount
+    employerMatchAmount = Math.min(
+      employerMatch / 100 * payPerPayPeriod, 
+      contributionAmount); 
+    if (i > 0 && table_rows[i - 1][7] + contributionAmount > _401kMaximum && megabackdoorEligible) {
+      employerMatchAmount = 0
+    } else if (i > 0 && table_rows[i - 1][7] + employerMatchAmount + contributionAmount > _401kMaximum && _401kAutoCap && megabackdoorEligible) {
+      employerMatchAmount = _401kMaximum - table_rows[i - 1][7] - contributionAmount;
+    }
 
     //if prev row exists, add value to period contribution, else use period contribution
-    let cumulativeAmountIndividual: number =
+    cumulativeAmountIndividual =
       i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
-    let cumulativeAmountCompany: number =
-      i != 0 ? table_rows[i - 1][6] + companyMatchAmount : companyMatchAmount;
+    cumulativeAmountEmployer =
+      i != 0 ? table_rows[i - 1][6] + employerMatchAmount : employerMatchAmount;
 
-    let cumulativeAmountTotal: number = 
-      i != 0 ? table_rows[i - 1][7] + contributionAmount + companyMatchAmount : contributionAmount + companyMatchAmount;
+    cumulativeAmountTotal = 
+      i != 0 ? table_rows[i - 1][7] + contributionAmount + employerMatchAmount : contributionAmount + employerMatchAmount;
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
     // with the last check meaning you're unable to hit maximum contribution limit,
     // add dagger to let user know to bump up contribution
     if (
+      !_401kAutoCap &&
       i === numberOfPayPeriods - 1 &&
       Math.round(cumulativeAmountIndividual) != _401kMaximumIndividual &&
       match != maxContributionFromPaycheck / 100
@@ -122,8 +183,8 @@ function Maximizer() {
       match,
       contributionAmount,
       cumulativeAmountIndividual,
-      companyMatchAmount,
-      cumulativeAmountCompany,
+      employerMatchAmount,
+      cumulativeAmountEmployer,
       cumulativeAmountTotal
     ]);
   }
@@ -156,14 +217,14 @@ function Maximizer() {
       changeNumberofPayPeriodsSoFar(value - 1);
       if (value === 1) {
         changeAmountContributedSoFarIndividual(0);
-        changeAmountContributedSoFarCompany(0);
+        changeAmountContributedSoFarEmployer(0);
         changeAmountContributedSoFarMBD(0);
       }
     }
     if (changeFunction === changeNumberofPayPeriodsSoFar) {
       if (value === 0) {
         changeAmountContributedSoFarIndividual(0);  
-        changeAmountContributedSoFarCompany(0);      
+        changeAmountContributedSoFarEmployer(0);      
         changeAmountContributedSoFarMBD(0);
       }
     }
@@ -193,12 +254,15 @@ function Maximizer() {
 
   return (
     <div className={styles.container}>
-      <Header titleName="401k Optimizer" />
+      <Header titleName="401k Maximizer" />
 
       <main className={styles.main}>
-        <h1>401k Optimizer</h1>
+        <h1>401k Maximizer</h1>
         <p>
-          Here we will maximize your 401k contribution assuming equal period contributions and assuming your plan does not automatically stop contributions.
+          Here we will maximize your 401k contribution with equal period contributions. We will prioritize individual contributions, employer match, then anything else. 
+        </p>
+        <p>
+          We will also assume employer match cannot exceed individual contributions for any pay period.
         </p>
       </main>
 
@@ -208,11 +272,20 @@ function Maximizer() {
           <TooltipOnHover
               text="Check this if you are able to do an After-Tax Traditional Contribution with In Plan Conversion to Roth."
               nest={
-                <InputGroup className="mb-3 w-100">
+                <InputGroup className="mb-3 w-50">
                 <Form.Check type="checkbox" onChange={() => changeMegabackdoorEligible(!megabackdoorEligible)} label="Eligible For Mega Backdoor Roth" checked={megabackdoorEligible} />
                 </InputGroup>
               }
             />
+
+          <TooltipOnHover
+            text="Check this if your 401k automatically caps contributions at limits."
+            nest={
+              <InputGroup className="mb-3 w-75">
+              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
+              </InputGroup>
+            }
+          />
 
           <Form.Label>401k Maximum for Individual Contribution</Form.Label>
             <TooltipOnHover
@@ -256,7 +329,7 @@ function Maximizer() {
                   <Form.Control
                     type="number" onWheel={e => e.currentTarget.blur()}
                     value={formatStateValue(salary)}
-                    onChange={(e) => updateAmount(e, changeSalary)}
+                    onChange={(e) => updateAmount(e, changeSalary, 0)}
                   />
                 </InputGroup>
               }
@@ -303,21 +376,21 @@ function Maximizer() {
             />
           </InputGroup>
 
-          <Form.Label>Company Contributions to 401k so far</Form.Label>
+          <Form.Label>Employer Contributions to 401k so far</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
               disabled={numberOfPayPeriodsSoFar === 0}
               type="number" onWheel={e => e.currentTarget.blur()}
-              value={formatStateValue(amountContributedSoFarCompany)}
+              value={formatStateValue(amountContributedSoFarEmployer)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFarCompany, 0, _401kMaximum - _401kMaximumIndividual)
+                updateAmount(e, changeAmountContributedSoFarEmployer, 0, _401kMaximum - _401kMaximumIndividual)
               }
             />
           </InputGroup>
 
           <Form.Label>
-            Effective Company 401k Match
+            Effective Employer 401k Match
           </Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100."
@@ -325,9 +398,9 @@ function Maximizer() {
               <InputGroup className="mb-3 w-100">
                 <Form.Control
                   type="number" onWheel={e => e.currentTarget.blur()}
-                  value={formatStateValue(companyMatch)}
+                  value={formatStateValue(employerMatch)}
                   onChange={(e) =>
-                    updateContribution(e, changeCompanyMatch)
+                    updateContribution(e, changeEmployerMatch)
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
@@ -364,8 +437,8 @@ function Maximizer() {
                 <th>Individual Contribution %</th>
                 <th>Individual Contribution $</th>
                 <th>Individual Cumulative Contribution</th>
-                <th>Company Contribution $</th>
-                <th>Company Cumulative Contribution</th>
+                <th>Employer Contribution $</th>
+                <th>Employer Cumulative Contribution</th>
                 <th>Total Cumulative Contributed</th>
                 
               </tr>
@@ -385,6 +458,7 @@ function Maximizer() {
               ))}
             </tbody>
           </Table>
+          {payPeriodAlreadyPassedAlertHTML}
           {_401kMaxNotReachedAlertHTML}
           {_401kMaxReachedEarlyAlertHTML}
         </div>

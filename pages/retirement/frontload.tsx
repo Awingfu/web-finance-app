@@ -40,16 +40,18 @@ function Frontload() {
   const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     _401kMaxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Congrats. All future contributions will not be possible if your employer caps your contributions";
+    " You will reach your maximum contribution early even with minimum matching available. Congrats. Future contributions for the year will not be possible if your employer caps your contributions";
 
   let _401kMaxNotReachedAlertHTML = <></>;
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
   // Calculations
+  const payPerPayPeriod = salary / numberOfPayPeriods;
+
   const maxContributionAmount =
-    ((maxContributionFromPaycheck / 100) * salary) / numberOfPayPeriods;
+    (maxContributionFromPaycheck / 100) * payPerPayPeriod;
   const contributionAmountForFullMatch =
-    ((minContributionForMatch / 100) * salary) / numberOfPayPeriods;
+    (minContributionForMatch / 100) * payPerPayPeriod;
 
   const numberOfMaxContributions = Math.floor(
     (amountContributedSoFar -
@@ -75,7 +77,7 @@ function Frontload() {
       100
   );
   const singleContributionAmount =
-    ((singleContributionPercent / 100) * salary) / numberOfPayPeriods;
+    (singleContributionPercent / 100) * payPerPayPeriod;
 
   const table_rows: any[][] = [];
   for (let i = 0; i < numberOfPayPeriods; i++) {
@@ -84,13 +86,13 @@ function Frontload() {
     // edge cases to just insert 0
     if (i < numberOfPayPeriodsSoFar - 1) {
       concatKey += " (Already passed)";
-      table_rows.push([concatKey, salary / numberOfPayPeriods, 0, 0, 0]);
+      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0]);
       continue;
     } else if (i == numberOfPayPeriodsSoFar - 1) {
       concatKey += " (Already passed)";
       table_rows.push([
         concatKey,
-        salary / numberOfPayPeriods,
+        payPerPayPeriod,
         0,
         amountContributedSoFar,
         amountContributedSoFar,
@@ -116,7 +118,7 @@ function Frontload() {
 
     // check for too much comp
     if (Math.floor(cumulativeAmount) > _401kMaximum) {
-      _401kMaxNotReachedAlertHTML = (
+      _401kMaxReachedEarlyAlertHTML = (
         <Alert className="mb-3" variant="secondary">
           {_401kMaxReachedEarlyNote}
         </Alert>
@@ -125,6 +127,7 @@ function Frontload() {
       cumulativeAmount = _401kMaximum;
       contributionAmount =
         i != 0 ? _401kMaximum - table_rows[i - 1][4] : _401kMaximum;
+      match = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
     }
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
@@ -146,7 +149,7 @@ function Frontload() {
     // row values: key, compensation, match, contribution, cumulative
     table_rows.push([
       concatKey,
-      salary / numberOfPayPeriods,
+      payPerPayPeriod,
       match,
       contributionAmount,
       cumulativeAmount,
@@ -219,8 +222,7 @@ function Frontload() {
       <main className={styles.main}>
         <h1>Frontload Calculator</h1>
         <p>
-          Here we will optimize your 401k match by frontloading the maximum
-          amount while maximizing employer matching throughout the year.
+          Here we will maximize your 401k contributions by frontloading while ensuring minimum contributions throughout the year.
         </p>
       </main>
 
@@ -280,7 +282,7 @@ function Frontload() {
 
           <Form.Label>401k Maximum for Individual Contribution</Form.Label>
           <TooltipOnHover
-            text="The maximum in 2022 is $20500. You can decrease this if you have contributed to another 401k."
+            text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
             nest={
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
@@ -294,10 +296,10 @@ function Frontload() {
           />
 
           <Form.Label>
-            Minimum Paycheck Contribution for Full Employer 401k Match
+            Minimum Desired Paycheck Contribution
           </Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100."
+            text="% of income between 0 and 100. This is effectively what you want to ensure you get a 401k match per paycheck."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -313,7 +315,7 @@ function Frontload() {
           />
 
           <Form.Label>
-            Maximum Paycheck Contribution Allowed for 401k
+            Maximum Paycheck Contribution Allowed
           </Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100. You can also just put the maximum amount you are comfortable contributing."
