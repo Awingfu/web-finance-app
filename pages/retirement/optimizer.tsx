@@ -6,21 +6,17 @@ import {
   formatPercent,
   formatStateValue,
 } from "../../src/utils";
-import { _401k_maximum_contribution_individual } from "../../src/utils/constants";
+import { _401k_maximum_contribution_individual, _401k_maximum_contribution_total } from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
 
-/**
- * Future Goals
- * 1. New inputs: Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
- * 2. different frontloading strategies inc company match and 401k true limit
- * a. max, then match. (current) b. flat amount. c. pure max and ignore match
- * 3. cost analysis with fv assumption for each strategy
- */
 
-function Frontload() {
+function Optimizer() {
   const [salary, changeSalary] = React.useState(50000);
-  const [_401kMaximum, change401kMaximum] = React.useState(
+  const [_401kMaximumIndividual, change401kMaximumIndividual] = React.useState(
     _401k_maximum_contribution_individual
+  );
+  const [_401kMaximum, change401kMaximum] = React.useState(
+    _401k_maximum_contribution_total
   );
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
   const [numberOfPayPeriodsSoFar, changeNumberofPayPeriodsSoFar] =
@@ -33,6 +29,10 @@ function Frontload() {
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
 
+  // Divide these by 100, too
+  const [companyMatchPercent, changeCompanyMatchPercent] = React.useState(50)
+  const [companyMatchUpToPercent, changeCompanyMatchUpToPercent] = React.useState(50)
+  
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     _401kMaxNotReachedIcon +
@@ -53,16 +53,16 @@ function Frontload() {
 
   const numberOfMaxContributions = Math.floor(
     (amountContributedSoFar -
-      _401kMaximum +
+      _401kMaximumIndividual +
       contributionAmountForFullMatch *
         (numberOfPayPeriods - numberOfPayPeriodsSoFar)) /
       (contributionAmountForFullMatch - maxContributionAmount)
   );
 
   // console.log(numberOfMaxContributions + " = " +
-  // amountContributedSoFar + " - " + _401kMaximum + " + (" + contributionAmountForFullMatch + " * (" + numberOfPayPeriods + " - " + numberOfPayPeriodsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
+  // amountContributedSoFar + " - " + _401kMaximumIndividual + " + (" + contributionAmountForFullMatch + " * (" + numberOfPayPeriods + " - " + numberOfPayPeriodsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
   const singleContributionPercent = Math.floor(
-    ((_401kMaximum -
+    ((_401kMaximumIndividual -
       (amountContributedSoFar +
         numberOfMaxContributions * maxContributionAmount +
         (numberOfPayPeriods -
@@ -115,16 +115,16 @@ function Frontload() {
       i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
     // check for too much comp
-    if (Math.floor(cumulativeAmount) > _401kMaximum) {
+    if (Math.floor(cumulativeAmount) > _401kMaximumIndividual) {
       _401kMaxNotReachedAlertHTML = (
         <Alert className="mb-3" variant="secondary">
           {_401kMaxReachedEarlyNote}
         </Alert>
       );
       concatKey += _401kMaxReachedEarlyIcon;
-      cumulativeAmount = _401kMaximum;
+      cumulativeAmount = _401kMaximumIndividual;
       contributionAmount =
-        i != 0 ? _401kMaximum - table_rows[i - 1][4] : _401kMaximum;
+        i != 0 ? _401kMaximumIndividual - table_rows[i - 1][4] : _401kMaximumIndividual;
     }
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
@@ -132,7 +132,7 @@ function Frontload() {
     // add dagger to let user know to bump up contribution
     if (
       i === numberOfPayPeriods - 1 &&
-      Math.round(cumulativeAmount) != _401kMaximum &&
+      Math.round(cumulativeAmount) != _401kMaximumIndividual &&
       match != maxContributionFromPaycheck / 100
     ) {
       _401kMaxNotReachedAlertHTML = (
@@ -273,7 +273,7 @@ function Frontload() {
               type="number" onWheel={e => e.currentTarget.blur()}
               value={formatStateValue(amountContributedSoFar)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFar, 0, _401kMaximum)
+                updateAmount(e, changeAmountContributedSoFar, 0, _401kMaximumIndividual)
               }
             />
           </InputGroup>
@@ -286,8 +286,8 @@ function Frontload() {
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
                   type="number" onWheel={e => e.currentTarget.blur()}
-                  value={formatStateValue(_401kMaximum)}
-                  onChange={(e) => updateAmount(e, change401kMaximum)}
+                  value={formatStateValue(_401kMaximumIndividual)}
+                  onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
                 />
               </InputGroup>
             }
@@ -365,4 +365,4 @@ function Frontload() {
   );
 }
 
-export default Frontload;
+export default Optimizer;
