@@ -114,7 +114,7 @@ function Frontload() {
     // base cases to just insert 0 and existing contributions if periods have already passed
     if (i < numberOfPayPeriodsSoFar - 1) {
       concatKey += payPeriodAlreadyPassedIcon;
-      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0]);
+      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0, 0, 0]);
       continue;
     } else if (i == numberOfPayPeriodsSoFar - 1) {
       concatKey += payPeriodAlreadyPassedIcon;
@@ -123,6 +123,8 @@ function Frontload() {
         payPerPayPeriod,
         0,
         amountContributedSoFar,
+        amountContributedSoFar,
+        0,
         amountContributedSoFar,
       ]);
       continue;
