@@ -27,8 +27,8 @@ const Home: NextPage = () => {
           
           <Link href="/retirement/maximizer">
             <a className={styles.card}>
-              <h2>401k Optimizer &rarr;</h2>
-              <p>Maximize your 401k contributions</p>
+              <h2>401k Maximizer &rarr;</h2>
+              <p>Maximize your 401k contributions with equal period contributions</p>
             </a>
           </Link>
 
