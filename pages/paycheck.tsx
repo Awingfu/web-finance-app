@@ -266,7 +266,7 @@ function Paycheck() {
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control type="number" value={formatStateValue(salary)} onChange={e => updateAmount(e, changeSalary)} />
+            <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(salary)} onChange={e => updateAmount(e, changeSalary)} />
           </InputGroup>
 
           <Form.Group className="mb-3">
@@ -274,7 +274,7 @@ function Paycheck() {
             <div className={styles.inlineGroup}>
               <InputGroup className={styles.inlineChildren}>
                 <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control type="number" value={formatStateValue(bonus)} onChange={e => updateAmount(e, changeBonus)} />
+                <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(bonus)} onChange={e => updateAmount(e, changeBonus)} />
               </InputGroup>
               <InputGroup className={styles.inlineChildren}>
                 <TooltipOnHover text="Check if bonus is eligible for 401k and other contributions. If unchecked, bonus will be added at Taxable Income step." nest={
@@ -352,21 +352,21 @@ function Paycheck() {
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
-                  <Form.Control type="number" value={formatStateValue(t401kContribution)} onChange={e => updateContribution(e, changeT401kContribution)} />
+                  <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(t401kContribution)} onChange={e => updateContribution(e, changeT401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
-                  <Form.Control type="number" value={formatStateValue(r401kContribution)} onChange={e => updateContribution(e, changeR401kContribution)} />
+                  <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(r401kContribution)} onChange={e => updateContribution(e, changeR401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90. This is the Mega Backdoor Roth." nest={
                 <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>After Tax:</InputGroup.Text>
-                  <Form.Control type="number" value={formatStateValue(at401kContribution)} onChange={e => updateContribution(e, changeAT401kContribution)} />
+                  <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(at401kContribution)} onChange={e => updateContribution(e, changeAT401kContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
@@ -379,14 +379,14 @@ function Paycheck() {
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Traditional:</InputGroup.Text>
-                  <Form.Control type="number" value={formatStateValue(tIRAContribution)} onChange={e => updateContribution(e, changeTIRAContribution)} />
+                  <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(tIRAContribution)} onChange={e => updateContribution(e, changeTIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
               <TooltipOnHover text="% of gross income between 0 and 90." nest={
                 <InputGroup className={styles.inlineChildren}>
                   <InputGroup.Text>Roth:</InputGroup.Text>
-                  <Form.Control type="number" value={formatStateValue(rIRAContribution)} onChange={e => updateContribution(e, changeRIRAContribution)} />
+                  <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(rIRAContribution)} onChange={e => updateContribution(e, changeRIRAContribution)} />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               } />
@@ -396,7 +396,7 @@ function Paycheck() {
           <Form.Label>Stock Purchase Plan Contribution</Form.Label>
           <TooltipOnHover text="% of gross income between 0 and 90." nest={
             <InputGroup className='mb-3 w-100'>
-              <Form.Control type="number" value={formatStateValue(sppContribution)} onChange={e => updateContribution(e, changeSPPContribution)} />
+              <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(sppContribution)} onChange={e => updateContribution(e, changeSPPContribution)} />
               <InputGroup.Text>%</InputGroup.Text>
             </InputGroup>
           } />
@@ -406,7 +406,7 @@ function Paycheck() {
               <Form.Label>{key} Contribution</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control type="number" value={formatStateValue(customWithholdings[key][0])} onChange={e => updateAmount(e, customWithholdings[key][1])} />
+                <Form.Control type="number" onWheel={e => e.currentTarget.blur()} value={formatStateValue(customWithholdings[key][0])} onChange={e => updateAmount(e, customWithholdings[key][1])} />
                 <InputGroup.Text>per</InputGroup.Text>
                 <DropdownButton
                   variant="secondary"
