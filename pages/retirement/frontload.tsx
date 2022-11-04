@@ -1,5 +1,5 @@
 import React from "react";
-import { Alert, Form, InputGroup, Table } from "react-bootstrap";
+import { Alert, Form, FormGroup, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
 import {
   formatCurrency,
@@ -27,13 +27,16 @@ function Frontload() {
     React.useState(0);
   const [amountContributedSoFar, changeAmountContributedSoFar] =
     React.useState(0);
-  // make sure to divide minContributionForMatch and maxContributionFromPaycheck by 100 to get percentage
+  // make sure to divide minContributionForMatch, maxContributionFromPaycheck, effectiveEmployerMatch by 100 to get percentage
   const [minContributionForMatch, changeMinContributionForMatch] =
     React.useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
-
+  const [effectiveEmployerBase, changeEffectiveEmployerBase] = React.useState(0)
+  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(5)
+    
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
+  const [showEmployerMatchInTable, changeShowEmployerMatchInTable] = React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
@@ -51,6 +54,7 @@ function Frontload() {
 
   let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
+  let _401kMaxReachedWithAutoCapAlertHTML = <></>;
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
   // Calculations
@@ -97,10 +101,17 @@ function Frontload() {
 
   // data for table
   const table_rows: any[][] = [];
+  let contributionPercent = 0;
+  let contributionAmount = 0;
+  let cumulativeAmountIndividual = 0;
+  let employerAmount = 0;
+  let cumulativeAmountTotal = 0;
+
   for (let i = 0; i < numberOfPayPeriods; i++) {
     // key for paycheck number. Index start at 1 cuz finance
     let concatKey = (i + 1).toString();
-    // edge cases to just insert 0
+
+    // base cases to just insert 0 and existing contributions if periods have already passed
     if (i < numberOfPayPeriodsSoFar - 1) {
       concatKey += payPeriodAlreadyPassedIcon;
       table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0]);
@@ -117,22 +128,27 @@ function Frontload() {
       continue;
     }
 
-    let match = minContributionForMatch / 100;
-    let contributionAmount = (match * salary) / numberOfPayPeriods;
+    // set base contribution pct and contribution amount
+    contributionPercent = minContributionForMatch / 100;
+    contributionAmount = (contributionPercent * salary) / numberOfPayPeriods;
 
     // do max contributions, then single contribution, then default to min match
     if (i - numberOfPayPeriodsSoFar < numberOfMaxContributions) {
-      match = maxContributionFromPaycheck / 100;
+      contributionPercent = maxContributionFromPaycheck / 100;
       contributionAmount = maxContributionAmount;
     } else if (i - numberOfPayPeriodsSoFar === numberOfMaxContributions) {
-      match = singleContributionPercent / 100;
+      contributionPercent = singleContributionPercent / 100;
       contributionAmount = singleContributionAmount;
     }
 
-    if (_401kAutoCap && i > 0 && i == numberOfPayPeriods - 1) {
+    // if 401k auto caps, we're at the last row, and contribution would not equal max,
+    // set contribution to max out
+    if (_401kAutoCap && 
+      i == numberOfPayPeriods - 1 && 
+      contributionAmount + table_rows[i - 1][4] != _401k_maximum_contribution_individual) {
       contributionAmount =_401k_maximum_contribution_individual - table_rows[i - 1][4];
-      match = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
-      _401kMaxNotReachedAlertHTML = (
+      contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
+      _401kMaxReachedWithAutoCapAlertHTML = (
         <Alert className="mb-3" variant="secondary">
           {_401kMaxReachedWithAutoCapNote}
         </Alert>
@@ -140,31 +156,30 @@ function Frontload() {
       concatKey += _401kMaxNotReachedIcon;
     }
 
-    //if prev row exists, add value to period contribution, else use period contribution
-    let cumulativeAmount: number =
-      i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
+    // if prev row exists, add value to period contribution, else use period contribution
+    cumulativeAmountIndividual = i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
     // check for too much comp
-    if (Math.floor(cumulativeAmount) > _401kMaximum) {
+    if (Math.floor(cumulativeAmountIndividual) > _401kMaximum) {
       _401kMaxReachedEarlyAlertHTML = (
         <Alert className="mb-3" variant="secondary">
           {_401kMaxReachedEarlyNote}
         </Alert>
       );
       concatKey += _401kMaxReachedEarlyIcon;
-      cumulativeAmount = _401kMaximum;
+      cumulativeAmountIndividual = _401kMaximum;
       contributionAmount =
         i != 0 ? _401kMaximum - table_rows[i - 1][4] : _401kMaximum;
-      match = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
+      contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
     }
 
-    // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
+    // if last paycheck, cumulative is < 401k max, and last match isn't the maximum,
     // with the last check meaning you're unable to hit maximum contribution limit,
     // add dagger to let user know to bump up contribution
     if (
       i === numberOfPayPeriods - 1 &&
-      Math.round(cumulativeAmount) != _401kMaximum &&
-      match != maxContributionFromPaycheck / 100
+      Math.round(cumulativeAmountIndividual) != _401kMaximum &&
+      contributionPercent != maxContributionFromPaycheck / 100
     ) {
       _401kMaxNotReachedAlertHTML = (
         <Alert className="mb-3" variant="secondary">
@@ -174,13 +189,22 @@ function Frontload() {
       concatKey += _401kMaxNotReachedIcon;
     }
 
+    // set employer match
+    let employerBaseAmount = effectiveEmployerBase * payPerPayPeriod / 100;
+    let employerMatchAmount = effectiveEmployerMatch * payPerPayPeriod / 100;
+    employerAmount = employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
+    cumulativeAmountTotal = i == 0 ? 
+      contributionAmount + employerAmount : table_rows[i-1][6] + contributionAmount + employerAmount;
+
     // row values: key, compensation, match, contribution, cumulative
     table_rows.push([
       concatKey,
       payPerPayPeriod,
-      match,
+      contributionPercent,
       contributionAmount,
-      cumulativeAmount,
+      cumulativeAmountIndividual,
+      employerAmount,
+      cumulativeAmountTotal
     ]);
   }
 
@@ -227,14 +251,17 @@ function Frontload() {
    * @param changeFunction change function that updates integer values
    * @param min if event value is NaN or less than min, set to min
    * @param max if event value is greater than max, set to max
+   * @param allowDecimal allows decimal input rounded to 2 places
    */
   const updateContribution = (
     e: React.FormEvent<HTMLElement>,
     changeFunction: { (value: React.SetStateAction<any>): void },
     min: number = 0,
-    max: number = 100
+    max: number = 100,
+    allowDecimal: boolean = false
   ) => {
-    let value = parseInt((e.target as HTMLInputElement).value);
+    const inputValue = (e.target as HTMLInputElement).value;
+    let value = allowDecimal ? Math.round(parseFloat(inputValue)*100)/100 : parseInt(inputValue);
     if (isNaN(value) || value < min) {
       value = min;
     } else if (value > max) {
@@ -245,10 +272,10 @@ function Frontload() {
 
   return (
     <div className={styles.container}>
-      <Header titleName="Frontload Calculator" />
+      <Header titleName="401k Frontload" />
 
       <main className={styles.main}>
-        <h1>Frontload Calculator</h1>
+        <h1>401k Frontload Calculator</h1>
         <p>
           Here we will maximize your 401k contributions by frontloading while ensuring minimum contributions throughout the year.
         </p>
@@ -362,13 +389,62 @@ function Frontload() {
           />
 
           <TooltipOnHover
-            text="Check this if your 401k automatically caps contributions at limits."
+            text="Check this if your 401k automatically caps individual contributions at limits."
             nest={
-              <InputGroup className="mb-3 w-75">
+              <InputGroup className="mb-3 w-50">
               <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
               </InputGroup>
             }
           />
+
+          <TooltipOnHover
+            text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
+            nest={
+              <InputGroup className="mb-3 w-50">
+              <Form.Check type="checkbox" onChange={() => changeShowEmployerMatchInTable(!showEmployerMatchInTable)} label="Show Employer Match" checked={showEmployerMatchInTable} />
+              </InputGroup>
+            }
+          />
+          {showEmployerMatchInTable && 
+          <FormGroup>
+            <Form.Label>
+              Employer 401k Base Contribution
+            </Form.Label>
+            <TooltipOnHover
+              text="% of income between 0 and 100. This is how much your employer contributes regardless of your contributions."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(effectiveEmployerBase)}
+                    onChange={(e) =>
+                      updateContribution(e, changeEffectiveEmployerBase, 0, 100, true)
+                    }
+                  />
+                  <InputGroup.Text>%</InputGroup.Text>
+                </InputGroup>
+              }
+            /> 
+            <Form.Label>
+              Employer 401k Match
+            </Form.Label>
+            <TooltipOnHover
+              text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(effectiveEmployerMatch)}
+                    onChange={(e) =>
+                      updateContribution(e, changeEffectiveEmployerMatch, 0, 100, true)
+                    }
+                  />
+                  <InputGroup.Text>%</InputGroup.Text>
+                </InputGroup>
+              }
+            /> 
+          </FormGroup>}
+
         </Form>
 
         <div className={styles.table}>
@@ -376,10 +452,11 @@ function Frontload() {
             <thead>
               <tr>
                 <th>Pay Period</th>
-                <th>Compensation</th>
-                <th>Match</th>
-                <th>Contribution</th>
-                <th>Cumulative Contributed</th>
+                <th>Pay</th>
+                <th>Contribution %</th>
+                <th>Contribution Amount</th>
+                {showEmployerMatchInTable && <th> Employer Amount </th>}
+                <th>Cumulative Amount</th>
               </tr>
             </thead>
             <tbody>
@@ -389,12 +466,16 @@ function Frontload() {
                   <td>{formatCurrency(row[1])}</td>
                   <td>{formatPercent(row[2])}</td>
                   <td>{formatCurrency(row[3])}</td>
-                  <td>{formatCurrency(row[4])}</td>
+                  {!showEmployerMatchInTable && <td>{formatCurrency(row[4])}</td>}
+                  {showEmployerMatchInTable && <td>{formatCurrency(row[5])}</td>}
+                  {showEmployerMatchInTable && <td>{formatCurrency(row[6])}</td>}
                 </tr>
               ))}
             </tbody>
           </Table>
+          {payPeriodAlreadyPassedAlertHTML}
           {_401kMaxNotReachedAlertHTML}
+          {_401kMaxReachedWithAutoCapAlertHTML}
           {_401kMaxReachedEarlyAlertHTML}
         </div>
       </div>

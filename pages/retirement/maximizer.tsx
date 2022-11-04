@@ -41,6 +41,7 @@ function Maximizer() {
   // Toggle
   const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
+  const [backloadToggle, changeBackloadToggle] = React.useState(false);
   
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
@@ -64,7 +65,7 @@ function Maximizer() {
   const contributionPerRemainingPeriodIndividual = amountLeftToContributeIndividual / numberOfPayPeriodsLeft;
   // This is rounded down since most companies won't let you select exact percentage
   const matchPercentIndividualRaw = (contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100;
-  const matchPercentIndividualRawRounded = _401kAutoCap ? Math.ceil(matchPercentIndividualRaw) : Math.floor(matchPercentIndividualRaw);
+  const matchPercentIndividualRawRounded = _401kAutoCap && !backloadToggle ? Math.ceil(matchPercentIndividualRaw) : Math.floor(matchPercentIndividualRaw);
   const matchPercentIndividual = Math.min(matchPercentIndividualRawRounded, maxContributionFromPaycheck) / 100;
 
   if (numberOfPayPeriodsSoFar > 0) {
@@ -121,23 +122,25 @@ function Maximizer() {
     } else if (i > 0 && _401kAutoCap && table_rows[i - 1][4] + contributionAmount >= _401kMaximumIndividual) {
       contributionAmount = Math.max(0, _401kMaximumIndividual - table_rows[i - 1][4])
       match = Math.ceil(contributionAmount / (payPerPayPeriod) * 100) / 100;
-      concatKey += _401kMaxReachedEarlyIcon;
-      _401kMaxReachedEarlyAlertHTML = (
-        <Alert className="mb-3" variant="secondary">
-          {_401kMaxReachedEarlyNote}
-        </Alert>
-      );
+      // show note only if it's before the last pay period
+      if (i < numberOfPayPeriods - 1) {
+        concatKey += _401kMaxReachedEarlyIcon;
+        _401kMaxReachedEarlyAlertHTML = (
+          <Alert className="mb-3" variant="secondary">
+            {_401kMaxReachedEarlyNote}
+          </Alert>
+        );
+      }
     }
 
-    // edge case for last paycheck and autocap is true
-    // TODO Add double dagger
-    // if (_401kAutoCap && i == numberOfPayPeriods - 1) {
-    //   contributionAmount = Math.min(
-    //     _401k_maximum_contribution_individual - cumulativeAmountIndividual, 
-    //     _401k_maximum_contribution_total - cumulativeAmountTotal, 
-    //     (maxContributionFromPaycheck / 100 * payPerPayPeriod));
-    //   match = Math.ceil(contributionAmount / (salary / numberOfPayPeriods) * 100) / 100;
-    // }
+    // edge case for last paycheck and autocap and backload is true
+    if (_401kAutoCap && backloadToggle && i == numberOfPayPeriods - 1) {
+      contributionAmount = Math.min(
+        _401k_maximum_contribution_individual - cumulativeAmountIndividual, 
+        _401k_maximum_contribution_total - cumulativeAmountTotal, 
+        (maxContributionFromPaycheck / 100 * payPerPayPeriod));
+      match = Math.ceil(contributionAmount / (salary / numberOfPayPeriods) * 100) / 100;
+    }
 
     // Employer match cannot exceed contribution amount
     employerMatchAmount = Math.min(
@@ -269,58 +272,7 @@ function Maximizer() {
       <div className={styles.content}>
         <Form className={styles.form}>
 
-          {/* <TooltipOnHover
-              text="Check this if you are able to do an After-Tax Traditional Contribution with In Plan Conversion to Roth."
-              nest={
-                <InputGroup className="mb-3 w-50">
-                <Form.Check type="checkbox" onChange={() => changeMegabackdoorEligible(!megabackdoorEligible)} label="Eligible For Mega Backdoor Roth" checked={megabackdoorEligible} />
-                </InputGroup>
-              }
-            /> */}
-
-          <TooltipOnHover
-            text="Check this if your 401k automatically caps contributions at limits."
-            nest={
-              <InputGroup className="mb-3 w-75">
-              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
-              </InputGroup>
-            }
-          />
-
-          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
-            <TooltipOnHover
-              text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
-              nest={
-                <InputGroup className="mb-3 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(_401kMaximumIndividual)}
-                    onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
-                  />
-                </InputGroup>
-              }
-            />
-          
-          {megabackdoorEligible &&
-          <Form.Group>
-          <Form.Label>401k Maximum for Total Contribution</Form.Label>
-            <TooltipOnHover
-              text="The maximum in 2023 is $66000. You can decrease this if you have contributed to another 401k."
-              nest={
-                <InputGroup className="mb-3 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(_401kMaximum)}
-                    onChange={(e) => updateAmount(e, change401kMaximum)}
-                  />
-                </InputGroup>
-              }
-            /></Form.Group>
-          }
-
-          <Form.Label>Annual Base Salary</Form.Label>
+          <Form.Label>Annual Salary</Form.Label>
           <TooltipOnHover
               text="Enter your compensation that is eligible for 401k contributions."
               nest={
@@ -426,6 +378,67 @@ function Maximizer() {
               </InputGroup>
             }
           />
+
+          {/* <TooltipOnHover
+              text="Check this if you are able to do an After-Tax Traditional Contribution with In Plan Conversion to Roth."
+              nest={
+                <InputGroup className="mb-3 w-50">
+                <Form.Check type="checkbox" onChange={() => changeMegabackdoorEligible(!megabackdoorEligible)} label="Eligible For Mega Backdoor Roth" checked={megabackdoorEligible} />
+                </InputGroup>
+              }
+            /> */}
+
+          <TooltipOnHover
+            text="Check this if your 401k automatically caps contributions at limits."
+            nest={
+              <InputGroup className="mb-3 w-75">
+              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
+              </InputGroup>
+            }
+          />
+
+          {_401kAutoCap && 
+            <TooltipOnHover
+            text="You may max out contributions early and miss match. Enable this to backload contributions into last pay period."
+            nest={
+              <InputGroup className="mb-3 w-75">
+              <Form.Check type="checkbox" onChange={() => changeBackloadToggle(!backloadToggle)} label="Backload Contribution For Maxing out" checked={backloadToggle} />
+              </InputGroup>
+            }
+          />}
+
+          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
+            <TooltipOnHover
+              text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(_401kMaximumIndividual)}
+                    onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
+                  />
+                </InputGroup>
+              }
+            />
+          
+          {megabackdoorEligible &&
+          <Form.Group>
+          <Form.Label>401k Maximum for Total Contribution</Form.Label>
+            <TooltipOnHover
+              text="The maximum in 2023 is $66000. You can decrease this if you have contributed to another 401k."
+              nest={
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(_401kMaximum)}
+                    onChange={(e) => updateAmount(e, change401kMaximum)}
+                  />
+                </InputGroup>
+              }
+            /></Form.Group>
+          }
         </Form>
 
         <div className={styles.table}>
@@ -434,12 +447,12 @@ function Maximizer() {
               <tr>
                 <th>Pay Period</th>
                 <th>Pay</th>
-                <th>Individual Contribution %</th>
-                <th>Individual Contribution $</th>
-                <th>Individual Cumulative Contribution</th>
+                <th>Contribution %</th>
+                <th>Contribution $</th>
+                <th>Cumulative $</th>
                 <th>Employer Contribution $</th>
-                <th>Employer Cumulative Contribution</th>
-                <th>Total Cumulative Contributed</th>
+                <th>Employer Cumulative $</th>
+                <th>Total Cumulative $</th>
                 
               </tr>
             </thead>
