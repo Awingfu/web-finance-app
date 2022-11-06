@@ -145,12 +145,11 @@ function Frontload() {
 
     // if 401k auto caps, we're at the last row, contribution would not equal max, and new contribution won't exceed max allowed
     // set contribution to max out
-    const contributionToMaxOut = _401k_maximum_contribution_individual - table_rows[i - 1][4]
     if (_401kAutoCap && 
       i == numberOfPayPeriods - 1 && 
-      contributionAmount != contributionToMaxOut &&
-      (contributionToMaxOut) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
-      contributionAmount = contributionToMaxOut;
+      contributionAmount != _401k_maximum_contribution_individual - table_rows[i - 1][4] &&
+      (_401k_maximum_contribution_individual - table_rows[i - 1][4]) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
+      contributionAmount = _401k_maximum_contribution_individual - table_rows[i - 1][4];
       contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
       _401kMaxReachedWithAutoCapAlertHTML = (
         <Alert className="mb-3" variant="secondary">
