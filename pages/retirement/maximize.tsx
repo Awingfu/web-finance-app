@@ -13,7 +13,7 @@ import styles from "../../styles/Retirement.module.scss";
  * TODO's:
  * - allow user to choose between maximize and frontload
  */
-function Maximizer() {
+function Maximize() {
   const [salary, changeSalary] = React.useState(60000);
   const [_401kMaximumIndividual, change401kMaximumIndividual] = React.useState(
     _401k_maximum_contribution_individual
@@ -257,13 +257,16 @@ function Maximizer() {
 
   return (
     <div className={styles.container}>
-      <Header titleName="401k Maximizer" />
+      <Header titleName="401k Maximize" />
 
       <main className={styles.main}>
         <h1>401k Maximizer</h1>
         <p>
-          Here we will maximize your 401k contribution with equal period contributions. We will prioritize individual contributions, employer match, then anything else. 
+          Here we will maximize your 401k contribution with equal period contributions.
         </p>
+        {/* <p>
+          We will prioritize individual contributions, employer match, then anything else. 
+        </p> */}
         <p>
           We will also assume employer match cannot exceed individual contributions for any pay period.
         </p>
@@ -361,10 +364,10 @@ function Maximizer() {
           />
 
           <Form.Label>
-            Maximum Paycheck Contribution Allowed for 401k
+            Maximum Paycheck Contribution for 401k
           </Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. You can also just put the maximum amount you are comfortable contributing."
+            text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -402,7 +405,7 @@ function Maximizer() {
             text="You may max out contributions early and miss match. Enable this to backload contributions into last pay period."
             nest={
               <InputGroup className="mb-3 w-75">
-              <Form.Check type="checkbox" onChange={() => changeBackloadToggle(!backloadToggle)} label="Backload Contribution For Maxing out" checked={backloadToggle} />
+              <Form.Check type="checkbox" onChange={() => changeBackloadToggle(!backloadToggle)} label="Backload Contribution For Maxing Out" checked={backloadToggle} />
               </InputGroup>
             }
           />}
@@ -482,4 +485,4 @@ function Maximizer() {
   );
 }
 
-export default Maximizer;
+export default Maximize;

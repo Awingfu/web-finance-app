@@ -143,12 +143,14 @@ function Frontload() {
       contributionAmount = singleContributionAmount;
     }
 
-    // if 401k auto caps, we're at the last row, and contribution would not equal max,
+    // if 401k auto caps, we're at the last row, contribution would not equal max, and new contribution won't exceed max allowed
     // set contribution to max out
+    const contributionToMaxOut = _401k_maximum_contribution_individual - table_rows[i - 1][4]
     if (_401kAutoCap && 
       i == numberOfPayPeriods - 1 && 
-      contributionAmount + table_rows[i - 1][4] != _401k_maximum_contribution_individual) {
-      contributionAmount =_401k_maximum_contribution_individual - table_rows[i - 1][4];
+      contributionAmount != contributionToMaxOut &&
+      (contributionToMaxOut) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
+      contributionAmount = contributionToMaxOut;
       contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
       _401kMaxReachedWithAutoCapAlertHTML = (
         <Alert className="mb-3" variant="secondary">
@@ -356,7 +358,7 @@ function Frontload() {
             Minimum Desired Paycheck Contribution
           </Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. This is effectively what you want to ensure you get a 401k match per paycheck."
+            text="% of income between 0 and 100. This is what you want to ensure you get a 401k match per paycheck."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -372,10 +374,10 @@ function Frontload() {
           />
 
           <Form.Label>
-            Maximum Paycheck Contribution Allowed
+            Maximum Paycheck Contribution
           </Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. You can also just put the maximum amount you are comfortable contributing."
+            text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control

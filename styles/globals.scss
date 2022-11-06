@@ -4,6 +4,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
     Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+  overflow-x: hidden;
 }
 
 a {
@@ -56,4 +57,15 @@ $theme-colors: (
 .form-check-input:checked {
   border-color: $secondary;
   background-color: $secondary;
+}
+
+.navbar img {
+  max-width: 30px;
+  max-height: 30px;
+}
+
+@media (max-width: 425px) {
+  .navbar-brand {
+    margin: 0;
+  }
 }
