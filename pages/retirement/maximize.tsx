@@ -22,7 +22,7 @@ function Maximize() {
     _401k_maximum_contribution_total
   );
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
-  const [numberOfPayPeriodsSoFar, changeNumberofPayPeriodsSoFar] =
+  const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
   const [amountContributedSoFarIndividual, changeAmountContributedSoFarIndividual] =
     React.useState(0);
@@ -30,7 +30,7 @@ function Maximize() {
     React.useState(0);
   const [amountContributedSoFarMBD, changeAmountContributedSoFarMBD] =
     React.useState(0);
-  // make sure to divide minContributionForMaxMatch, maxContributionFromPaycheck, 
+  // make sure to divide minContributionForMaxMatch, maxContributionFromPaycheck,
   // and employerMatch by 100 to get percentage
   // const [minContributionForMaxMatch, changeMinContributionForMaxMatch] =
   //   React.useState(5);
@@ -42,7 +42,7 @@ function Maximize() {
   const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
   const [backloadToggle, changeBackloadToggle] = React.useState(false);
-  
+
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
@@ -136,16 +136,16 @@ function Maximize() {
     // edge case for last paycheck and autocap and backload is true
     if (_401kAutoCap && backloadToggle && i == numberOfPayPeriods - 1) {
       contributionAmount = Math.min(
-        _401k_maximum_contribution_individual - cumulativeAmountIndividual, 
-        _401k_maximum_contribution_total - cumulativeAmountTotal, 
+        _401k_maximum_contribution_individual - cumulativeAmountIndividual,
+        _401k_maximum_contribution_total - cumulativeAmountTotal,
         (maxContributionFromPaycheck / 100 * payPerPayPeriod));
       match = Math.ceil(contributionAmount / (salary / numberOfPayPeriods) * 100) / 100;
     }
 
     // Employer match cannot exceed contribution amount
     employerMatchAmount = Math.min(
-      employerMatch / 100 * payPerPayPeriod, 
-      contributionAmount); 
+      employerMatch / 100 * payPerPayPeriod,
+      contributionAmount);
     if (i > 0 && table_rows[i - 1][7] + contributionAmount > _401kMaximum && megabackdoorEligible) {
       employerMatchAmount = 0
     } else if (i > 0 && table_rows[i - 1][7] + employerMatchAmount + contributionAmount > _401kMaximum && _401kAutoCap && megabackdoorEligible) {
@@ -159,7 +159,7 @@ function Maximize() {
     cumulativeAmountEmployer =
       i != 0 ? table_rows[i - 1][6] + employerMatchAmount : employerMatchAmount;
 
-    cumulativeAmountTotal = 
+    cumulativeAmountTotal =
       i != 0 ? table_rows[i - 1][7] + contributionAmount + employerMatchAmount : contributionAmount + employerMatchAmount;
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
@@ -217,17 +217,17 @@ function Maximize() {
       changeFunction === changeNumberOfPayPeriods &&
       value <= numberOfPayPeriodsSoFar
     ) {
-      changeNumberofPayPeriodsSoFar(value - 1);
+      changeNumberOfPayPeriodsSoFar(value - 1);
       if (value === 1) {
         changeAmountContributedSoFarIndividual(0);
         changeAmountContributedSoFarEmployer(0);
         changeAmountContributedSoFarMBD(0);
       }
     }
-    if (changeFunction === changeNumberofPayPeriodsSoFar) {
+    if (changeFunction === changeNumberOfPayPeriodsSoFar) {
       if (value === 0) {
-        changeAmountContributedSoFarIndividual(0);  
-        changeAmountContributedSoFarEmployer(0);      
+        changeAmountContributedSoFarIndividual(0);
+        changeAmountContributedSoFarEmployer(0);
         changeAmountContributedSoFarMBD(0);
       }
     }
@@ -265,7 +265,7 @@ function Maximize() {
           Here we will maximize your 401k contribution with equal period contributions.
         </p>
         {/* <p>
-          We will prioritize individual contributions, employer match, then anything else. 
+          We will prioritize individual contributions, employer match, then anything else.
         </p> */}
         <p>
           We will also assume employer match cannot exceed individual contributions for any pay period.
@@ -310,7 +310,7 @@ function Maximize() {
               onChange={(e) =>
                 updateAmount(
                   e,
-                  changeNumberofPayPeriodsSoFar,
+                  changeNumberOfPayPeriodsSoFar,
                   0,
                   numberOfPayPeriods - 1
                 )
@@ -400,7 +400,7 @@ function Maximize() {
             }
           />
 
-          {_401kAutoCap && 
+          {_401kAutoCap &&
             <TooltipOnHover
             text="You may max out contributions early and miss match. Enable this to backload contributions into last pay period."
             nest={
@@ -424,7 +424,7 @@ function Maximize() {
                 </InputGroup>
               }
             />
-          
+
           {megabackdoorEligible &&
           <Form.Group>
           <Form.Label>401k Maximum for Total Contribution</Form.Label>
@@ -456,7 +456,7 @@ function Maximize() {
                 <th>Employer Contribution $</th>
                 <th>Employer Cumulative $</th>
                 <th>Total Cumulative $</th>
-                
+
               </tr>
             </thead>
             <tbody>

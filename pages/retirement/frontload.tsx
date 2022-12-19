@@ -23,7 +23,7 @@ function Frontload() {
     _401k_maximum_contribution_individual
   );
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
-  const [numberOfPayPeriodsSoFar, changeNumberofPayPeriodsSoFar] =
+  const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
   const [amountContributedSoFar, changeAmountContributedSoFar] =
     React.useState(0);
@@ -32,11 +32,11 @@ function Frontload() {
     React.useState(6);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
-  const [effectiveEmployerBase, changeEffectiveEmployerBase] = React.useState(0)
-  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(50)
-  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] = React.useState(6)
+  const [effectiveEmployerBase, changeEffectiveEmployerBase] = React.useState(0);
+  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(50);
+  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] = React.useState(6);
 
-    
+
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
   const [showEmployerMatchInTable, changeShowEmployerMatchInTable] = React.useState(false);
 
@@ -147,8 +147,8 @@ function Frontload() {
 
     // if 401k auto caps, we're at the last row, contribution would not equal max, and new contribution won't exceed max allowed
     // set contribution to max out
-    if (_401kAutoCap && 
-      i == numberOfPayPeriods - 1 && 
+    if (_401kAutoCap &&
+      i == numberOfPayPeriods - 1 &&
       contributionAmount != _401kMaximum - table_rows[i - 1][4] &&
       (_401kMaximum - table_rows[i - 1][4]) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
       contributionAmount = _401kMaximum - table_rows[i - 1][4];
@@ -198,7 +198,7 @@ function Frontload() {
     let employerBaseAmount = effectiveEmployerBase * payPerPayPeriod / 100;
     let employerMatchAmount = (effectiveEmployerMatch / 100 * Math.min(effectiveEmployerMatchUpTo, contributionPercent * 100)) * payPerPayPeriod / 100;
     employerAmount = employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
-    cumulativeAmountTotal = i == 0 ? 
+    cumulativeAmountTotal = i == 0 ?
       contributionAmount + employerAmount : table_rows[i-1][6] + contributionAmount + employerAmount;
 
     // row values: key, compensation, match, contribution, cumulative
@@ -238,14 +238,14 @@ function Frontload() {
       changeFunction === changeNumberOfPayPeriods &&
       value <= numberOfPayPeriodsSoFar
     ) {
-      changeNumberofPayPeriodsSoFar(value - 1);
+      changeNumberOfPayPeriodsSoFar(value - 1);
       if (value === 1) {
         changeAmountContributedSoFar(0);
       }
     }
-    if (changeFunction === changeNumberofPayPeriodsSoFar) {
+    if (changeFunction === changeNumberOfPayPeriodsSoFar) {
       if (value === 0) {
-        changeAmountContributedSoFar(0);        
+        changeAmountContributedSoFar(0);
       }
     }
     changeFunction(value);
@@ -319,7 +319,7 @@ function Frontload() {
               onChange={(e) =>
                 updateAmount(
                   e,
-                  changeNumberofPayPeriodsSoFar,
+                  changeNumberOfPayPeriodsSoFar,
                   0,
                   numberOfPayPeriods - 1
                 )
@@ -410,7 +410,7 @@ function Frontload() {
               </InputGroup>
             }
           />
-          {showEmployerMatchInTable && 
+          {showEmployerMatchInTable &&
           <FormGroup>
             <Form.Label>
               Employer 401k Base Contribution
@@ -429,7 +429,7 @@ function Frontload() {
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
               }
-            /> 
+            />
             <Form.Label className={styles.inlineGroupFormLabel}>
               Employer 401k Match
             </Form.Label>
