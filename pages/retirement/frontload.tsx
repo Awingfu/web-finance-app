@@ -18,7 +18,7 @@ import styles from "../../styles/Retirement.module.scss";
  */
 
 function Frontload() {
-  const [salary, changeSalary] = React.useState(50000);
+  const [salary, changeSalary] = React.useState(60000);
   const [_401kMaximum, change401kMaximum] = React.useState(
     _401k_maximum_contribution_individual
   );
@@ -29,11 +29,13 @@ function Frontload() {
     React.useState(0);
   // make sure to divide minContributionForMatch, maxContributionFromPaycheck, effectiveEmployerMatch by 100 to get percentage
   const [minContributionForMatch, changeMinContributionForMatch] =
-    React.useState(5);
+    React.useState(6);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
   const [effectiveEmployerBase, changeEffectiveEmployerBase] = React.useState(0)
-  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(5)
+  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(50)
+  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] = React.useState(6)
+
     
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
   const [showEmployerMatchInTable, changeShowEmployerMatchInTable] = React.useState(false);
@@ -147,9 +149,9 @@ function Frontload() {
     // set contribution to max out
     if (_401kAutoCap && 
       i == numberOfPayPeriods - 1 && 
-      contributionAmount != _401k_maximum_contribution_individual - table_rows[i - 1][4] &&
-      (_401k_maximum_contribution_individual - table_rows[i - 1][4]) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
-      contributionAmount = _401k_maximum_contribution_individual - table_rows[i - 1][4];
+      contributionAmount != _401kMaximum - table_rows[i - 1][4] &&
+      (_401kMaximum - table_rows[i - 1][4]) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
+      contributionAmount = _401kMaximum - table_rows[i - 1][4];
       contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
       _401kMaxReachedWithAutoCapAlertHTML = (
         <Alert className="mb-3" variant="secondary">
@@ -194,7 +196,7 @@ function Frontload() {
 
     // set employer match
     let employerBaseAmount = effectiveEmployerBase * payPerPayPeriod / 100;
-    let employerMatchAmount = effectiveEmployerMatch * payPerPayPeriod / 100;
+    let employerMatchAmount = (effectiveEmployerMatch / 100 * Math.min(effectiveEmployerMatchUpTo, contributionPercent * 100)) * payPerPayPeriod / 100;
     employerAmount = employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
     cumulativeAmountTotal = i == 0 ? 
       contributionAmount + employerAmount : table_rows[i-1][6] + contributionAmount + employerAmount;
@@ -428,13 +430,14 @@ function Frontload() {
                 </InputGroup>
               }
             /> 
-            <Form.Label>
+            <Form.Label className={styles.inlineGroupFormLabel}>
               Employer 401k Match
             </Form.Label>
             <TooltipOnHover
-              text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions."
+              text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions. This is in the form of X% up to Y% of contributions."
               nest={
-                <InputGroup className="mb-3 w-100">
+                <div className={styles.inlineGroup}>
+                <InputGroup className={styles.inlineChildren}>
                   <Form.Control
                     type="number" onWheel={e => e.currentTarget.blur()}
                     value={formatStateValue(effectiveEmployerMatch)}
@@ -444,8 +447,20 @@ function Frontload() {
                   />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
+                <p className="styles."> Up To </p>
+                <InputGroup className={styles.inlineChildren}>
+                  <Form.Control
+                    type="number" onWheel={e => e.currentTarget.blur()}
+                    value={formatStateValue(effectiveEmployerMatchUpTo)}
+                    onChange={(e) =>
+                      updateContribution(e, changeEffectiveEmployerMatchUpTo, 0, 100, true)
+                    }
+                  />
+                  <InputGroup.Text>%</InputGroup.Text>
+                </InputGroup>
+                </div>
               }
-            /> 
+            />
           </FormGroup>}
 
         </Form>

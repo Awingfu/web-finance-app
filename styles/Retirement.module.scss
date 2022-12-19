@@ -76,3 +76,42 @@ $desktop: 1200px;
         justify-content: space-evenly;
     }
 }
+
+.inlineGroupFormLabel {
+    margin: 0;
+}
+
+.inlineGroup {
+    display: flex;
+    
+    @media screen and (min-width: $extraSmall) {
+        flex-direction: row;        
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    @media screen and (max-width: $extraSmall) {
+        flex-direction: column;
+    }
+}
+
+.inlineGroup p {
+    margin: 0;
+
+    @media screen and (max-width: $extraSmall) {
+        margin-top: 0.5rem;
+    }
+}
+
+.inlineChildren {
+    margin-top: 0.5rem;
+
+    @media screen and (min-width: $extraSmall) {
+        width: 35%;
+    }
+
+    @media screen and (max-width: $extraSmall) {
+        width: 100%;
+    }
+}
