@@ -36,7 +36,7 @@ function Maximize() {
   //   React.useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
-  const [employerMatch, changeEmployerMatch] = React.useState(5);
+  const [employerMatch, changeEmployerMatch] = React.useState(6);
 
   // Toggle
   const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);

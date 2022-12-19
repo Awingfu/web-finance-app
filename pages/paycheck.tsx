@@ -12,15 +12,15 @@ import {
 } from '../src/utils/constants';
 import {
   determineStateTaxesWithheld,
-  determineSocialSecurityTaxesWithheld,
-  determineFederalTaxesWithheld,
-  determineMedicareTaxesWithheld,
+  getFICAWithholding,
+  getFederalWithholding,
+  getMedicareWithholding,
   US_STATES_MAP,
   instanceOfTaxUnknown,
   formatCurrency,
   formatStateValue,
-  maxSocialSecurityContribution,
-  getSocialSecuritytax
+  maxFICAContribution,
+  getFICATaxRate
 } from '../src/utils';
 
 /**
@@ -62,7 +62,7 @@ const calculateAnnualFromAmountAndFrequency = (contributionAmount: number,
  * */
 function Paycheck() {
   // Form States
-  const [salary, changeSalary] = React.useState(50000);
+  const [salary, changeSalary] = React.useState(60000);
   const [bonus, changeBonus] = React.useState(0);
   const [bonusEligible, changeBonusEligible] = React.useState(false);
 
@@ -128,29 +128,29 @@ function Paycheck() {
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(taxableIncome_annual, paySchedule);
 
   // Taxes Withheld, should use taxableIncome_annual over salary
-  const federalWithholding_annual = determineFederalTaxesWithheld(taxableIncome_annual, taxClass)
-  const federalWithholding_paycheck = convertAnnualAmountToPaySchedule(federalWithholding_annual, paySchedule);
+  const federalWithholding_paycheck = getFederalWithholding(taxableIncome_paycheck, taxClass, paySchedule)
+  const federalWithholding_annual = federalWithholding_paycheck * PAY_SCHEDULE_TO_ANNUM[paySchedule];
 
   const grossTaxableIncome_annual = salary + bonus;
   const grossTaxableIncome_paycheck = convertAnnualAmountToPaySchedule(grossTaxableIncome_annual, paySchedule);
-  const socialSecurityWithholding_annual = determineSocialSecurityTaxesWithheld(grossTaxableIncome_annual);
+  const socialSecurityWithholding_annual = getFICAWithholding(grossTaxableIncome_annual);
   let socialSecurityWithholding_paycheck = convertAnnualAmountToPaySchedule(socialSecurityWithholding_annual, paySchedule);
   const socialSecurityMaxedIcon = '\u2020'; // dagger
   const socialSecurityMaxedNote = socialSecurityMaxedIcon +
-    " You will pay the maximum Social Security tax of " + formatCurrency(maxSocialSecurityContribution) +
+    " You will pay the maximum Social Security tax of " + formatCurrency(maxFICAContribution) +
     " this year. Once you have withheld the maximum, which is after withholding for " +
-    Math.ceil(maxSocialSecurityContribution / (grossTaxableIncome_paycheck * getSocialSecuritytax)) +
+    Math.ceil(maxFICAContribution / (grossTaxableIncome_paycheck * getFICATaxRate)) +
     " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
   let socialSecurityMaxedAlertTableFooter = <></>;
   let socialSecurity_key = "Social Security"
-  const isSocialSecurityMaxed = socialSecurityWithholding_annual === maxSocialSecurityContribution;
+  const isSocialSecurityMaxed = socialSecurityWithholding_annual === maxFICAContribution;
   if (isSocialSecurityMaxed) {
     socialSecurityMaxedAlertTableFooter = <Alert className='mb-3' variant="secondary">{socialSecurityMaxedNote}</Alert>;
     socialSecurity_key = "Social Security" + socialSecurityMaxedIcon;
-    socialSecurityWithholding_paycheck = Math.min(grossTaxableIncome_paycheck * getSocialSecuritytax, maxSocialSecurityContribution);
+    socialSecurityWithholding_paycheck = Math.min(grossTaxableIncome_paycheck * getFICATaxRate, maxFICAContribution);
   }
 
-  const medicareWithholding_annual = determineMedicareTaxesWithheld(grossTaxableIncome_annual, taxClass);
+  const medicareWithholding_annual = getMedicareWithholding(grossTaxableIncome_annual, taxClass);
   const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(medicareWithholding_annual, paySchedule);
 
   let stateTaxInvalidAlert = <></>;
@@ -258,7 +258,7 @@ function Paycheck() {
 
       <main className={styles.main}>
         <h1>Paycheck Calculator</h1>
-        <p>Here we will estimate your take home pay (for 2022)!</p>
+        <p>Here we will estimate your take home pay (for 2023)!</p>
       </main>
 
       <div className={styles.content}>
@@ -300,8 +300,8 @@ function Paycheck() {
             <TooltipOnHover text="Twice a month" nest={
               <Form.Check
                 inline
-                label={PAY_SCHEDULE.BIMONTHLY}
-                value={PAY_SCHEDULE.BIMONTHLY}
+                label={PAY_SCHEDULE.SEMIMONTHLY}
+                value={PAY_SCHEDULE.SEMIMONTHLY}
                 name="paycheck_schedule"
                 type="radio"
                 id="paycheck-schedule-radio-2"

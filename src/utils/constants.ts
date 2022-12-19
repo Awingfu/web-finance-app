@@ -32,7 +32,7 @@ export enum PAY_SCHEDULE {
     WEEKLY = "Weekly",
     BIWEEKLY = "Biweekly",
     BIWEEKLY_1 = "Biweekly Offset 1",
-    BIMONTHLY = "Bimonthly",
+    SEMIMONTHLY = "Semimonthly",
     MONTHLY = "Monthly",
 }
 
@@ -40,7 +40,7 @@ export const PAY_SCHEDULE_TO_ANNUM = {
     [PAY_SCHEDULE.WEEKLY]: 52,
     [PAY_SCHEDULE.BIWEEKLY]: 26,
     [PAY_SCHEDULE.BIWEEKLY_1]: 26,
-    [PAY_SCHEDULE.BIMONTHLY]: 24,
+    [PAY_SCHEDULE.SEMIMONTHLY]: 24,
     [PAY_SCHEDULE.MONTHLY]: 12,
 }
 

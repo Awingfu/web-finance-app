@@ -12,14 +12,14 @@ const Header = (props : HeaderProps) => {
     let titleSuffix = titleName ? ("| " + titleName) : "";
     let metadataContent = "Adam Lui finance " + titleName;
     return (
-        <React.Fragment>
+        <>
             <Head>
                 <title> Finance App {titleSuffix} </title>
                 <meta name="description" content={metadataContent} />
                 <link rel="icon" href={`${prefix}/favicon.ico`} />
             </Head>
             <NavigationBar/>
-        </React.Fragment>
+        </>
     );
 };
 
