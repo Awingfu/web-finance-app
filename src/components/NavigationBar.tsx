@@ -37,6 +37,7 @@ const NavigationBar = () => {
                         isGreaterThan425px ? "Finance App" : 
                         <Image src={iconPath} alt="Finance App Icon" width={30} height={30}/>
                     }</Navbar.Brand>
+                    <div></div>
                 </Link>
                 <Nav className="me-auto">
                     <Link href="/paycheck" passHref>
