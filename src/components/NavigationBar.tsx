@@ -33,7 +33,6 @@ const NavigationBar = () => {
       <Container>
         <Link href="/" passHref>
           <Navbar.Brand>
-            {" "}
             {isGreaterThan425px ? (
               "Finance App"
             ) : (
