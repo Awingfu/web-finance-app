@@ -1,5 +1,6 @@
 import React from "react";
 import Link from 'next/link';
+import Image from 'next/image';
 import { Container, Nav, Navbar} from 'react-bootstrap';
 import { prefix } from '../utils';
 
@@ -32,7 +33,10 @@ const NavigationBar = () => {
         <Navbar bg="primary" variant="dark">
             <Container>
                 <Link href="/" passHref>
-                    <Navbar.Brand> {isGreaterThan425px ? "Finance App" : <img src={iconPath} />} </Navbar.Brand>
+                    <Navbar.Brand> {
+                        isGreaterThan425px ? "Finance App" : 
+                        <Image src={iconPath} alt="Finance App Icon" width={30} height={30}/>
+                    }</Navbar.Brand>
                 </Link>
                 <Nav className="me-auto">
                     <Link href="/paycheck" passHref>

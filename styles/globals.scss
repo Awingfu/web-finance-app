@@ -59,11 +59,6 @@ $theme-colors: (
   background-color: $secondary;
 }
 
-.navbar img {
-  max-width: 30px;
-  max-height: 30px;
-}
-
 @media (max-width: 425px) {
   .navbar-brand {
     margin: 0;

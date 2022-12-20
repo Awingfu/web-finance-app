@@ -481,7 +481,7 @@ function Paycheck() {
                     <td colSpan={4} className={styles.thicc}>Post-Tax Deductions</td>
                   </tr>
                   {Object.keys(postTaxTableMap).filter((key) => postTaxTableMap[key][0] != 0).map((key) => (
-                    <tr>
+                    <tr key={key}>
                       <td>{key}</td>
                       <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
                       <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
