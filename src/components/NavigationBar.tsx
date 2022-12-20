@@ -1,19 +1,16 @@
 import React from "react";
 import Link from 'next/link';
 import { Container, Nav, Navbar} from 'react-bootstrap';
+import { prefix } from '../utils';
 
 /**
- * Todo:
- * - add custom styling
- * - Be more reactive
- * - add more routing
- * 
  * Navbar items are for CSS, we have to wrap in next/link in order for single page behavior 
  * @returns NavigationBar JSX
  */
 const NavigationBar = () => {
 
     const [isGreaterThan425px, setIsGreaterThan425px] = React.useState(false);
+    const iconPath = prefix + '/favicon.ico';
 
     React.useEffect(() => {
         function handleResize() {
@@ -35,7 +32,7 @@ const NavigationBar = () => {
         <Navbar bg="primary" variant="dark">
             <Container>
                 <Link href="/" passHref>
-                    <Navbar.Brand> {isGreaterThan425px ? "Finance App" : <img src="favicon.ico"/>} </Navbar.Brand>
+                    <Navbar.Brand> {isGreaterThan425px ? "Finance App" : <img src={iconPath} />} </Navbar.Brand>
                 </Link>
                 <Nav className="me-auto">
                     <Link href="/paycheck" passHref>

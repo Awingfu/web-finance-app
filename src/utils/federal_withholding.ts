@@ -165,7 +165,6 @@ export const getFICAWithholding = (annualIncome: number): number => {
 export const getMedicareWithholding = (annualIncome: number, tax_class: TAX_CLASSES): number => {
     const withholdingBrackets = MEDICARE_WITHHOLDING[tax_class];
     const threshold = withholdingBrackets[1][0];
-    console.log(tax_class)
     if (annualIncome >= threshold) {
         return withholdingBrackets[1][2] + (annualIncome - threshold) * withholdingBrackets[1][3];
     }

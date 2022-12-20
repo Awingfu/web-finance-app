@@ -64,7 +64,9 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
     }
 
     if (instanceOfTaxUnknown(us_state_object)) {
-        console.log(us_state_object.name + " State's taxes are not defined, returning 0.");
+        if(us_state_object.name != "None") {
+            console.log(us_state_object.name + " State's taxes are not defined, returning 0.");
+        }
         return 0;
     }
     if (instanceOfFlatTax(us_state_object)) {
@@ -80,7 +82,7 @@ export const determineStateTaxesWithheld = (stateAbbreviation: string, taxableAn
             // if we're at the last bracket or the max at the current bracket is higher than income
             if (withholdingBrackets[row][1] === Infinity || withholdingBrackets[row][1] > income) {
                 // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
-                console.log("You're at the " + withholdingBrackets[row][2]*100 +"% tax bracket for " + us_state_object.name + " State");
+                console.log("You're at the " + withholdingBrackets[row][3]*100 +"% tax bracket for " + us_state_object.name + " State");
                 return withholdingBrackets[row][2] + (income - withholdingBrackets[row][0]) * withholdingBrackets[row][3];
             }
         }
