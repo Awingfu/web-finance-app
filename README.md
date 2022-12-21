@@ -10,8 +10,9 @@ This is a NextJS/React app that contains tools that will do random finance stuff
 
 Planned features
 
-1. 401k Roth vs Traditional
+1. 401k Roth vs Traditional (future value estimations + tax assumptions)
 2. Budgeting
+3. Why Invest? with charts
 
 ## Technology
 
