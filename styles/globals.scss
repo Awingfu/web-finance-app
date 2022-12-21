@@ -21,6 +21,10 @@ a {
   overflow-y: auto;
 }
 
+thead tr {
+  border-bottom: 2px solid currentColor;
+} 
+
 tr > th:not(:first-child) {
   text-align: right;
 }

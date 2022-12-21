@@ -17,27 +17,21 @@ const Home: NextPage = () => {
         </p>
 
         <div className={styles.grid}>
-          <Link href="/paycheck">
-            <a className={styles.card}>
-              <h2>Paycheck Calculator &rarr;</h2>
-              <p>Estimate your take home pay</p>
-            </a>
+          <Link href="/paycheck" className={styles.card} passHref>
+            <h2>Paycheck Calculator &rarr;</h2>
+            <p>Estimate your take home pay</p>
           </Link>
 
-          <Link href="/retirement/maximize">
-            <a className={styles.card}>
-              <h2>401k Maximizer &rarr;</h2>
-              <p>
-                Maximize your 401k contributions with equal period contributions
-              </p>
-            </a>
+          <Link href="/retirement/maximize" className={styles.card} passHref>
+            <h2>401k Maximizer &rarr;</h2>
+            <p>
+              Maximize your 401k contributions with equal period contributions
+            </p>
           </Link>
 
-          <Link href="/retirement/frontload">
-            <a className={styles.card}>
-              <h2>401k Frontloader &rarr;</h2>
-              <p>Plan your 401k frontloading strategy</p>
-            </a>
+          <Link href="/retirement/frontload" className={styles.card} passHref>
+            <h2>401k Frontloader &rarr;</h2>
+            <p>Plan your 401k frontloading strategy</p>
           </Link>
         </div>
       </main>

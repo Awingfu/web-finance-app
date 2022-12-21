@@ -68,6 +68,10 @@ $desktop: 1200px;
     
 }
 
+.table .tbody > :first-child {
+    border-top: 2px solid currentColor;
+}
+
 .content {
     display: flex;
     flex-direction: column;

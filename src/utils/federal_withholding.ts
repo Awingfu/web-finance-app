@@ -135,7 +135,6 @@ export const getFederalWithholding = (
     taxClass = TAX_CLASSES.SINGLE;
   }
   let withholdingBrackets = BIWEEKLY_WITHHOLDING[taxClass];
-  console.log(payPeriod);
   switch (payPeriod) {
     case PAY_SCHEDULE.BIWEEKLY:
       break;
