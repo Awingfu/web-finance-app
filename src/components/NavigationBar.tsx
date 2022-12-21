@@ -46,14 +46,14 @@ const NavigationBar = () => {
           </Navbar.Brand>
         </Link>
         <Nav className="me-auto">
-          <Link href="/paycheck" passHref>
-            <Nav.Link> Paycheck </Nav.Link>
+          <Link href="/paycheck" className="nav-link" passHref>
+            Paycheck
           </Link>
-          <Link href="/retirement/maximize" passHref>
-            <Nav.Link> {isGreaterThan425px && "401k "} Maximizer </Nav.Link>
+          <Link href="/retirement/maximize" className="nav-link" passHref>
+            {isGreaterThan425px && "401k "} Maximizer
           </Link>
-          <Link href="/retirement/frontload" passHref>
-            <Nav.Link> {isGreaterThan425px && "401k "} Frontloader </Nav.Link>
+          <Link href="/retirement/frontload" className="nav-link" passHref>
+            {isGreaterThan425px && "401k "} Frontloader
           </Link>
         </Nav>
       </Container>

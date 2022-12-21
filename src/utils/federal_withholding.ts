@@ -2,6 +2,7 @@
  * Latest updated year: 2023
  * Federal Withholding Source: https://www.irs.gov/publications/p15t Manual Payroll Systems W4 after 2020
  * Federal Withholding Source PDF: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf
+ * W4 Reference for math checks: https://www.irs.gov/pub/irs-pdf/fw4.pdf
  * FICA and Medicare Tax Source: https://www.nerdwallet.com/article/taxes/fica-tax-withholding
  * Additional Medicare Tax Source https://www.irs.gov/taxtopics/tc560
  * This file contains Federal, FICA (Social Security), and Medicare withholding
@@ -134,7 +135,6 @@ export const getFederalWithholding = (
     taxClass = TAX_CLASSES.SINGLE;
   }
   let withholdingBrackets = BIWEEKLY_WITHHOLDING[taxClass];
-  console.log(payPeriod);
   switch (payPeriod) {
     case PAY_SCHEDULE.BIWEEKLY:
       break;
