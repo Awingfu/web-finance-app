@@ -6,7 +6,10 @@ import {
   formatPercent,
   formatStateValue,
 } from "../../src/utils";
-import { _401k_maximum_contribution_individual, _401k_maximum_contribution_total } from "../../src/utils/constants";
+import {
+  _401k_maximum_contribution_individual,
+  _401k_maximum_contribution_total,
+} from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
 
 /**
@@ -24,8 +27,10 @@ function Maximize() {
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
   const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
-  const [amountContributedSoFarIndividual, changeAmountContributedSoFarIndividual] =
-    React.useState(0);
+  const [
+    amountContributedSoFarIndividual,
+    changeAmountContributedSoFarIndividual,
+  ] = React.useState(0);
   const [amountContributedSoFarEmployer, changeAmountContributedSoFarEmployer] =
     React.useState(0);
   const [amountContributedSoFarMBD, changeAmountContributedSoFarMBD] =
@@ -39,12 +44,14 @@ function Maximize() {
   const [employerMatch, changeEmployerMatch] = React.useState(6);
 
   // Toggle
-  const [megabackdoorEligible, changeMegabackdoorEligible] = React.useState(false);
+  const [megabackdoorEligible, changeMegabackdoorEligible] =
+    React.useState(false);
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
   const [backloadToggle, changeBackloadToggle] = React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
-  const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
+  const payPeriodAlreadyPassedText =
+    payPeriodAlreadyPassedIcon + " Pay period has already passed";
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     _401kMaxNotReachedIcon +
@@ -61,12 +68,20 @@ function Maximize() {
   // Calculations
   const payPerPayPeriod = salary / numberOfPayPeriods;
   const numberOfPayPeriodsLeft = numberOfPayPeriods - numberOfPayPeriodsSoFar;
-  const amountLeftToContributeIndividual = _401kMaximumIndividual - amountContributedSoFarIndividual;
-  const contributionPerRemainingPeriodIndividual = amountLeftToContributeIndividual / numberOfPayPeriodsLeft;
+  const amountLeftToContributeIndividual =
+    _401kMaximumIndividual - amountContributedSoFarIndividual;
+  const contributionPerRemainingPeriodIndividual =
+    amountLeftToContributeIndividual / numberOfPayPeriodsLeft;
   // This is rounded down since most companies won't let you select exact percentage
-  const matchPercentIndividualRaw = (contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100;
-  const matchPercentIndividualRawRounded = _401kAutoCap && !backloadToggle ? Math.ceil(matchPercentIndividualRaw) : Math.floor(matchPercentIndividualRaw);
-  const matchPercentIndividual = Math.min(matchPercentIndividualRawRounded, maxContributionFromPaycheck) / 100;
+  const matchPercentIndividualRaw =
+    (contributionPerRemainingPeriodIndividual / payPerPayPeriod) * 100;
+  const matchPercentIndividualRawRounded =
+    _401kAutoCap && !backloadToggle
+      ? Math.ceil(matchPercentIndividualRaw)
+      : Math.floor(matchPercentIndividualRaw);
+  const matchPercentIndividual =
+    Math.min(matchPercentIndividualRawRounded, maxContributionFromPaycheck) /
+    100;
 
   if (numberOfPayPeriodsSoFar > 0) {
     payPeriodAlreadyPassedAlertHTML = (
@@ -119,9 +134,16 @@ function Maximize() {
       match = 0;
       contributionAmount = 0;
       concatKey += _401kMaxReachedEarlyIcon;
-    } else if (i > 0 && _401kAutoCap && table_rows[i - 1][4] + contributionAmount >= _401kMaximumIndividual) {
-      contributionAmount = Math.max(0, _401kMaximumIndividual - table_rows[i - 1][4])
-      match = Math.ceil(contributionAmount / (payPerPayPeriod) * 100) / 100;
+    } else if (
+      i > 0 &&
+      _401kAutoCap &&
+      table_rows[i - 1][4] + contributionAmount >= _401kMaximumIndividual
+    ) {
+      contributionAmount = Math.max(
+        0,
+        _401kMaximumIndividual - table_rows[i - 1][4]
+      );
+      match = Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
       // show note only if it's before the last pay period
       if (i < numberOfPayPeriods - 1) {
         concatKey += _401kMaxReachedEarlyIcon;
@@ -138,18 +160,33 @@ function Maximize() {
       contributionAmount = Math.min(
         _401k_maximum_contribution_individual - cumulativeAmountIndividual,
         _401k_maximum_contribution_total - cumulativeAmountTotal,
-        (maxContributionFromPaycheck / 100 * payPerPayPeriod));
-      match = Math.ceil(contributionAmount / (salary / numberOfPayPeriods) * 100) / 100;
+        (maxContributionFromPaycheck / 100) * payPerPayPeriod
+      );
+      match =
+        Math.ceil((contributionAmount / (salary / numberOfPayPeriods)) * 100) /
+        100;
     }
 
     // Employer match cannot exceed contribution amount
     employerMatchAmount = Math.min(
-      employerMatch / 100 * payPerPayPeriod,
-      contributionAmount);
-    if (i > 0 && table_rows[i - 1][7] + contributionAmount > _401kMaximum && megabackdoorEligible) {
-      employerMatchAmount = 0
-    } else if (i > 0 && table_rows[i - 1][7] + employerMatchAmount + contributionAmount > _401kMaximum && _401kAutoCap && megabackdoorEligible) {
-      employerMatchAmount = _401kMaximum - table_rows[i - 1][7] - contributionAmount;
+      (employerMatch / 100) * payPerPayPeriod,
+      contributionAmount
+    );
+    if (
+      i > 0 &&
+      table_rows[i - 1][7] + contributionAmount > _401kMaximum &&
+      megabackdoorEligible
+    ) {
+      employerMatchAmount = 0;
+    } else if (
+      i > 0 &&
+      table_rows[i - 1][7] + employerMatchAmount + contributionAmount >
+        _401kMaximum &&
+      _401kAutoCap &&
+      megabackdoorEligible
+    ) {
+      employerMatchAmount =
+        _401kMaximum - table_rows[i - 1][7] - contributionAmount;
     }
 
     //if prev row exists, add value to period contribution, else use period contribution
@@ -160,7 +197,9 @@ function Maximize() {
       i != 0 ? table_rows[i - 1][6] + employerMatchAmount : employerMatchAmount;
 
     cumulativeAmountTotal =
-      i != 0 ? table_rows[i - 1][7] + contributionAmount + employerMatchAmount : contributionAmount + employerMatchAmount;
+      i != 0
+        ? table_rows[i - 1][7] + contributionAmount + employerMatchAmount
+        : contributionAmount + employerMatchAmount;
 
     // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
     // with the last check meaning you're unable to hit maximum contribution limit,
@@ -188,7 +227,7 @@ function Maximize() {
       cumulativeAmountIndividual,
       employerMatchAmount,
       cumulativeAmountEmployer,
-      cumulativeAmountTotal
+      cumulativeAmountTotal,
     ]);
   }
 
@@ -262,37 +301,40 @@ function Maximize() {
       <main className={styles.main}>
         <h1>401k Maximizer</h1>
         <p>
-          Here we will maximize your 401k contribution with equal period contributions.
+          Here we will maximize your 401k contribution with equal period
+          contributions.
         </p>
         {/* <p>
           We will prioritize individual contributions, employer match, then anything else.
         </p> */}
         <p>
-          We will also assume employer match cannot exceed individual contributions for any pay period.
+          We will also assume employer match cannot exceed individual
+          contributions for any pay period.
         </p>
       </main>
 
       <div className={styles.content}>
         <Form className={styles.form}>
-
           <Form.Label>Annual Salary</Form.Label>
           <TooltipOnHover
-              text="Enter your compensation that is eligible for 401k contributions."
-              nest={
-                <InputGroup className="mb-3 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(salary)}
-                    onChange={(e) => updateAmount(e, changeSalary, 0)}
-                  />
-                </InputGroup>
-              }
-            />
+            text="Enter your compensation that is eligible for 401k contributions."
+            nest={
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(salary)}
+                  onChange={(e) => updateAmount(e, changeSalary, 0)}
+                />
+              </InputGroup>
+            }
+          />
           <Form.Label>Number of Pay Periods this year</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(numberOfPayPeriods)}
               onChange={(e) =>
                 updateAmount(e, changeNumberOfPayPeriods, 1, 366)
@@ -305,7 +347,8 @@ function Maximize() {
           </Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(numberOfPayPeriodsSoFar)}
               onChange={(e) =>
                 updateAmount(
@@ -323,10 +366,16 @@ function Maximize() {
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
               disabled={numberOfPayPeriodsSoFar === 0}
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(amountContributedSoFarIndividual)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFarIndividual, 0, _401kMaximumIndividual)
+                updateAmount(
+                  e,
+                  changeAmountContributedSoFarIndividual,
+                  0,
+                  _401kMaximumIndividual
+                )
               }
             />
           </InputGroup>
@@ -336,42 +385,44 @@ function Maximize() {
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
               disabled={numberOfPayPeriodsSoFar === 0}
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(amountContributedSoFarEmployer)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFarEmployer, 0, _401kMaximum - _401kMaximumIndividual)
+                updateAmount(
+                  e,
+                  changeAmountContributedSoFarEmployer,
+                  0,
+                  _401kMaximum - _401kMaximumIndividual
+                )
               }
             />
           </InputGroup>
 
-          <Form.Label>
-            Effective Employer 401k Match
-          </Form.Label>
+          <Form.Label>Effective Employer 401k Match</Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(employerMatch)}
-                  onChange={(e) =>
-                    updateContribution(e, changeEmployerMatch)
-                  }
+                  onChange={(e) => updateContribution(e, changeEmployerMatch)}
                 />
                 <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
             }
           />
 
-          <Form.Label>
-            Maximum Paycheck Contribution for 401k
-          </Form.Label>
+          <Form.Label>Maximum Paycheck Contribution for 401k</Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(maxContributionFromPaycheck)}
                   onChange={(e) =>
                     updateContribution(e, changeMaxContributionFromPaycheck)
@@ -395,53 +446,67 @@ function Maximize() {
             text="Check this if your 401k automatically caps contributions at limits."
             nest={
               <InputGroup className="mb-3 w-75">
-              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
+                <Form.Check
+                  type="checkbox"
+                  onChange={() => change401kAutoCap(!_401kAutoCap)}
+                  label="401k Automatically Caps Contributions"
+                  checked={_401kAutoCap}
+                />
               </InputGroup>
             }
           />
 
-          {_401kAutoCap &&
+          {_401kAutoCap && (
             <TooltipOnHover
-            text="You may max out contributions early and miss match. Enable this to backload contributions into last pay period."
-            nest={
-              <InputGroup className="mb-3 w-75">
-              <Form.Check type="checkbox" onChange={() => changeBackloadToggle(!backloadToggle)} label="Backload Contribution For Maxing Out" checked={backloadToggle} />
-              </InputGroup>
-            }
-          />}
-
-          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
-            <TooltipOnHover
-              text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
+              text="You may max out contributions early and miss match. Enable this to backload contributions into last pay period."
               nest={
-                <InputGroup className="mb-3 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(_401kMaximumIndividual)}
-                    onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
+                <InputGroup className="mb-3 w-75">
+                  <Form.Check
+                    type="checkbox"
+                    onChange={() => changeBackloadToggle(!backloadToggle)}
+                    label="Backload Contribution For Maxing Out"
+                    checked={backloadToggle}
                   />
                 </InputGroup>
               }
             />
+          )}
 
-          {megabackdoorEligible &&
-          <Form.Group>
-          <Form.Label>401k Maximum for Total Contribution</Form.Label>
-            <TooltipOnHover
-              text="The maximum in 2023 is $66000. You can decrease this if you have contributed to another 401k."
-              nest={
-                <InputGroup className="mb-3 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(_401kMaximum)}
-                    onChange={(e) => updateAmount(e, change401kMaximum)}
-                  />
-                </InputGroup>
-              }
-            /></Form.Group>
-          }
+          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
+          <TooltipOnHover
+            text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
+            nest={
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(_401kMaximumIndividual)}
+                  onChange={(e) => updateAmount(e, change401kMaximumIndividual)}
+                />
+              </InputGroup>
+            }
+          />
+
+          {megabackdoorEligible && (
+            <Form.Group>
+              <Form.Label>401k Maximum for Total Contribution</Form.Label>
+              <TooltipOnHover
+                text="The maximum in 2023 is $66000. You can decrease this if you have contributed to another 401k."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(_401kMaximum)}
+                      onChange={(e) => updateAmount(e, change401kMaximum)}
+                    />
+                  </InputGroup>
+                }
+              />
+            </Form.Group>
+          )}
         </Form>
 
         <div className={styles.table}>
@@ -456,7 +521,6 @@ function Maximize() {
                 <th>Employer Contribution $</th>
                 <th>Employer Cumulative $</th>
                 <th>Total Cumulative $</th>
-
               </tr>
             </thead>
             <tbody>

@@ -32,16 +32,20 @@ function Frontload() {
     React.useState(6);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
     React.useState(90);
-  const [effectiveEmployerBase, changeEffectiveEmployerBase] = React.useState(0);
-  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] = React.useState(50);
-  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] = React.useState(6);
-
+  const [effectiveEmployerBase, changeEffectiveEmployerBase] =
+    React.useState(0);
+  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] =
+    React.useState(50);
+  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] =
+    React.useState(6);
 
   const [_401kAutoCap, change401kAutoCap] = React.useState(false);
-  const [showEmployerMatchInTable, changeShowEmployerMatchInTable] = React.useState(false);
+  const [showEmployerMatchInTable, changeShowEmployerMatchInTable] =
+    React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
-  const payPeriodAlreadyPassedText = payPeriodAlreadyPassedIcon + " Pay period has already passed";
+  const payPeriodAlreadyPassedText =
+    payPeriodAlreadyPassedIcon + " Pay period has already passed";
   const _401kMaxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     _401kMaxNotReachedIcon +
@@ -147,12 +151,16 @@ function Frontload() {
 
     // if 401k auto caps, we're at the last row, contribution would not equal max, and new contribution won't exceed max allowed
     // set contribution to max out
-    if (_401kAutoCap &&
+    if (
+      _401kAutoCap &&
       i == numberOfPayPeriods - 1 &&
       contributionAmount != _401kMaximum - table_rows[i - 1][4] &&
-      (_401kMaximum - table_rows[i - 1][4]) / payPerPayPeriod * 100 <= maxContributionFromPaycheck) {
+      ((_401kMaximum - table_rows[i - 1][4]) / payPerPayPeriod) * 100 <=
+        maxContributionFromPaycheck
+    ) {
       contributionAmount = _401kMaximum - table_rows[i - 1][4];
-      contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
+      contributionPercent =
+        Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
       _401kMaxReachedWithAutoCapAlertHTML = (
         <Alert className="mb-3" variant="secondary">
           {_401kMaxReachedWithAutoCapNote}
@@ -162,7 +170,8 @@ function Frontload() {
     }
 
     // if prev row exists, add value to period contribution, else use period contribution
-    cumulativeAmountIndividual = i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
+    cumulativeAmountIndividual =
+      i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
 
     // check for too much comp
     if (Math.floor(cumulativeAmountIndividual) > _401kMaximum) {
@@ -175,7 +184,8 @@ function Frontload() {
       cumulativeAmountIndividual = _401kMaximum;
       contributionAmount =
         i != 0 ? _401kMaximum - table_rows[i - 1][4] : _401kMaximum;
-      contributionPercent = Math.ceil(contributionAmount / payPerPayPeriod * 100) / 100;
+      contributionPercent =
+        Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
     }
 
     // if last paycheck, cumulative is < 401k max, and last match isn't the maximum,
@@ -195,11 +205,18 @@ function Frontload() {
     }
 
     // set employer match
-    let employerBaseAmount = effectiveEmployerBase * payPerPayPeriod / 100;
-    let employerMatchAmount = (effectiveEmployerMatch / 100 * Math.min(effectiveEmployerMatchUpTo, contributionPercent * 100)) * payPerPayPeriod / 100;
-    employerAmount = employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
-    cumulativeAmountTotal = i == 0 ?
-      contributionAmount + employerAmount : table_rows[i-1][6] + contributionAmount + employerAmount;
+    let employerBaseAmount = (effectiveEmployerBase * payPerPayPeriod) / 100;
+    let employerMatchAmount =
+      ((effectiveEmployerMatch / 100) *
+        Math.min(effectiveEmployerMatchUpTo, contributionPercent * 100) *
+        payPerPayPeriod) /
+      100;
+    employerAmount =
+      employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
+    cumulativeAmountTotal =
+      i == 0
+        ? contributionAmount + employerAmount
+        : table_rows[i - 1][6] + contributionAmount + employerAmount;
 
     // row values: key, compensation, match, contribution, cumulative
     table_rows.push([
@@ -209,7 +226,7 @@ function Frontload() {
       contributionAmount,
       cumulativeAmountIndividual,
       employerAmount,
-      cumulativeAmountTotal
+      cumulativeAmountTotal,
     ]);
   }
 
@@ -266,7 +283,9 @@ function Frontload() {
     allowDecimal: boolean = false
   ) => {
     const inputValue = (e.target as HTMLInputElement).value;
-    let value = allowDecimal ? Math.round(parseFloat(inputValue)*100)/100 : parseInt(inputValue);
+    let value = allowDecimal
+      ? Math.round(parseFloat(inputValue) * 100) / 100
+      : parseInt(inputValue);
     if (isNaN(value) || value < min) {
       value = min;
     } else if (value > max) {
@@ -282,7 +301,8 @@ function Frontload() {
       <main className={styles.main}>
         <h1>401k Frontload Calculator</h1>
         <p>
-          Here we will maximize your 401k contributions by frontloading while ensuring minimum contributions throughout the year.
+          Here we will maximize your 401k contributions by frontloading while
+          ensuring minimum contributions throughout the year.
         </p>
       </main>
 
@@ -292,7 +312,8 @@ function Frontload() {
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(salary)}
               onChange={(e) => updateAmount(e, changeSalary)}
             />
@@ -301,7 +322,8 @@ function Frontload() {
           <Form.Label>Number of Pay Periods this year</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(numberOfPayPeriods)}
               onChange={(e) =>
                 updateAmount(e, changeNumberOfPayPeriods, 1, 366)
@@ -314,7 +336,8 @@ function Frontload() {
           </Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(numberOfPayPeriodsSoFar)}
               onChange={(e) =>
                 updateAmount(
@@ -332,7 +355,8 @@ function Frontload() {
             <InputGroup.Text>$</InputGroup.Text>
             <Form.Control
               disabled={numberOfPayPeriodsSoFar === 0}
-              type="number" onWheel={e => e.currentTarget.blur()}
+              type="number"
+              onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(amountContributedSoFar)}
               onChange={(e) =>
                 updateAmount(e, changeAmountContributedSoFar, 0, _401kMaximum)
@@ -347,7 +371,8 @@ function Frontload() {
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(_401kMaximum)}
                   onChange={(e) => updateAmount(e, change401kMaximum)}
                 />
@@ -355,15 +380,14 @@ function Frontload() {
             }
           />
 
-          <Form.Label>
-            Minimum Desired Paycheck Contribution
-          </Form.Label>
+          <Form.Label>Minimum Desired Paycheck Contribution</Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100. This is what you want to ensure you get a 401k match per paycheck."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(minContributionForMatch)}
                   onChange={(e) =>
                     updateContribution(e, changeMinContributionForMatch)
@@ -374,15 +398,14 @@ function Frontload() {
             }
           />
 
-          <Form.Label>
-            Maximum Paycheck Contribution
-          </Form.Label>
+          <Form.Label>Maximum Paycheck Contribution</Form.Label>
           <TooltipOnHover
             text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
-                  type="number" onWheel={e => e.currentTarget.blur()}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(maxContributionFromPaycheck)}
                   onChange={(e) =>
                     updateContribution(e, changeMaxContributionFromPaycheck)
@@ -397,7 +420,12 @@ function Frontload() {
             text="Check this if your 401k automatically caps individual contributions at limits."
             nest={
               <InputGroup className="mb-3 w-50">
-              <Form.Check type="checkbox" onChange={() => change401kAutoCap(!_401kAutoCap)} label="401k Automatically Caps Contributions" checked={_401kAutoCap} />
+                <Form.Check
+                  type="checkbox"
+                  onChange={() => change401kAutoCap(!_401kAutoCap)}
+                  label="401k Automatically Caps Contributions"
+                  checked={_401kAutoCap}
+                />
               </InputGroup>
             }
           />
@@ -406,63 +434,89 @@ function Frontload() {
             text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
             nest={
               <InputGroup className="mb-3 w-50">
-              <Form.Check type="checkbox" onChange={() => changeShowEmployerMatchInTable(!showEmployerMatchInTable)} label="Show Employer Match" checked={showEmployerMatchInTable} />
+                <Form.Check
+                  type="checkbox"
+                  onChange={() =>
+                    changeShowEmployerMatchInTable(!showEmployerMatchInTable)
+                  }
+                  label="Show Employer Match"
+                  checked={showEmployerMatchInTable}
+                />
               </InputGroup>
             }
           />
-          {showEmployerMatchInTable &&
-          <FormGroup>
-            <Form.Label>
-              Employer 401k Base Contribution
-            </Form.Label>
-            <TooltipOnHover
-              text="% of income between 0 and 100. This is how much your employer contributes regardless of your contributions."
-              nest={
-                <InputGroup className="mb-3 w-100">
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(effectiveEmployerBase)}
-                    onChange={(e) =>
-                      updateContribution(e, changeEffectiveEmployerBase, 0, 100, true)
-                    }
-                  />
-                  <InputGroup.Text>%</InputGroup.Text>
-                </InputGroup>
-              }
-            />
-            <Form.Label className={styles.inlineGroupFormLabel}>
-              Employer 401k Match
-            </Form.Label>
-            <TooltipOnHover
-              text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions. This is in the form of X% up to Y% of contributions."
-              nest={
-                <div className={styles.inlineGroup}>
-                <InputGroup className={styles.inlineChildren}>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(effectiveEmployerMatch)}
-                    onChange={(e) =>
-                      updateContribution(e, changeEffectiveEmployerMatch, 0, 100, true)
-                    }
-                  />
-                  <InputGroup.Text>%</InputGroup.Text>
-                </InputGroup>
-                <p className="styles."> Up To </p>
-                <InputGroup className={styles.inlineChildren}>
-                  <Form.Control
-                    type="number" onWheel={e => e.currentTarget.blur()}
-                    value={formatStateValue(effectiveEmployerMatchUpTo)}
-                    onChange={(e) =>
-                      updateContribution(e, changeEffectiveEmployerMatchUpTo, 0, 100, true)
-                    }
-                  />
-                  <InputGroup.Text>%</InputGroup.Text>
-                </InputGroup>
-                </div>
-              }
-            />
-          </FormGroup>}
-
+          {showEmployerMatchInTable && (
+            <FormGroup>
+              <Form.Label>Employer 401k Base Contribution</Form.Label>
+              <TooltipOnHover
+                text="% of income between 0 and 100. This is how much your employer contributes regardless of your contributions."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(effectiveEmployerBase)}
+                      onChange={(e) =>
+                        updateContribution(
+                          e,
+                          changeEffectiveEmployerBase,
+                          0,
+                          100,
+                          true
+                        )
+                      }
+                    />
+                    <InputGroup.Text>%</InputGroup.Text>
+                  </InputGroup>
+                }
+              />
+              <Form.Label className={styles.inlineGroupFormLabel}>
+                Employer 401k Match
+              </Form.Label>
+              <TooltipOnHover
+                text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions. This is in the form of X% up to Y% of contributions."
+                nest={
+                  <div className={styles.inlineGroup}>
+                    <InputGroup className={styles.inlineChildren}>
+                      <Form.Control
+                        type="number"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        value={formatStateValue(effectiveEmployerMatch)}
+                        onChange={(e) =>
+                          updateContribution(
+                            e,
+                            changeEffectiveEmployerMatch,
+                            0,
+                            100,
+                            true
+                          )
+                        }
+                      />
+                      <InputGroup.Text>%</InputGroup.Text>
+                    </InputGroup>
+                    <p className="styles."> Up To </p>
+                    <InputGroup className={styles.inlineChildren}>
+                      <Form.Control
+                        type="number"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        value={formatStateValue(effectiveEmployerMatchUpTo)}
+                        onChange={(e) =>
+                          updateContribution(
+                            e,
+                            changeEffectiveEmployerMatchUpTo,
+                            0,
+                            100,
+                            true
+                          )
+                        }
+                      />
+                      <InputGroup.Text>%</InputGroup.Text>
+                    </InputGroup>
+                  </div>
+                }
+              />
+            </FormGroup>
+          )}
         </Form>
 
         <div className={styles.table}>
@@ -484,9 +538,15 @@ function Frontload() {
                   <td>{formatCurrency(row[1])}</td>
                   <td>{formatPercent(row[2])}</td>
                   <td>{formatCurrency(row[3])}</td>
-                  {!showEmployerMatchInTable && <td>{formatCurrency(row[4])}</td>}
-                  {showEmployerMatchInTable && <td>{formatCurrency(row[5])}</td>}
-                  {showEmployerMatchInTable && <td>{formatCurrency(row[6])}</td>}
+                  {!showEmployerMatchInTable && (
+                    <td>{formatCurrency(row[4])}</td>
+                  )}
+                  {showEmployerMatchInTable && (
+                    <td>{formatCurrency(row[5])}</td>
+                  )}
+                  {showEmployerMatchInTable && (
+                    <td>{formatCurrency(row[6])}</td>
+                  )}
                 </tr>
               ))}
             </tbody>

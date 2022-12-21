@@ -6,7 +6,7 @@ This is a NextJS/React app that contains tools that will do random finance stuff
 
 1. Paycheck Calculator
 2. 401k Equal Contribution Maximizing
-2. 401k Frontloading
+3. 401k Frontloading
 
 Planned features
 

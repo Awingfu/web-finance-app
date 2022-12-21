@@ -23,7 +23,7 @@ a {
 
 thead tr {
   border-bottom: 2px solid currentColor;
-} 
+}
 
 tr > th:not(:first-child) {
   text-align: right;
@@ -46,14 +46,14 @@ footer p {
   margin: 0;
 }
 
-$primary: #06A77D;
-$secondary: #052F5F;
+$primary: #06a77d;
+$secondary: #052f5f;
 $danger: red;
 
 $theme-colors: (
   primary: $primary,
   secondary: $secondary,
-  danger: $danger
+  danger: $danger,
 );
 
 @import "bootstrap";
