@@ -160,11 +160,11 @@ export const getFederalWithholding = (
   ) {
     row += 1;
   }
-  console.log(
-    "You're at the " +
-      withholdingBrackets[row][3] * 100 +
-      "% Federal withholding bracket."
-  );
+  // console.log(
+  //   "You're at the " +
+  //     withholdingBrackets[row][3] * 100 +
+  //     "% Federal withholding bracket."
+  // );
   return (
     withholdingBrackets[row][2] +
     (taxableWage - withholdingBrackets[row][0]) * withholdingBrackets[row][3]

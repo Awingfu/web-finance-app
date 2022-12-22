@@ -78,20 +78,18 @@ export const determineStateTaxesWithheld = (
   }
 
   if (instanceOfTaxUnknown(us_state_object)) {
-    if (us_state_object.name != "None") {
-      console.log(
-        us_state_object.name + " State's taxes are not defined, returning 0."
-      );
-    }
+    // console.log(
+    //   us_state_object.name + " State's taxes are not defined, returning 0."
+    // );
     return 0;
   }
   if (instanceOfFlatTax(us_state_object)) {
-    console.log(
-      us_state_object.name +
-        " State has a flat tax of " +
-        us_state_object.flatTax +
-        "%"
-    );
+    // console.log(
+    //   us_state_object.name +
+    //     " State has a flat tax of " +
+    //     us_state_object.flatTax +
+    //     "%"
+    // );
     return us_state_object.flatTax * income;
   }
   if (instanceOfTaxBrackets(us_state_object)) {
@@ -109,13 +107,13 @@ export const determineStateTaxesWithheld = (
         withholdingBrackets[row][1] > income
       ) {
         // cumulative from previous rows + (income - min income at bracket) * tax rate at bracket
-        console.log(
-          "You're at the " +
-            withholdingBrackets[row][3] * 100 +
-            "% tax bracket for " +
-            us_state_object.name +
-            " State"
-        );
+        // console.log(
+        //   "You're at the " +
+        //     withholdingBrackets[row][3] * 100 +
+        //     "% tax bracket for " +
+        //     us_state_object.name +
+        //     " State"
+        // );
         return (
           withholdingBrackets[row][2] +
           (income - withholdingBrackets[row][0]) * withholdingBrackets[row][3]
