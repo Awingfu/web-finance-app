@@ -8,14 +8,15 @@ interface HeaderProps {
 }
 
 const Header = (props: HeaderProps) => {
-  let titleName = props.titleName;
-  let titleSuffix = titleName ? "| " + titleName : "";
-  let metadataContent = "Adam Lui finance " + titleName;
+  const titleName = props.titleName;
+  const titleSuffix = titleName ? "| " + titleName : "";
+  const title = "Finance App " + titleSuffix;
+  const content = "Adam Lui finance " + titleName;
   return (
     <>
       <Head>
-        <title> Finance App {titleSuffix} </title>
-        <meta name="description" content={metadataContent} />
+        <title>{title}</title>
+        <meta name="description" content={content} />
         <link rel="icon" href={`${prefix}/favicon.ico`} />
       </Head>
       <NavigationBar />

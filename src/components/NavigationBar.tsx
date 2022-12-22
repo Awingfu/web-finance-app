@@ -12,7 +12,8 @@ const NavigationBar = () => {
   const [isGreaterThan425px, setIsGreaterThan425px] = React.useState(false);
   const iconPath = prefix + "/favicon.ico";
 
-  React.useEffect(() => {
+  // useLayoutEffect over useEffect as useEffect shows artifacts of lower resolution options briefly during routing
+  React.useLayoutEffect(() => {
     function handleResize() {
       if (window.innerWidth > 425) {
         setIsGreaterThan425px(true);
