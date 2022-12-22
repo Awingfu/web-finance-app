@@ -449,7 +449,7 @@ function Frontload() {
             <FormGroup>
               <Form.Label>Employer 401k Base Contribution</Form.Label>
               <TooltipOnHover
-                text="% of income between 0 and 100. This is how much your employer contributes regardless of your contributions."
+                text="This is how much your employer contributes regardless of your contributions."
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <Form.Control
@@ -474,7 +474,7 @@ function Frontload() {
                 Employer 401k Match
               </Form.Label>
               <TooltipOnHover
-                text="% of income between 0 and 100. This is how much your employer contributes dependent on your contributions. This is in the form of X% up to Y% of contributions."
+                text="This is how much your employer contributes dependent on your contributions."
                 nest={
                   <div className={styles.inlineGroup}>
                     <InputGroup className={styles.inlineChildren}>
