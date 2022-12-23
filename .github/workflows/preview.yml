@@ -16,6 +16,10 @@ jobs:
   deploy-preview:
     runs-on: ubuntu-latest
 
+    # Need this to ensure routing in the app works
+    env:
+      NEXT_PUBLIC_BASE_PATH: /web-finance-app/pr-preview/pr-${{github.event.issue.number}}
+
     strategy:
       matrix:
         node-version: [16.x]
