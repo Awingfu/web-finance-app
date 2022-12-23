@@ -37,6 +37,9 @@
     ],
     "*.tsx": [
       "prettier --write"
+    ],
+    "*.scss": [
+      "prettier --write"
     ]
   }
 }

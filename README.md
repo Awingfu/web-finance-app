@@ -34,6 +34,11 @@ Favicon from https://favicon.io/emoji-favicons/wind-chime
 
 Deployment to GH Pages from this guide: https://www.linkedin.com/pulse/deploy-nextjs-app-github-pages-federico-antu%C3%B1a/
 
+### Github Actions
+
+[PR Preview Action](https://github.com/rossjrw/pr-preview-action)
+[Github Pages Deploy Action](https://github.com/JamesIves/github-pages-deploy-action)
+
 ## Getting Started
 
 Download the repo locally:
