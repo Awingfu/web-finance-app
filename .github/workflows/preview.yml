@@ -1,19 +1,20 @@
-name: Deploy to GitHub Pages
+name: Deploy PR previews
 
 on:
-  push:
-    branches: [main]
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
 
 concurrency:
-  group: ci-${{ github.ref }}
+  group: preview-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy-main:
+  deploy-preview:
     runs-on: ubuntu-latest
-
-    env:
-      NEXT_PUBLIC_BASE_PATH: /web-finance-app
 
     strategy:
       matrix:
@@ -34,10 +35,8 @@ jobs:
         run: npm run export
       - name: Add .nojekyll file
         run: touch ./out/.nojekyll
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@4
+      - name: Deploy preview
+        uses: rossjrw/pr-preview-action@v1
         with:
-          branch: gh-pages
-          folder: out
-          clean-exclude: pr-preview/
-          force: false
+          source-dir: out
+          preview-branch: gh-pages
