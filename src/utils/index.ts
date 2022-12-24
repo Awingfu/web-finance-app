@@ -17,3 +17,5 @@ export {
   formatStateValue,
 } from "./helperFunctions";
 export { prefix } from "./prefix";
+export { RetirementTable } from "./retirement_table";
+export type { RetirementTableRow } from "./retirement_table";

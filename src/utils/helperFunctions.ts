@@ -38,14 +38,3 @@ export const formatPercent = (num: number, round: boolean = true): string => {
 export const formatStateValue = (value: string | number): string => {
   return Number(value).toString();
 };
-
-// Not finished
-// Gets all paydays based on pay period and current year
-const getPayDays = (
-  paycheckFrequency: FREQUENCIES,
-  year: number,
-  payBeforeHolidays: boolean = true,
-  payBeforeWeekends: boolean = true
-): Date[] => {
-  return [new Date()];
-};

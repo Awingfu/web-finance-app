@@ -5,8 +5,13 @@ import {
   formatCurrency,
   formatPercent,
   formatStateValue,
+  RetirementTable,
+  RetirementTableRow,
 } from "../../src/utils";
-import { _401k_maximum_contribution_individual } from "../../src/utils/constants";
+import {
+  _401k_maximum_contribution_individual,
+  _401k_maximum_contribution_total,
+} from "../../src/utils/constants";
 import styles from "../../styles/Retirement.module.scss";
 
 /**
@@ -21,6 +26,9 @@ function Frontload() {
   const [salary, changeSalary] = React.useState(60000);
   const [_401kMaximum, change401kMaximum] = React.useState(
     _401k_maximum_contribution_individual
+  );
+  const [_401kMaximumT, change401kMaximumT] = React.useState(
+    _401k_maximum_contribution_total
   );
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
   const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
@@ -56,27 +64,29 @@ function Frontload() {
   const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     _401kMaxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Congrats. Future contributions for the year will not be possible if your employer caps your contributions";
+    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer caps your contributions";
 
   let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
   let _401kMaxReachedWithAutoCapAlertHTML = <></>;
   let _401kMaxReachedEarlyAlertHTML = <></>;
 
-  // Calculations
-  const payPerPayPeriod = salary / numberOfPayPeriods;
-
-  const maxContributionAmount =
-    (maxContributionFromPaycheck / 100) * payPerPayPeriod;
-  const contributionAmountForFullMatch =
-    (minContributionForMatch / 100) * payPerPayPeriod;
-
-  const numberOfMaxContributions = Math.floor(
-    (amountContributedSoFar -
-      _401kMaximum +
-      contributionAmountForFullMatch *
-        (numberOfPayPeriods - numberOfPayPeriodsSoFar)) /
-      (contributionAmountForFullMatch - maxContributionAmount)
+  const table = new RetirementTable(
+    salary,
+    numberOfPayPeriods,
+    numberOfPayPeriodsSoFar,
+    amountContributedSoFar,
+    0,
+    _401kMaximum,
+    _401kMaximumT,
+    minContributionForMatch,
+    maxContributionFromPaycheck,
+    effectiveEmployerBase,
+    effectiveEmployerMatch,
+    effectiveEmployerMatchUpTo,
+    0,
+    _401kAutoCap,
+    false
   );
 
   if (numberOfPayPeriodsSoFar > 0) {
@@ -87,147 +97,29 @@ function Frontload() {
     );
   }
 
-  // console.log(numberOfMaxContributions + " = " +
-  // amountContributedSoFar + " - " + _401kMaximum + " + (" + contributionAmountForFullMatch + " * (" + numberOfPayPeriods + " - " + numberOfPayPeriodsSoFar + ")) / (" + contributionAmountForFullMatch + " - " + maxContributionAmount + ")");
-  const singleContributionPercent = Math.floor(
-    ((_401kMaximum -
-      (amountContributedSoFar +
-        numberOfMaxContributions * maxContributionAmount +
-        (numberOfPayPeriods -
-          numberOfMaxContributions -
-          numberOfPayPeriodsSoFar -
-          1) *
-          contributionAmountForFullMatch)) /
-      salary) *
-      numberOfPayPeriods *
-      100
-  );
-  const singleContributionAmount =
-    (singleContributionPercent / 100) * payPerPayPeriod;
+  if (table.maxReachedEarly) {
+    _401kMaxReachedEarlyAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {_401kMaxReachedEarlyNote}
+      </Alert>
+    );
+  }
 
-  // data for table
-  const table_rows: any[][] = [];
-  let contributionPercent = 0;
-  let contributionAmount = 0;
-  let cumulativeAmountIndividual = 0;
-  let employerAmount = 0;
-  let cumulativeAmountTotal = 0;
+  if (table.maxNotReached) {
+    _401kMaxNotReachedAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {_401kMaxNotReachedNote}
+      </Alert>
+    );
+  }
 
-  for (let i = 0; i < numberOfPayPeriods; i++) {
-    // key for paycheck number. Index start at 1 cuz finance
-    let concatKey = (i + 1).toString();
-
-    // base cases to just insert 0 and existing contributions if periods have already passed
-    if (i < numberOfPayPeriodsSoFar - 1) {
-      concatKey += payPeriodAlreadyPassedIcon;
-      table_rows.push([concatKey, payPerPayPeriod, 0, 0, 0, 0, 0]);
-      continue;
-    } else if (i == numberOfPayPeriodsSoFar - 1) {
-      concatKey += payPeriodAlreadyPassedIcon;
-      table_rows.push([
-        concatKey,
-        payPerPayPeriod,
-        0,
-        amountContributedSoFar,
-        amountContributedSoFar,
-        0,
-        amountContributedSoFar,
-      ]);
-      continue;
-    }
-
-    // set base contribution pct and contribution amount
-    contributionPercent = minContributionForMatch / 100;
-    contributionAmount = (contributionPercent * salary) / numberOfPayPeriods;
-
-    // do max contributions, then single contribution, then default to min match
-    if (i - numberOfPayPeriodsSoFar < numberOfMaxContributions) {
-      contributionPercent = maxContributionFromPaycheck / 100;
-      contributionAmount = maxContributionAmount;
-    } else if (i - numberOfPayPeriodsSoFar === numberOfMaxContributions) {
-      contributionPercent = singleContributionPercent / 100;
-      contributionAmount = singleContributionAmount;
-    }
-
-    // if 401k auto caps, we're at the last row, contribution would not equal max, and new contribution won't exceed max allowed
-    // set contribution to max out
-    if (
-      _401kAutoCap &&
-      i == numberOfPayPeriods - 1 &&
-      contributionAmount != _401kMaximum - table_rows[i - 1][4] &&
-      ((_401kMaximum - table_rows[i - 1][4]) / payPerPayPeriod) * 100 <=
-        maxContributionFromPaycheck
-    ) {
-      contributionAmount = _401kMaximum - table_rows[i - 1][4];
-      contributionPercent =
-        Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
-      _401kMaxReachedWithAutoCapAlertHTML = (
-        <Alert className="mb-3" variant="secondary">
-          {_401kMaxReachedWithAutoCapNote}
-        </Alert>
-      );
-      concatKey += _401kMaxNotReachedIcon;
-    }
-
-    // if prev row exists, add value to period contribution, else use period contribution
-    cumulativeAmountIndividual =
-      i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
-
-    // check for too much comp
-    if (Math.floor(cumulativeAmountIndividual) > _401kMaximum) {
-      _401kMaxReachedEarlyAlertHTML = (
-        <Alert className="mb-3" variant="secondary">
-          {_401kMaxReachedEarlyNote}
-        </Alert>
-      );
-      concatKey += _401kMaxReachedEarlyIcon;
-      cumulativeAmountIndividual = _401kMaximum;
-      contributionAmount =
-        i != 0 ? _401kMaximum - table_rows[i - 1][4] : _401kMaximum;
-      contributionPercent =
-        Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
-    }
-
-    // if last paycheck, cumulative is < 401k max, and last match isn't the maximum,
-    // with the last check meaning you're unable to hit maximum contribution limit,
-    // add dagger to let user know to bump up contribution
-    if (
-      i === numberOfPayPeriods - 1 &&
-      Math.round(cumulativeAmountIndividual) != _401kMaximum &&
-      contributionPercent != maxContributionFromPaycheck / 100
-    ) {
-      _401kMaxNotReachedAlertHTML = (
-        <Alert className="mb-3" variant="secondary">
-          {_401kMaxNotReachedNote}
-        </Alert>
-      );
-      concatKey += _401kMaxNotReachedIcon;
-    }
-
-    // set employer match
-    let employerBaseAmount = (effectiveEmployerBase * payPerPayPeriod) / 100;
-    let employerMatchAmount =
-      ((effectiveEmployerMatch / 100) *
-        Math.min(effectiveEmployerMatchUpTo, contributionPercent * 100) *
-        payPerPayPeriod) /
-      100;
-    employerAmount =
-      employerBaseAmount + Math.min(contributionAmount, employerMatchAmount);
-    cumulativeAmountTotal =
-      i == 0
-        ? contributionAmount + employerAmount
-        : table_rows[i - 1][6] + contributionAmount + employerAmount;
-
-    // row values: key, compensation, match, contribution, cumulative
-    table_rows.push([
-      concatKey,
-      payPerPayPeriod,
-      contributionPercent,
-      contributionAmount,
-      cumulativeAmountIndividual,
-      employerAmount,
-      cumulativeAmountTotal,
-    ]);
+  // Todo, edge case where maxReachedWithAutomaticCap and maxReachedEarly can trigger together
+  if (table.maxReachedWithAutomaticCap) {
+    _401kMaxReachedWithAutoCapAlertHTML = (
+      <Alert className="mb-3" variant="secondary">
+        {_401kMaxReachedWithAutoCapNote}
+      </Alert>
+    );
   }
 
   /**
@@ -326,7 +218,7 @@ function Frontload() {
               onWheel={(e) => e.currentTarget.blur()}
               value={formatStateValue(numberOfPayPeriods)}
               onChange={(e) =>
-                updateAmount(e, changeNumberOfPayPeriods, 1, 366)
+                updateAmount(e, changeNumberOfPayPeriods, 1, 260)
               }
             />
           </InputGroup>
@@ -532,20 +424,20 @@ function Frontload() {
               </tr>
             </thead>
             <tbody>
-              {table_rows.map((row) => (
-                <tr key={row[0]}>
-                  <td className={styles.thicc}>{row[0]}</td>
-                  <td>{formatCurrency(row[1])}</td>
-                  <td>{formatPercent(row[2])}</td>
-                  <td>{formatCurrency(row[3])}</td>
+              {table.getTable().map((row: RetirementTableRow) => (
+                <tr key={row.rowKey}>
+                  <td className={styles.thicc}>{row.rowKey}</td>
+                  <td>{formatCurrency(row.payPerPayPeriod)}</td>
+                  <td>{formatPercent(row.contributionFraction)}</td>
+                  <td>{formatCurrency(row.contributionAmount)}</td>
                   {!showEmployerMatchInTable && (
-                    <td>{formatCurrency(row[4])}</td>
+                    <td>{formatCurrency(row.cumulativeAmountIndividual)}</td>
                   )}
                   {showEmployerMatchInTable && (
-                    <td>{formatCurrency(row[5])}</td>
+                    <td>{formatCurrency(row.employerAmount)}</td>
                   )}
                   {showEmployerMatchInTable && (
-                    <td>{formatCurrency(row[6])}</td>
+                    <td>{formatCurrency(row.cumulativeAmountWithEmployer)}</td>
                   )}
                 </tr>
               ))}
