@@ -57,6 +57,12 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
+### When Making a Pull Request
+
+A preview deployment will deploy to `https://awingfu.github.io/web-finance-app/pr-preview/pr-<PR Number>` and will be linked in the PR Issue.
+
+You may encounter the 404 page at the preview URL when the PR is first built so please allow 2 minutes after the preview deployment is marked successful and ensure to Hard Reload.
+
 ## References
 
 Favicon [Wind-Chime](https://favicon.io/emoji-favicons/wind-chime)
