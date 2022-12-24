@@ -29,7 +29,7 @@ function Frontload() {
   const [max401kTotalAmount, changeMax401kTotalAmount] = React.useState(
     _401k_maximum_contribution_total
   );
-  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
+  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(24);
   const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
   const [
@@ -57,12 +57,17 @@ function Frontload() {
   const [employerMatchUpToPercent, changeEmployerMatchUpToPercent] =
     React.useState(6);
 
+  // customization options
   const [automaticallyCap401k, changeAutomaticallyCap401k] =
     React.useState(false);
   const [prioritizeMegaBackdoor, changePrioritizeMegaBackdoor] =
     React.useState(false);
-  const [showEmployerMatchInTable, changeShowEmployerMatchInTable] =
+
+  // form options
+  const [addExistingContributions, changeAddExistingContributions] =
     React.useState(false);
+  const [update401kLimits, changeUpdate401kLimits] = React.useState(false);
+  const [showEmployerMatch, changeShowEmployerMatch] = React.useState(false);
   const [showMegaBackdoor, changeShowMegaBackdoor] = React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
@@ -176,10 +181,29 @@ function Frontload() {
     changeFunction(value);
   };
 
+  const updateToggle = (
+    e: React.FormEvent<HTMLElement>,
+    changeFunction: { (value: React.SetStateAction<any>): void }
+  ) => {
+    let value = (e.target as HTMLInputElement).checked;
+    if (changeFunction === changeAddExistingContributions && !value) {
+      setAmountsSoFarToZero();
+    }
+    if (changeFunction === changeUpdate401kLimits) {
+      set401kLimitsToDefault();
+    }
+    changeFunction(value);
+  };
+
   const setAmountsSoFarToZero = () => {
     changeIndividualContributionAmountSoFar(0);
     changeEmployerContributionAmountSoFar(0);
     changeIndividualContributionAfterTaxAmountSoFar(0);
+  };
+
+  const set401kLimitsToDefault = () => {
+    changeMax401kIndividualAmount(_401k_maximum_contribution_individual);
+    changeMax401kTotalAmount(_401k_maximum_contribution_total);
   };
 
   /**
@@ -233,7 +257,7 @@ function Frontload() {
             />
           </InputGroup>
 
-          <Form.Label>Number of Pay Periods this year</Form.Label>
+          <Form.Label>Number of Pay Periods this Year</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Control
               type="number"
@@ -244,62 +268,6 @@ function Frontload() {
               }
             />
           </InputGroup>
-
-          <Form.Label>
-            Number of Pay Periods you have received so far
-          </Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <Form.Control
-              type="number"
-              onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(numberOfPayPeriodsSoFar)}
-              onChange={(e) =>
-                updateAmount(
-                  e,
-                  changeNumberOfPayPeriodsSoFar,
-                  0,
-                  numberOfPayPeriods - 1
-                )
-              }
-            />
-          </InputGroup>
-
-          <Form.Label>Amount Contributed to 401k so far</Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control
-              disabled={numberOfPayPeriodsSoFar === 0}
-              type="number"
-              onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(individualContributionAmountSoFar)}
-              onChange={(e) =>
-                updateAmount(
-                  e,
-                  changeIndividualContributionAmountSoFar,
-                  0,
-                  max401kIndividualAmount
-                )
-              }
-            />
-          </InputGroup>
-
-          <Form.Label>401k Maximum for Individual Contribution</Form.Label>
-          <TooltipOnHover
-            text="The maximum in 2023 is $22500. You can decrease this if you have contributed to another 401k."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(max401kIndividualAmount)}
-                  onChange={(e) =>
-                    updateAmount(e, changeMax401kIndividualAmount)
-                  }
-                />
-              </InputGroup>
-            }
-          />
 
           <Form.Label>Minimum Desired Paycheck Contribution</Form.Label>
           <TooltipOnHover
@@ -357,40 +325,97 @@ function Frontload() {
           />
 
           <TooltipOnHover
-            text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
+            text="Check this to add contributions in past pay periods in the year."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
-                  onChange={() =>
-                    changeShowEmployerMatchInTable(!showEmployerMatchInTable)
+                  onChange={(e) =>
+                    updateToggle(e, changeAddExistingContributions)
                   }
-                  label="Show Employer Match"
-                  checked={showEmployerMatchInTable}
+                  label="Add Existing Contributions"
+                  checked={addExistingContributions}
                 />
               </InputGroup>
             }
           />
-          {showEmployerMatchInTable && (
+          {addExistingContributions && (
             <FormGroup>
-              <Form.Label>Employer Contributions so far</Form.Label>
+              <Form.Label>Number of Pay Periods So Far</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <Form.Control
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(numberOfPayPeriodsSoFar)}
+                  onChange={(e) =>
+                    updateAmount(
+                      e,
+                      changeNumberOfPayPeriodsSoFar,
+                      0,
+                      numberOfPayPeriods - 1
+                    )
+                  }
+                />
+              </InputGroup>
+
+              <Form.Label>Amount Contributed to 401k So Far</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
                   disabled={numberOfPayPeriodsSoFar === 0}
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(employerContributionAmountSoFar)}
+                  value={formatStateValue(individualContributionAmountSoFar)}
                   onChange={(e) =>
                     updateAmount(
                       e,
-                      changeEmployerContributionAmountSoFar,
+                      changeIndividualContributionAmountSoFar,
                       0,
-                      max401kTotalAmount - max401kIndividualAmount
+                      max401kIndividualAmount
                     )
                   }
                 />
               </InputGroup>
+            </FormGroup>
+          )}
+
+          <TooltipOnHover
+            text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
+            nest={
+              <InputGroup className="mb-3 w-50">
+                <Form.Check
+                  type="checkbox"
+                  onChange={() => changeShowEmployerMatch(!showEmployerMatch)}
+                  label="Show Employer Match"
+                  checked={showEmployerMatch}
+                />
+              </InputGroup>
+            }
+          />
+          {showEmployerMatch && (
+            <FormGroup>
+              {addExistingContributions && (
+                <>
+                  <Form.Label>Employer Contributions So Far</Form.Label>
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      disabled={numberOfPayPeriodsSoFar === 0}
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(employerContributionAmountSoFar)}
+                      onChange={(e) =>
+                        updateAmount(
+                          e,
+                          changeEmployerContributionAmountSoFar,
+                          0,
+                          max401kTotalAmount - max401kIndividualAmount
+                        )
+                      }
+                    />
+                  </InputGroup>
+                </>
+              )}
 
               <Form.Label>Employer 401k Base Contribution</Form.Label>
               <TooltipOnHover
@@ -462,6 +487,40 @@ function Frontload() {
               />
             </FormGroup>
           )}
+          <TooltipOnHover
+            text="Check this to update 401k Limits."
+            nest={
+              <InputGroup className="mb-3 w-50">
+                <Form.Check
+                  type="checkbox"
+                  onChange={(e) => updateToggle(e, changeUpdate401kLimits)}
+                  label="Update 401k Limits"
+                  checked={update401kLimits}
+                />
+              </InputGroup>
+            }
+          />
+          {update401kLimits && (
+            <>
+              <Form.Label>401k Maximum for Individual Contribution</Form.Label>
+              <TooltipOnHover
+                text="The maximum in 2023 is $22500."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(max401kIndividualAmount)}
+                      onChange={(e) =>
+                        updateAmount(e, changeMax401kIndividualAmount)
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </>
+          )}
         </Form>
 
         <div className={styles.table}>
@@ -472,7 +531,7 @@ function Frontload() {
                 <th>Pay</th>
                 <th>Contribution %</th>
                 <th>Contribution Amount</th>
-                {showEmployerMatchInTable && <th> Employer Amount </th>}
+                {showEmployerMatch && <th> Employer Amount </th>}
                 <th>Cumulative Amount</th>
               </tr>
             </thead>
@@ -483,13 +542,13 @@ function Frontload() {
                   <td>{formatCurrency(row.payPerPayPeriod)}</td>
                   <td>{formatPercent(row.contributionFraction)}</td>
                   <td>{formatCurrency(row.contributionAmount)}</td>
-                  {!showEmployerMatchInTable && (
+                  {!showEmployerMatch && (
                     <td>{formatCurrency(row.cumulativeAmountIndividual)}</td>
                   )}
-                  {showEmployerMatchInTable && (
+                  {showEmployerMatch && (
                     <td>{formatCurrency(row.employerAmount)}</td>
                   )}
-                  {showEmployerMatchInTable && (
+                  {showEmployerMatch && (
                     <td>{formatCurrency(row.cumulativeAmountWithEmployer)}</td>
                   )}
                 </tr>
