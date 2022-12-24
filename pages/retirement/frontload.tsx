@@ -24,46 +24,60 @@ import styles from "../../styles/Retirement.module.scss";
 
 function Frontload() {
   const [salary, changeSalary] = React.useState(60000);
-  const [_401kMaximum, change401kMaximum] = React.useState(
-    _401k_maximum_contribution_individual
-  );
-  const [_401kMaximumT, change401kMaximumT] = React.useState(
+  const [max401kIndividualAmount, changeMax401kIndividualAmount] =
+    React.useState(_401k_maximum_contribution_individual);
+  const [max401kTotalAmount, changeMax401kTotalAmount] = React.useState(
     _401k_maximum_contribution_total
   );
   const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
   const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
-  const [amountContributedSoFar, changeAmountContributedSoFar] =
-    React.useState(0);
-  // make sure to divide minContributionForMatch, maxContributionFromPaycheck, effectiveEmployerMatch by 100 to get percentage
-  const [minContributionForMatch, changeMinContributionForMatch] =
-    React.useState(6);
-  const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
+  const [
+    individualContributionAmountSoFar,
+    changeIndividualContributionAmountSoFar,
+  ] = React.useState(0);
+  const [
+    employerContributionAmountSoFar,
+    changeEmployerContributionAmountSoFar,
+  ] = React.useState(0);
+  const [
+    individualContributionAfterTaxAmountSoFar,
+    changeIndividualContributionAfterTaxAmountSoFar,
+  ] = React.useState(0);
+  // make sure to divide minIndividualContributionPercent, maxContributionPercent, employerMatchPercent by 100 to get percentage
+  const [
+    minIndividualContributionPercent,
+    changeMinIndividualContributionPercent,
+  ] = React.useState(6);
+  const [maxContributionPercent, changeMaxContributionPercent] =
     React.useState(90);
-  const [effectiveEmployerBase, changeEffectiveEmployerBase] =
+  const [employerMatchBasePercent, changeEmployerMatchBasePercent] =
     React.useState(0);
-  const [effectiveEmployerMatch, changeEffectiveEmployerMatch] =
-    React.useState(50);
-  const [effectiveEmployerMatchUpTo, changeEffectiveEmployerMatchUpTo] =
+  const [employerMatchPercent, changeEmployerMatchPercent] = React.useState(50);
+  const [employerMatchUpToPercent, changeEmployerMatchUpToPercent] =
     React.useState(6);
 
-  const [_401kAutoCap, change401kAutoCap] = React.useState(false);
+  const [automaticallyCap401k, changeAutomaticallyCap401k] =
+    React.useState(false);
+  const [prioritizeMegaBackdoor, changePrioritizeMegaBackdoor] =
+    React.useState(false);
   const [showEmployerMatchInTable, changeShowEmployerMatchInTable] =
     React.useState(false);
+  const [showMegaBackdoor, changeShowMegaBackdoor] = React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText =
     payPeriodAlreadyPassedIcon + " Pay period has already passed";
-  const _401kMaxNotReachedIcon = "\u2020"; // dagger
+  const maxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
-    _401kMaxNotReachedIcon +
+    maxNotReachedIcon +
     " If your employer automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
   const _401kMaxReachedWithAutoCapNote =
-    _401kMaxNotReachedIcon +
+    maxNotReachedIcon +
     " Since your employer automatically caps your 401k contribution, this last contribution should max out your contributions.";
-  const _401kMaxReachedEarlyIcon = "\u2021"; // double dagger
+  const maxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
-    _401kMaxReachedEarlyIcon +
+    maxReachedEarlyIcon +
     " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer caps your contributions";
 
   let payPeriodAlreadyPassedAlertHTML = <></>;
@@ -75,18 +89,21 @@ function Frontload() {
     salary,
     numberOfPayPeriods,
     numberOfPayPeriodsSoFar,
-    amountContributedSoFar,
-    0,
-    _401kMaximum,
-    _401kMaximumT,
-    minContributionForMatch,
-    maxContributionFromPaycheck,
-    effectiveEmployerBase,
-    effectiveEmployerMatch,
-    effectiveEmployerMatchUpTo,
-    0,
-    _401kAutoCap,
-    false
+    individualContributionAmountSoFar,
+    employerContributionAmountSoFar,
+    individualContributionAfterTaxAmountSoFar,
+    max401kIndividualAmount,
+    max401kTotalAmount,
+    minIndividualContributionPercent,
+    maxContributionPercent,
+    employerMatchBasePercent,
+    employerMatchPercent,
+    employerMatchUpToPercent,
+    payPeriodAlreadyPassedIcon,
+    maxNotReachedIcon,
+    maxReachedEarlyIcon,
+    automaticallyCap401k,
+    prioritizeMegaBackdoor
   );
 
   if (numberOfPayPeriodsSoFar > 0) {
@@ -113,7 +130,6 @@ function Frontload() {
     );
   }
 
-  // Todo, edge case where maxReachedWithAutomaticCap and maxReachedEarly can trigger together
   if (table.maxReachedWithAutomaticCap) {
     _401kMaxReachedWithAutoCapAlertHTML = (
       <Alert className="mb-3" variant="secondary">
@@ -129,7 +145,7 @@ function Frontload() {
    * @param max if event value is greater than max, set to max
    * If changeFunction is changeNumber of PayPeriods,
    * ensure payPeriodsSoFar is less.
-   * If payPeriodsSoFar is 0, set amountContributedSoFar to 0
+   * If payPeriodsSoFar is 0, set contribution amounts so far to 0
    */
   const updateAmount = (
     e: React.FormEvent<HTMLElement>,
@@ -149,15 +165,21 @@ function Frontload() {
     ) {
       changeNumberOfPayPeriodsSoFar(value - 1);
       if (value === 1) {
-        changeAmountContributedSoFar(0);
+        setAmountsSoFarToZero();
       }
     }
     if (changeFunction === changeNumberOfPayPeriodsSoFar) {
       if (value === 0) {
-        changeAmountContributedSoFar(0);
+        setAmountsSoFarToZero();
       }
     }
     changeFunction(value);
+  };
+
+  const setAmountsSoFarToZero = () => {
+    changeIndividualContributionAmountSoFar(0);
+    changeEmployerContributionAmountSoFar(0);
+    changeIndividualContributionAfterTaxAmountSoFar(0);
   };
 
   /**
@@ -249,9 +271,14 @@ function Frontload() {
               disabled={numberOfPayPeriodsSoFar === 0}
               type="number"
               onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(amountContributedSoFar)}
+              value={formatStateValue(individualContributionAmountSoFar)}
               onChange={(e) =>
-                updateAmount(e, changeAmountContributedSoFar, 0, _401kMaximum)
+                updateAmount(
+                  e,
+                  changeIndividualContributionAmountSoFar,
+                  0,
+                  max401kIndividualAmount
+                )
               }
             />
           </InputGroup>
@@ -265,8 +292,10 @@ function Frontload() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(_401kMaximum)}
-                  onChange={(e) => updateAmount(e, change401kMaximum)}
+                  value={formatStateValue(max401kIndividualAmount)}
+                  onChange={(e) =>
+                    updateAmount(e, changeMax401kIndividualAmount)
+                  }
                 />
               </InputGroup>
             }
@@ -280,9 +309,12 @@ function Frontload() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(minContributionForMatch)}
+                  value={formatStateValue(minIndividualContributionPercent)}
                   onChange={(e) =>
-                    updateContribution(e, changeMinContributionForMatch)
+                    updateContribution(
+                      e,
+                      changeMinIndividualContributionPercent
+                    )
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
@@ -298,9 +330,9 @@ function Frontload() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(maxContributionFromPaycheck)}
+                  value={formatStateValue(maxContributionPercent)}
                   onChange={(e) =>
-                    updateContribution(e, changeMaxContributionFromPaycheck)
+                    updateContribution(e, changeMaxContributionPercent)
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
@@ -314,9 +346,11 @@ function Frontload() {
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
-                  onChange={() => change401kAutoCap(!_401kAutoCap)}
+                  onChange={() =>
+                    changeAutomaticallyCap401k(!automaticallyCap401k)
+                  }
                   label="401k Automatically Caps Contributions"
-                  checked={_401kAutoCap}
+                  checked={automaticallyCap401k}
                 />
               </InputGroup>
             }
@@ -339,6 +373,25 @@ function Frontload() {
           />
           {showEmployerMatchInTable && (
             <FormGroup>
+              <Form.Label>Employer Contributions so far</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  disabled={numberOfPayPeriodsSoFar === 0}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(employerContributionAmountSoFar)}
+                  onChange={(e) =>
+                    updateAmount(
+                      e,
+                      changeEmployerContributionAmountSoFar,
+                      0,
+                      max401kTotalAmount - max401kIndividualAmount
+                    )
+                  }
+                />
+              </InputGroup>
+
               <Form.Label>Employer 401k Base Contribution</Form.Label>
               <TooltipOnHover
                 text="This is how much your employer contributes regardless of your contributions."
@@ -347,11 +400,11 @@ function Frontload() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(effectiveEmployerBase)}
+                      value={formatStateValue(employerMatchBasePercent)}
                       onChange={(e) =>
                         updateContribution(
                           e,
-                          changeEffectiveEmployerBase,
+                          changeEmployerMatchBasePercent,
                           0,
                           100,
                           true
@@ -373,11 +426,11 @@ function Frontload() {
                       <Form.Control
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(effectiveEmployerMatch)}
+                        value={formatStateValue(employerMatchPercent)}
                         onChange={(e) =>
                           updateContribution(
                             e,
-                            changeEffectiveEmployerMatch,
+                            changeEmployerMatchPercent,
                             0,
                             100,
                             true
@@ -391,11 +444,11 @@ function Frontload() {
                       <Form.Control
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(effectiveEmployerMatchUpTo)}
+                        value={formatStateValue(employerMatchUpToPercent)}
                         onChange={(e) =>
                           updateContribution(
                             e,
-                            changeEffectiveEmployerMatchUpTo,
+                            changeEmployerMatchUpToPercent,
                             0,
                             100,
                             true

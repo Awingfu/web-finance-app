@@ -2,6 +2,11 @@
  * This is an object oriented class to generate the table data for the 401k calculator.
  */
 
+import {
+  _401k_maximum_contribution_individual,
+  _401k_maximum_contribution_total,
+} from "./constants";
+
 export interface RetirementTableRow {
   rowKey: string;
   payPerPayPeriod: number;
@@ -45,6 +50,7 @@ export class RetirementTable {
 
   numberOfPayPeriodsSoFar: number;
   individualContributionAmountSoFar: number;
+  employerContributionAmountSoFar: number;
   individualContributionAfterTaxAmountSoFar: number;
 
   max401kIndividualAmount: number;
@@ -56,16 +62,15 @@ export class RetirementTable {
   employerMatchBasePercent: number;
   employerMatchPercent: number;
   employerMatchUpToPercent: number;
-  employerContributionAmountSoFar: number;
 
   // table options
   automaticallyCap401k: boolean = false;
   prioritizeMegaBackdoor: boolean = false;
 
   // icons for table
-  payPeriodAlreadyPassedIcon: string = "\u203E"; // overline
-  maxNotReachedIcon: string = "\u2020"; // dagger, shared with maxNotReached and maxReachedWithAutomaticCap
-  maxReachedEarlyIcon: string = "\u2021"; // double dagger
+  payPeriodAlreadyPassedIcon: string;
+  maxNotReachedIcon: string; // shared with maxNotReached and maxReachedWithAutomaticCap
+  maxReachedEarlyIcon: string;
 
   // output parameters to expose
   maxNotReached: boolean = false;
@@ -76,17 +81,20 @@ export class RetirementTable {
   constructor(
     salary: number,
     numberOfPayPeriods: number,
-    numberOfPayPeriodsSoFar: number,
+    numberOfPayPeriodsSoFar: number = 0,
     individualContributionAmountSoFar: number = 0,
+    employerContributionAmountSoFar: number = 0,
     individualContributionAfterTaxAmountSoFar: number = 0,
-    max401kIndividualAmount: number,
-    max401kTotalAmount: number,
-    minIndividualContributionPercent: number,
-    maxContributionPercent: number,
+    max401kIndividualAmount: number = _401k_maximum_contribution_individual,
+    max401kTotalAmount: number = _401k_maximum_contribution_total,
+    minIndividualContributionPercent: number = 0,
+    maxContributionPercent: number = 50,
     employerMatchBasePercent: number = 0,
     employerMatchPercent: number = 0,
     employerMatchUpToPercent: number = 0,
-    employerContributionAmountSoFar: number = 0,
+    payPeriodAlreadyPassedIcon: string = "\u203E",
+    maxNotReachedIcon: string = "\u2020",
+    maxReachedEarlyIcon: string = "\u2021",
     automaticallyCap401k: boolean = false,
     prioritizeMegaBackdoor: boolean = false
   ) {
@@ -104,6 +112,9 @@ export class RetirementTable {
     this.employerMatchPercent = employerMatchPercent;
     this.employerMatchUpToPercent = employerMatchUpToPercent;
     this.employerContributionAmountSoFar = employerContributionAmountSoFar;
+    this.payPeriodAlreadyPassedIcon = payPeriodAlreadyPassedIcon;
+    this.maxNotReachedIcon = maxNotReachedIcon;
+    this.maxReachedEarlyIcon = maxReachedEarlyIcon;
     this.automaticallyCap401k = automaticallyCap401k;
     this.prioritizeMegaBackdoor = prioritizeMegaBackdoor;
 
@@ -225,25 +236,35 @@ export class RetirementTable {
         individualContributionAmount = singleContributionAmount;
       }
 
-      // if 401k auto caps, we're at the last row, amount contributed so far is less than max amount,
+      // if 401k auto caps, we're at the last row (or first row which is also last),
+      // amount contributed so far is less than max amount,
       // contribution would not equal max, and new contribution won't exceed max allowed
       // set contribution to max out
       if (
         this.automaticallyCap401k &&
-        i == this.numberOfPayPeriods - 1 &&
-        cumulativeAmountIndividual < this.max401kIndividualAmount &&
-        individualContributionAmount !=
-          this.max401kIndividualAmount -
-            tableRows[i - 1].cumulativeAmountIndividual &&
-        ((this.max401kIndividualAmount -
-          tableRows[i - 1].cumulativeAmountIndividual) /
-          payPerPayPeriod) *
-          100 <=
-          maxPeriodContributionAmount
+        ((i > 0 &&
+          i == this.numberOfPayPeriods - 1 &&
+          cumulativeAmountIndividual < this.max401kIndividualAmount &&
+          individualContributionAmount !=
+            this.max401kIndividualAmount -
+              tableRows[i - 1].cumulativeAmountIndividual &&
+          ((this.max401kIndividualAmount -
+            tableRows[i - 1].cumulativeAmountIndividual) /
+            payPerPayPeriod) *
+            100 <=
+            maxPeriodContributionAmount) ||
+          (i == 0 &&
+            i == this.numberOfPayPeriods - 1 &&
+            cumulativeAmountIndividual < this.max401kIndividualAmount &&
+            individualContributionAmount != this.max401kIndividualAmount &&
+            (this.max401kIndividualAmount / payPerPayPeriod) * 100 <=
+              maxPeriodContributionAmount))
       ) {
         individualContributionAmount =
-          this.max401kIndividualAmount -
-          tableRows[i - 1].cumulativeAmountIndividual;
+          i == 0
+            ? this.max401kIndividualAmount
+            : this.max401kIndividualAmount -
+              tableRows[i - 1].cumulativeAmountIndividual;
         individualContributionFraction =
           Math.ceil((individualContributionAmount / payPerPayPeriod) * 100) /
           100;
