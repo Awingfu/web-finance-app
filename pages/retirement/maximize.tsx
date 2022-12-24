@@ -24,7 +24,7 @@ function Maximize() {
   const [_401kMaximum, change401kMaximum] = React.useState(
     _401k_maximum_contribution_total
   );
-  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(26);
+  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(24);
   const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
     React.useState(0);
   const [

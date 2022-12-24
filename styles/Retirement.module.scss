@@ -23,7 +23,7 @@ $desktop: 1200px;
 .form {
   @media screen and (min-width: $desktop) {
     width: 40%;
-    margin: 0 2%;
+    margin: 0 2% 5% 2%;
   }
 
   @media screen and (min-width: $medium) and (max-width: $desktop) {
@@ -45,7 +45,7 @@ $desktop: 1200px;
 
   @media screen and (min-width: $desktop) {
     width: 40%;
-    margin: 0 2%;
+    margin: 0 2% 2% 2%;
   }
 
   @media screen and (min-width: $medium) and (max-width: $desktop) {
@@ -84,6 +84,7 @@ $desktop: 1200px;
 
 .inlineGroup {
   display: flex;
+  margin-bottom: 1rem;
 
   @media screen and (min-width: $extraSmall) {
     flex-direction: row;

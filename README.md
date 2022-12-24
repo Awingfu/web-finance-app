@@ -1,6 +1,6 @@
 # web-finance-app
 
-## What is this
+## Summary
 
 This is a NextJS/React app that contains tools that will do random finance stuff such as:
 
@@ -16,30 +16,26 @@ Planned features
 
 ## Technology
 
-This app uses NextJS React with Typescript and SASS for component level styling.
+This app uses:
+
+- NextJS React with Typescript
+- SASS for component level styling
 
 Upon merge to `main` branch, github actions will autodeploy this site to <https://awingfu.github.io/web-finance-app>.
 
 ## How to Contribute
 
-`/pages` contains all of the React components in route form e.g. `pages/index.tsx` contains the home page and `pages/paycheck.tsx` contains the `<url>/paycheck` route.
+`/pages` contains the React components in route form e.g. `pages/index.tsx` contains the home page and `pages/paycheck.tsx` contains the `<url>/paycheck` route.
 
-`src/components` contains all of the resusable React components used throughout the app such as header, tooltip wrapper, footer, and navigation bar.
+`/src/components` contains the resusable React components used throughout the app such as header, tooltip wrapper, footer, and navigation bar.
 
-`src/utls` contains all of the constants, helper functions, and other useful items to import into the React components.
+`/src/utls` contains the constants, helper functions, and other useful typescript functions for the app.
 
-## References
+`/.github/workflows` contains the continuous integration scripts that automatically build and deploy the app on pull requests or merges to main.
 
-Favicon from https://favicon.io/emoji-favicons/wind-chime
+## Development
 
-Deployment to GH Pages from this guide: https://www.linkedin.com/pulse/deploy-nextjs-app-github-pages-federico-antu%C3%B1a/
-
-### Github Actions
-
-[PR Preview Action](https://github.com/rossjrw/pr-preview-action)
-[Github Pages Deploy Action](https://github.com/JamesIves/github-pages-deploy-action)
-
-## Getting Started
+### Getting Started
 
 Download the repo locally:
 
@@ -57,13 +53,31 @@ Run the development server which auto updates on file edits:
 
 ```bash
 npm run dev
-# or
-yarn dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## Learn More
+### When Making a Pull Request
+
+A preview deployment will deploy to `https://awingfu.github.io/web-finance-app/pr-preview/pr-<PR Number>` and will be linked in the PR Issue.
+
+You may encounter the 404 page at the preview URL when the PR is first built so please allow 2 minutes after the preview deployment is marked successful and ensure to Hard Reload.
+
+## References
+
+Favicon [Wind-Chime](https://favicon.io/emoji-favicons/wind-chime)
+
+Deployment to GH Pages [Guide](https://www.linkedin.com/pulse/deploy-nextjs-app-github-pages-federico-antu%C3%B1a/)
+
+Setting up prettier and pre-commit hooks [Guide](https://gist.github.com/primaryobjects/9ab8d2346aa58ef6959ad357bb835963)
+
+### Github Actions
+
+[PR Preview Action](https://github.com/rossjrw/pr-preview-action)
+
+[Github Pages Deploy Action](https://github.com/JamesIves/github-pages-deploy-action)
+
+### Next.js Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
