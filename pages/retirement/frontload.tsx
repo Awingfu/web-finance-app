@@ -537,10 +537,8 @@ function Frontload() {
             </>
           )}
           {showMegaBackdoor && (
-            <Form.Group>
-              <Form.Label>
-                Estimated Maximum Employer Match Contribution
-              </Form.Label>
+            <>
+              <Form.Label>Estimated Maximum Employer Contribution</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
@@ -564,7 +562,7 @@ function Frontload() {
                   </InputGroup>
                 }
               />
-            </Form.Group>
+            </>
           )}
 
           <TooltipOnHover
