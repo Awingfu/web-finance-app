@@ -53,22 +53,23 @@ function Frontload() {
     React.useState(90);
   const [employerMatchBasePercent, changeEmployerMatchBasePercent] =
     React.useState(0);
-  const [employerMatchPercent, changeEmployerMatchPercent] = React.useState(50);
+  const [employerMatchPercent, changeEmployerMatchPercent] = React.useState(0);
   const [employerMatchUpToPercent, changeEmployerMatchUpToPercent] =
     React.useState(6);
 
   // customization options
-  const [automaticallyCap401k, changeAutomaticallyCap401k] =
+  const [automaticallyCap401k, toggleAutomaticallyCap401k] =
     React.useState(false);
-  const [prioritizeMegaBackdoor, changePrioritizeMegaBackdoor] =
+  // TODO; add this toggle then update retirement table logic
+  const [prioritizeMegaBackdoor, togglePrioritizeMegaBackdoor] =
     React.useState(false);
 
   // form options
-  const [addExistingContributions, changeAddExistingContributions] =
+  const [addExistingContributions, toggleAddExistingContributions] =
     React.useState(false);
-  const [update401kLimits, changeUpdate401kLimits] = React.useState(false);
-  const [showEmployerMatch, changeShowEmployerMatch] = React.useState(false);
-  const [showMegaBackdoor, changeShowMegaBackdoor] = React.useState(false);
+  const [update401kLimits, toggleUpdate401kLimits] = React.useState(false);
+  const [showEmployerMatch, toggleShowEmployerMatch] = React.useState(false);
+  const [showMegaBackdoor, toggleShowMegaBackdoor] = React.useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText =
@@ -76,14 +77,14 @@ function Frontload() {
   const maxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     maxNotReachedIcon +
-    " If your employer automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+    " If your employer limits your 401k contribution, bump the last contribution up in order to max your 401k.";
   const _401kMaxReachedWithAutoCapNote =
     maxNotReachedIcon +
-    " Since your employer automatically caps your 401k contribution, this last contribution should max out your contributions.";
+    " Since your employer limits your 401k contribution, this last contribution should max your contributions.";
   const maxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     maxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer caps your contributions";
+    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer limits your contributions";
 
   let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
@@ -108,6 +109,7 @@ function Frontload() {
     maxNotReachedIcon,
     maxReachedEarlyIcon,
     automaticallyCap401k,
+    showMegaBackdoor,
     prioritizeMegaBackdoor
   );
 
@@ -183,16 +185,20 @@ function Frontload() {
 
   const updateToggle = (
     e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    toggleFunction: { (value: React.SetStateAction<any>): void }
   ) => {
     let value = (e.target as HTMLInputElement).checked;
-    if (changeFunction === changeAddExistingContributions && !value) {
+    if (toggleFunction === toggleAddExistingContributions && !value) {
+      changeNumberOfPayPeriodsSoFar(0);
       setAmountsSoFarToZero();
     }
-    if (changeFunction === changeUpdate401kLimits) {
+    if (toggleFunction === toggleUpdate401kLimits) {
       set401kLimitsToDefault();
     }
-    changeFunction(value);
+    if (toggleFunction === toggleShowEmployerMatch) {
+      setEmployerMatchToDefault();
+    }
+    toggleFunction(value);
   };
 
   const setAmountsSoFarToZero = () => {
@@ -204,6 +210,11 @@ function Frontload() {
   const set401kLimitsToDefault = () => {
     changeMax401kIndividualAmount(_401k_maximum_contribution_individual);
     changeMax401kTotalAmount(_401k_maximum_contribution_total);
+  };
+
+  const setEmployerMatchToDefault = () => {
+    changeEmployerMatchBasePercent(0);
+    changeEmployerMatchPercent(0);
   };
 
   /**
@@ -237,10 +248,10 @@ function Frontload() {
       <Header titleName="401k Frontload" />
 
       <main className={styles.main}>
-        <h1>401k Frontload Calculator</h1>
+        <h1>401k Frontloader</h1>
         <p>
-          Here we will maximize your 401k contributions by frontloading while
-          ensuring minimum contributions throughout the year.
+          Maximize your 401k contributions by frontloading while ensuring
+          minimum contributions throughout the year.
         </p>
       </main>
 
@@ -271,7 +282,7 @@ function Frontload() {
 
           <Form.Label>Minimum Desired Paycheck Contribution</Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. This is what you want to ensure you get a 401k match per paycheck."
+            text="% of income between 0 and 100. Set this to ensure your employer will match your contributions if they calculate the match based on each pay period instead of the whole year."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -292,7 +303,7 @@ function Frontload() {
 
           <Form.Label>Maximum Paycheck Contribution</Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
+            text="% of income between 0 and 100. This is the maximum amount you are comfortable or allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -309,15 +320,15 @@ function Frontload() {
           />
 
           <TooltipOnHover
-            text="Check this if your 401k automatically caps individual contributions at limits."
+            text="Check this if your 401k automatically limits individual contributions."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
                   onChange={() =>
-                    changeAutomaticallyCap401k(!automaticallyCap401k)
+                    toggleAutomaticallyCap401k(!automaticallyCap401k)
                   }
-                  label="401k Automatically Caps Contributions"
+                  label="401k Limits Contributions"
                   checked={automaticallyCap401k}
                 />
               </InputGroup>
@@ -331,7 +342,7 @@ function Frontload() {
                 <Form.Check
                   type="checkbox"
                   onChange={(e) =>
-                    updateToggle(e, changeAddExistingContributions)
+                    updateToggle(e, toggleAddExistingContributions)
                   }
                   label="Add Existing Contributions"
                   checked={addExistingContributions}
@@ -380,13 +391,13 @@ function Frontload() {
           )}
 
           <TooltipOnHover
-            text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
+            text="Check this to show employer contributions in table. This tool does not limit employer contributions to the total 401k limit."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
-                  onChange={() => changeShowEmployerMatch(!showEmployerMatch)}
-                  label="Show Employer Match"
+                  onChange={(e) => updateToggle(e, toggleShowEmployerMatch)}
+                  label="Show Employer Contributions"
                   checked={showEmployerMatch}
                 />
               </InputGroup>
@@ -457,7 +468,7 @@ function Frontload() {
                             e,
                             changeEmployerMatchPercent,
                             0,
-                            100,
+                            500,
                             true
                           )
                         }
@@ -487,13 +498,80 @@ function Frontload() {
               />
             </FormGroup>
           )}
+
+          <TooltipOnHover
+            text="A.K.A. Mega Backdoor Roth. This tool assumes your 401k cannot limit this amount and may round down the after-tax contribution. This tool will prioritize individual over after-tax contributions."
+            nest={
+              <InputGroup className="mb-3 w-50">
+                <Form.Check
+                  type="checkbox"
+                  onChange={(e) => updateToggle(e, toggleShowMegaBackdoor)}
+                  label="Show After-Tax 401k"
+                  checked={showMegaBackdoor}
+                />
+              </InputGroup>
+            }
+          />
+          {addExistingContributions && showMegaBackdoor && (
+            <>
+              <Form.Label>After-Tax Contributions So Far</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  disabled={numberOfPayPeriodsSoFar === 0}
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(
+                    individualContributionAfterTaxAmountSoFar
+                  )}
+                  onChange={(e) =>
+                    updateAmount(
+                      e,
+                      changeIndividualContributionAfterTaxAmountSoFar,
+                      0,
+                      table.maxAfterTaxAmount
+                    )
+                  }
+                />
+              </InputGroup>
+            </>
+          )}
+          {showMegaBackdoor && (
+            <>
+              <Form.Label>Estimated Maximum Employer Contribution</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  disabled={true}
+                  type="number"
+                  value={table.maxEmployerAmount}
+                />
+              </InputGroup>
+              <Form.Label>Maximum After-Tax Contribution</Form.Label>
+              <TooltipOnHover
+                text={`This is the result of (Total - Individual - Employer) Contribution Maximums = ${max401kTotalAmount} - ${max401kIndividualAmount} - ${table.maxEmployerAmount}.`}
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      disabled={true}
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={table.maxAfterTaxAmount}
+                    />
+                  </InputGroup>
+                }
+              />
+            </>
+          )}
+
           <TooltipOnHover
             text="Check this to update 401k Limits."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
-                  onChange={(e) => updateToggle(e, changeUpdate401kLimits)}
+                  onChange={(e) => updateToggle(e, toggleUpdate401kLimits)}
                   label="Update 401k Limits"
                   checked={update401kLimits}
                 />
@@ -504,7 +582,7 @@ function Frontload() {
             <>
               <Form.Label>401k Maximum for Individual Contribution</Form.Label>
               <TooltipOnHover
-                text="The maximum in 2023 is $22500."
+                text="The maximum in 2023 is $22,500."
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -521,6 +599,27 @@ function Frontload() {
               />
             </>
           )}
+          {update401kLimits && showMegaBackdoor && (
+            <>
+              <Form.Label>401k Total Maximum</Form.Label>
+              <TooltipOnHover
+                text="The maximum in 2023 is $66,000."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(max401kTotalAmount)}
+                      onChange={(e) =>
+                        updateAmount(e, changeMax401kTotalAmount)
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </>
+          )}
         </Form>
 
         <div className={styles.table}>
@@ -528,11 +627,13 @@ function Frontload() {
             <thead>
               <tr>
                 <th>Pay Period</th>
-                <th>Pay</th>
-                <th>Contribution %</th>
-                <th>Contribution Amount</th>
-                {showEmployerMatch && <th> Employer Amount </th>}
-                <th>Cumulative Amount</th>
+                <th>Gross Pay ($)</th>
+                <th>Contribution (%)</th>
+                <th>Contribution ($)</th>
+                {showEmployerMatch && <th> Employer Contribution ($) </th>}
+                {showMegaBackdoor && <th> After-Tax Contribution (%) </th>}
+                {showMegaBackdoor && <th> After-Tax Contribution ($) </th>}
+                <th>Cumulative ($)</th>
               </tr>
             </thead>
             <tbody>
@@ -542,18 +643,55 @@ function Frontload() {
                   <td>{formatCurrency(row.payPerPayPeriod)}</td>
                   <td>{formatPercent(row.contributionFraction)}</td>
                   <td>{formatCurrency(row.contributionAmount)}</td>
-                  {!showEmployerMatch && (
-                    <td>{formatCurrency(row.cumulativeAmountIndividual)}</td>
-                  )}
                   {showEmployerMatch && (
                     <td>{formatCurrency(row.employerAmount)}</td>
                   )}
-                  {showEmployerMatch && (
-                    <td>{formatCurrency(row.cumulativeAmountWithEmployer)}</td>
+                  {showMegaBackdoor && (
+                    <td>{formatPercent(row.afterTaxPercent)}</td>
                   )}
+                  {showMegaBackdoor && (
+                    <td>{formatCurrency(row.afterTaxAmount)}</td>
+                  )}
+                  <td>{formatCurrency(row.cumulativeAmountTotal)}</td>
                 </tr>
               ))}
             </tbody>
+            <tfoot>
+              <tr>
+                <td>Total</td>
+                <td>{formatCurrency(table.salaryRemaining)}</td>
+                <td></td>
+                <td>
+                  {formatCurrency(
+                    table.getTable()[numberOfPayPeriods - 1]
+                      .cumulativeIndividualAmount
+                  )}
+                </td>
+                {showEmployerMatch && (
+                  <td>
+                    {formatCurrency(
+                      table.getTable()[numberOfPayPeriods - 1]
+                        .cumulativeEmployerAmount
+                    )}
+                  </td>
+                )}
+                {showMegaBackdoor && <td></td>}
+                {showMegaBackdoor && (
+                  <td>
+                    {formatCurrency(
+                      table.getTable()[numberOfPayPeriods - 1]
+                        .cumulativeAfterTaxAmount
+                    )}
+                  </td>
+                )}
+                <td>
+                  {formatCurrency(
+                    table.getTable()[numberOfPayPeriods - 1]
+                      .cumulativeAmountTotal
+                  )}
+                </td>
+              </tr>
+            </tfoot>
           </Table>
           {payPeriodAlreadyPassedAlertHTML}
           {_401kMaxNotReachedAlertHTML}

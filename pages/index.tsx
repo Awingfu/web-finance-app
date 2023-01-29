@@ -9,11 +9,11 @@ const Home: NextPage = () => {
       <Header />
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Welcome to the Finance Tools App.</h1>
+        <h1 className={styles.title}>Welcome to the Finance App.</h1>
 
         <p className={styles.description}>
-          Here we will have multiple tools for you to estimate your paycheck,
-          budget, and more.
+          We have tools for you to estimate your paycheck, frontload your 401k,
+          and more.
         </p>
 
         <div className={styles.grid}>
