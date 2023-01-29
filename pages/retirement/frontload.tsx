@@ -76,14 +76,14 @@ function Frontload() {
   const maxNotReachedIcon = "\u2020"; // dagger
   const _401kMaxNotReachedNote =
     maxNotReachedIcon +
-    " If your employer automatically caps your 401k contribution, bump the last contribution up in order to fully max your 401k.";
+    " If your employer limits your 401k contribution, bump the last contribution up in order to max your 401k.";
   const _401kMaxReachedWithAutoCapNote =
     maxNotReachedIcon +
-    " Since your employer automatically caps your 401k contribution, this last contribution should max out your contributions.";
+    " Since your employer limits your 401k contribution, this last contribution should max your contributions.";
   const maxReachedEarlyIcon = "\u2021"; // double dagger
   const _401kMaxReachedEarlyNote =
     maxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer caps your contributions";
+    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer limits your contributions";
 
   let payPeriodAlreadyPassedAlertHTML = <></>;
   let _401kMaxNotReachedAlertHTML = <></>;
@@ -237,10 +237,10 @@ function Frontload() {
       <Header titleName="401k Frontload" />
 
       <main className={styles.main}>
-        <h1>401k Frontload Calculator</h1>
+        <h1>401k Frontloader</h1>
         <p>
-          Here we will maximize your 401k contributions by frontloading while
-          ensuring minimum contributions throughout the year.
+          Maximize your 401k contributions by frontloading while ensuring
+          minimum contributions throughout the year.
         </p>
       </main>
 
@@ -271,7 +271,7 @@ function Frontload() {
 
           <Form.Label>Minimum Desired Paycheck Contribution</Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. This is what you want to ensure you get a 401k match per paycheck."
+            text="% of income between 0 and 100. Set this to ensure your employer will match your contributions if they calculate the match based on each pay period instead of the whole year."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -292,7 +292,7 @@ function Frontload() {
 
           <Form.Label>Maximum Paycheck Contribution</Form.Label>
           <TooltipOnHover
-            text="% of income between 0 and 100. This is the maximum amount you are comfortable or are allowed to contribute."
+            text="% of income between 0 and 100. This is the maximum amount you are comfortable or allowed to contribute."
             nest={
               <InputGroup className="mb-3 w-100">
                 <Form.Control
@@ -309,7 +309,7 @@ function Frontload() {
           />
 
           <TooltipOnHover
-            text="Check this if your 401k automatically caps individual contributions at limits."
+            text="Check this if your 401k automatically limits individual contributions."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
@@ -317,7 +317,7 @@ function Frontload() {
                   onChange={() =>
                     changeAutomaticallyCap401k(!automaticallyCap401k)
                   }
-                  label="401k Automatically Caps Contributions"
+                  label="401k Limits Contributions"
                   checked={automaticallyCap401k}
                 />
               </InputGroup>
@@ -380,13 +380,13 @@ function Frontload() {
           )}
 
           <TooltipOnHover
-            text="Check this to show employer match in table. This tool does not cap the match to the true 401k limits."
+            text="Check this to show employer contributions in table. This tool does not limit employer contributions to the total 401k limit."
             nest={
               <InputGroup className="mb-3 w-50">
                 <Form.Check
                   type="checkbox"
                   onChange={() => changeShowEmployerMatch(!showEmployerMatch)}
-                  label="Show Employer Match"
+                  label="Show Employer Contributions"
                   checked={showEmployerMatch}
                 />
               </InputGroup>

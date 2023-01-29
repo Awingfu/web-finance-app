@@ -1,9 +1,11 @@
 import React from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
+import { Placement } from "react-bootstrap/esm/types";
 
 interface TooltipOnHoverProps {
+  placement?: Placement;
   text: string;
-  nest: any;
+  nest: JSX.Element;
 }
 
 interface TooltipProps {
@@ -14,9 +16,7 @@ interface TooltipProps {
 const tooltip_show_delay = 700;
 const tooltip_hide_delay = 200;
 const renderTooltip = (props: TooltipProps) => (
-  <Tooltip id="button-tooltip" {...props}>
-    {props.text}
-  </Tooltip>
+  <Tooltip id="button-tooltip">{props.text}</Tooltip>
 );
 
 /**
@@ -27,7 +27,7 @@ const renderTooltip = (props: TooltipProps) => (
 const TooltipOnHover = (props: TooltipOnHoverProps) => {
   return (
     <OverlayTrigger
-      placement="bottom"
+      placement={props.placement || "bottom"}
       delay={{ show: tooltip_show_delay, hide: tooltip_hide_delay }}
       overlay={renderTooltip({ text: props.text })}
     >
