@@ -1,5 +1,9 @@
 /**
  * This is an object oriented class to generate the table data for the 401k calculator.
+ * TODOs:
+ * 1. Implement prioritizing after tax first
+ * 2. When minIndividualContributionPercent is set below employerMatchUpToPercent, after-tax may not hit real max.
+ *    This is because the after-tax max is set based on max employer matching
  */
 
 import {
@@ -12,11 +16,12 @@ export interface RetirementTableRow {
   payPerPayPeriod: number;
   contributionFraction: number;
   contributionAmount: number;
-  cumulativeAmountIndividual: number;
+  cumulativeIndividualAmount: number;
   employerAmount: number;
-  cumulativeAmountWithEmployer: number; // Individual + Employer
+  cumulativeEmployerAmount: number;
   afterTaxPercent: number;
   afterTaxAmount: number;
+  cumulativeAfterTaxAmount: number;
   cumulativeAmountTotal: number; // Individual + Employer + After Tax
 }
 
@@ -35,11 +40,12 @@ const generateDefaultRetirementTableRow = (
     payPerPayPeriod,
     contributionFraction: 0,
     contributionAmount: 0,
-    cumulativeAmountIndividual: 0,
+    cumulativeIndividualAmount: 0,
     employerAmount: 0,
-    cumulativeAmountWithEmployer: 0,
+    cumulativeEmployerAmount: 0,
     afterTaxPercent: 0,
     afterTaxAmount: 0,
+    cumulativeAfterTaxAmount: 0,
     cumulativeAmountTotal: 0,
   };
 };
@@ -63,6 +69,10 @@ export class RetirementTable {
   employerMatchPercent: number;
   employerMatchUpToPercent: number;
 
+  // expose these for after tax calculations
+  maxEmployerAmount: number;
+  maxAfterTaxAmount: number;
+
   // table options
   automaticallyCap401k: boolean = false;
   prioritizeMegaBackdoor: boolean = false;
@@ -73,6 +83,7 @@ export class RetirementTable {
   maxReachedEarlyIcon: string;
 
   // output parameters to expose
+  salaryRemaining: number;
   maxNotReached: boolean = false;
   maxReachedWithAutomaticCap: boolean = false;
   maxReachedEarly: boolean = false;
@@ -96,6 +107,7 @@ export class RetirementTable {
     maxNotReachedIcon: string = "\u2020",
     maxReachedEarlyIcon: string = "\u2021",
     automaticallyCap401k: boolean = false,
+    showMegaBackdoor: boolean = false,
     prioritizeMegaBackdoor: boolean = false
   ) {
     this.salary = salary;
@@ -118,10 +130,27 @@ export class RetirementTable {
     this.automaticallyCap401k = automaticallyCap401k;
     this.prioritizeMegaBackdoor = prioritizeMegaBackdoor;
 
-    this.generateTable();
-  }
+    // constants for after tax calculations
+    const numberOfPayPeriodsRemaining =
+      this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar;
+    this.salaryRemaining =
+      (this.salary * numberOfPayPeriodsRemaining) / this.numberOfPayPeriods;
+    this.maxEmployerAmount =
+      (this.employerMatchBasePercent / 100) * this.salaryRemaining +
+      (((this.employerMatchPercent / 100) * this.employerMatchUpToPercent) /
+        100) *
+        this.salaryRemaining +
+      this.employerContributionAmountSoFar;
 
-  updateTable() {
+    this.maxAfterTaxAmount = showMegaBackdoor
+      ? Math.max(
+          _401k_maximum_contribution_total -
+            _401k_maximum_contribution_individual -
+            this.maxEmployerAmount,
+          0
+        )
+      : 0;
+
     this.generateTable();
   }
 
@@ -172,10 +201,12 @@ export class RetirementTable {
 
     let individualContributionFraction = 0;
     let individualContributionAmount = 0;
-    let cumulativeAmountIndividual = 0;
+    let cumulativeIndividualAmount = 0;
     let employerAmount = 0;
+    let cumulativeEmployerAmount = 0;
+    let afterTaxCapacity = this.maxAfterTaxAmount;
     let afterTaxAmount = 0;
-    let cumulativeAmountWithEmployer = 0;
+    let cumulativeAfterTaxAmount = 0;
     let cumulativeAmountTotal = 0;
 
     // generate RetirementTableRow for each period
@@ -203,13 +234,13 @@ export class RetirementTable {
       if (isLastPeriodPassed) {
         row.rowKey += this.payPeriodAlreadyPassedIcon;
         row.contributionAmount = this.individualContributionAmountSoFar;
-        row.cumulativeAmountIndividual = this.individualContributionAmountSoFar;
+        row.cumulativeIndividualAmount = this.individualContributionAmountSoFar;
         row.employerAmount = this.employerContributionAmountSoFar;
+        row.cumulativeEmployerAmount = row.employerAmount;
         row.afterTaxAmount = this.individualContributionAfterTaxAmountSoFar;
-        row.cumulativeAmountWithEmployer =
-          row.contributionAmount + row.employerAmount;
+        row.cumulativeAfterTaxAmount = row.afterTaxAmount;
         row.cumulativeAmountTotal =
-          row.cumulativeAmountWithEmployer + row.afterTaxAmount;
+          row.contributionAmount + row.employerAmount + row.afterTaxAmount;
         tableRows.push(row);
         continue;
       }
@@ -244,18 +275,18 @@ export class RetirementTable {
         this.automaticallyCap401k &&
         ((i > 0 &&
           i == this.numberOfPayPeriods - 1 &&
-          cumulativeAmountIndividual < this.max401kIndividualAmount &&
+          cumulativeIndividualAmount < this.max401kIndividualAmount &&
           individualContributionAmount !=
             this.max401kIndividualAmount -
-              tableRows[i - 1].cumulativeAmountIndividual &&
+              tableRows[i - 1].cumulativeIndividualAmount &&
           ((this.max401kIndividualAmount -
-            tableRows[i - 1].cumulativeAmountIndividual) /
+            tableRows[i - 1].cumulativeIndividualAmount) /
             payPerPayPeriod) *
             100 <=
             maxPeriodContributionAmount) ||
           (i == 0 &&
             i == this.numberOfPayPeriods - 1 &&
-            cumulativeAmountIndividual < this.max401kIndividualAmount &&
+            cumulativeIndividualAmount < this.max401kIndividualAmount &&
             individualContributionAmount != this.max401kIndividualAmount &&
             (this.max401kIndividualAmount / payPerPayPeriod) * 100 <=
               maxPeriodContributionAmount))
@@ -264,7 +295,7 @@ export class RetirementTable {
           i == 0
             ? this.max401kIndividualAmount
             : this.max401kIndividualAmount -
-              tableRows[i - 1].cumulativeAmountIndividual;
+              tableRows[i - 1].cumulativeIndividualAmount;
         individualContributionFraction =
           Math.ceil((individualContributionAmount / payPerPayPeriod) * 100) /
           100;
@@ -273,26 +304,26 @@ export class RetirementTable {
       }
 
       // if first row, use period contributions, else add value to last period contribution
-      cumulativeAmountIndividual =
+      cumulativeIndividualAmount =
         i == 0
           ? individualContributionAmount
-          : tableRows[i - 1].cumulativeAmountIndividual +
+          : tableRows[i - 1].cumulativeIndividualAmount +
             individualContributionAmount;
 
       // check if max is hit early
       if (
-        Math.floor(cumulativeAmountIndividual) > this.max401kIndividualAmount
+        Math.floor(cumulativeIndividualAmount) > this.max401kIndividualAmount
       ) {
         this.maxReachedEarly = true;
         row.rowKey += this.maxReachedEarlyIcon;
         // if we auto cap, max out, otherwise get very close
         if (this.automaticallyCap401k) {
-          cumulativeAmountIndividual = this.max401kIndividualAmount;
+          cumulativeIndividualAmount = this.max401kIndividualAmount;
           individualContributionAmount =
             i == 0
               ? this.max401kIndividualAmount
               : this.max401kIndividualAmount -
-                tableRows[i - 1].cumulativeAmountIndividual;
+                tableRows[i - 1].cumulativeIndividualAmount;
           individualContributionFraction =
             Math.ceil((individualContributionAmount / payPerPayPeriod) * 100) /
             100;
@@ -301,15 +332,15 @@ export class RetirementTable {
             i == 0
               ? this.max401kIndividualAmount
               : this.max401kIndividualAmount -
-                tableRows[i - 1].cumulativeAmountIndividual;
+                tableRows[i - 1].cumulativeIndividualAmount;
           individualContributionFraction =
             Math.floor((upperBoundContribution / payPerPayPeriod) * 100) / 100;
           individualContributionAmount =
             payPerPayPeriod * individualContributionFraction;
-          cumulativeAmountIndividual =
+          cumulativeIndividualAmount =
             i == 0
               ? individualContributionAmount
-              : tableRows[i - 1].cumulativeAmountIndividual +
+              : tableRows[i - 1].cumulativeIndividualAmount +
                 individualContributionAmount;
         }
       }
@@ -319,7 +350,7 @@ export class RetirementTable {
       // add dagger to let user know to bump up contribution
       if (
         i === this.numberOfPayPeriods - 1 &&
-        Math.round(cumulativeAmountIndividual) < this.max401kIndividualAmount &&
+        Math.round(cumulativeIndividualAmount) < this.max401kIndividualAmount &&
         individualContributionAmount != maxPeriodContributionAmount
       ) {
         this.maxNotReached = true;
@@ -337,26 +368,48 @@ export class RetirementTable {
           ) *
           payPerPayPeriod) /
         100;
-      employerAmount =
-        employerBaseAmount +
-        Math.min(cumulativeAmountIndividual, employerMatchAmount);
-      cumulativeAmountWithEmployer =
+      employerAmount = employerBaseAmount + employerMatchAmount;
+      cumulativeEmployerAmount =
         i == 0
-          ? cumulativeAmountIndividual + employerAmount
-          : tableRows[i - 1].cumulativeAmountWithEmployer +
-            individualContributionAmount +
-            employerAmount;
+          ? employerAmount
+          : tableRows[i - 1].cumulativeEmployerAmount + employerAmount;
+
+      // set after tax
+      afterTaxCapacity =
+        i == 0
+          ? afterTaxCapacity
+          : afterTaxCapacity - tableRows[i - 1].afterTaxAmount;
+      afterTaxAmount = Math.max(
+        Math.min(
+          maxPeriodContributionAmount - individualContributionAmount,
+          afterTaxCapacity
+        ),
+        0
+      );
+      const afterTaxPercent =
+        Math.floor((afterTaxAmount / payPerPayPeriod) * 100) / 100;
+      afterTaxAmount = afterTaxPercent * payPerPayPeriod;
+      cumulativeAfterTaxAmount =
+        i == 0
+          ? afterTaxAmount
+          : tableRows[i - 1].cumulativeAfterTaxAmount + afterTaxAmount;
+
+      cumulativeAmountTotal =
+        cumulativeIndividualAmount +
+        cumulativeEmployerAmount +
+        cumulativeAfterTaxAmount;
 
       tableRows.push({
         ...row,
         contributionFraction: individualContributionFraction,
         contributionAmount: individualContributionAmount,
-        cumulativeAmountIndividual,
+        cumulativeIndividualAmount,
         employerAmount,
-        cumulativeAmountWithEmployer,
-        afterTaxPercent: 0,
-        afterTaxAmount: 0,
-        cumulativeAmountTotal: cumulativeAmountWithEmployer,
+        cumulativeEmployerAmount,
+        afterTaxPercent,
+        afterTaxAmount,
+        cumulativeAfterTaxAmount,
+        cumulativeAmountTotal,
       });
     }
 
