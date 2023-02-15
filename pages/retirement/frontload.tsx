@@ -322,7 +322,7 @@ function Frontload() {
           <TooltipOnHover
             text="Check this if your 401k automatically limits individual contributions."
             nest={
-              <InputGroup className="mb-3 w-50">
+              <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
                   onChange={() =>
@@ -338,7 +338,7 @@ function Frontload() {
           <TooltipOnHover
             text="Check this to add contributions in past pay periods in the year."
             nest={
-              <InputGroup className="mb-3 w-50">
+              <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
                   onChange={(e) =>
@@ -391,13 +391,13 @@ function Frontload() {
           )}
 
           <TooltipOnHover
-            text="Check this to show employer contributions in table. This tool does not limit employer contributions to the total 401k limit."
+            text="This tool does not limit employer contributions to the total 401k limit."
             nest={
-              <InputGroup className="mb-3 w-50">
+              <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
                   onChange={(e) => updateToggle(e, toggleShowEmployerMatch)}
-                  label="Show Employer Contributions"
+                  label="Employer Contributions"
                   checked={showEmployerMatch}
                 />
               </InputGroup>
@@ -500,9 +500,9 @@ function Frontload() {
           )}
 
           <TooltipOnHover
-            text="A.K.A. Mega Backdoor Roth. This tool assumes your 401k cannot limit this amount and may round down the after-tax contribution. This tool will prioritize individual over after-tax contributions."
+            text="A.K.A. Mega Backdoor Roth. This tool assumes your plan cannot limit this amount and may round down the after-tax contribution. This tool will prioritize individual over after-tax contributions."
             nest={
-              <InputGroup className="mb-3 w-50">
+              <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
                   onChange={(e) => updateToggle(e, toggleShowMegaBackdoor)}
@@ -565,19 +565,14 @@ function Frontload() {
             </>
           )}
 
-          <TooltipOnHover
-            text="Check this to update 401k Limits."
-            nest={
-              <InputGroup className="mb-3 w-50">
-                <Form.Check
-                  type="checkbox"
-                  onChange={(e) => updateToggle(e, toggleUpdate401kLimits)}
-                  label="Update 401k Limits"
-                  checked={update401kLimits}
-                />
-              </InputGroup>
-            }
-          />
+          <InputGroup className={styles.checkbox}>
+            <Form.Check
+              type="checkbox"
+              onChange={(e) => updateToggle(e, toggleUpdate401kLimits)}
+              label="Update 401k Limits"
+              checked={update401kLimits}
+            />
+          </InputGroup>
           {update401kLimits && (
             <>
               <Form.Label>401k Maximum for Individual Contribution</Form.Label>
