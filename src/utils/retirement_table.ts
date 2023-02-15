@@ -225,6 +225,7 @@ export class RetirementTable {
       // insert payPeriodAlreadyPassedIcon and move on
       if (isOverOnePeriodPassed) {
         row.rowKey += this.payPeriodAlreadyPassedIcon;
+        row.payPerPayPeriod = 0;
         tableRows.push(row);
         continue;
       }
@@ -233,6 +234,7 @@ export class RetirementTable {
       // insert payPeriodAlreadyPassedIcon to row key, add amounts contributed so far, and move on
       if (isLastPeriodPassed) {
         row.rowKey += this.payPeriodAlreadyPassedIcon;
+        row.payPerPayPeriod = 0;
         row.contributionAmount = this.individualContributionAmountSoFar;
         row.cumulativeIndividualAmount = this.individualContributionAmountSoFar;
         row.employerAmount = this.employerContributionAmountSoFar;
