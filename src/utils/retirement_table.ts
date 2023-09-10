@@ -25,6 +25,12 @@ export interface RetirementTableRow {
   cumulativeAmountTotal: number; // Individual + Employer + After Tax
 }
 
+export enum RetirementTableStrategy {
+  FRONTLOAD = "Fronload Individual Contributions",
+  EQUAL = "Equal Period Contributions",
+  FRONTLOAD_AT = "Frontload After Tax Contributions",
+}
+
 /**
  * Generates a RetirementTableRow object.
  * @param rowKey
@@ -75,7 +81,8 @@ export class RetirementTable {
 
   // table options
   automaticallyCap401k: boolean = false;
-  prioritizeMegaBackdoor: boolean = false;
+  contributionStrategy: RetirementTableStrategy =
+    RetirementTableStrategy.FRONTLOAD;
 
   // icons for table
   payPeriodAlreadyPassedIcon: string;
@@ -108,7 +115,7 @@ export class RetirementTable {
     maxReachedEarlyIcon: string = "\u2021",
     automaticallyCap401k: boolean = false,
     showMegaBackdoor: boolean = false,
-    prioritizeMegaBackdoor: boolean = false
+    contributionStrategy: RetirementTableStrategy = RetirementTableStrategy.FRONTLOAD
   ) {
     this.salary = salary;
     this.numberOfPayPeriods = numberOfPayPeriods;
@@ -128,7 +135,7 @@ export class RetirementTable {
     this.maxNotReachedIcon = maxNotReachedIcon;
     this.maxReachedEarlyIcon = maxReachedEarlyIcon;
     this.automaticallyCap401k = automaticallyCap401k;
-    this.prioritizeMegaBackdoor = prioritizeMegaBackdoor;
+    this.contributionStrategy = contributionStrategy;
 
     // constants for after tax calculations
     const numberOfPayPeriodsRemaining =
@@ -165,7 +172,19 @@ export class RetirementTable {
     this.maxNotReached = false;
     this.table = [];
 
-    // data for table
+    switch (this.contributionStrategy) {
+      case RetirementTableStrategy.EQUAL: {
+        this.tableWithEqualPeriodContributions();
+        break;
+      }
+      default: {
+        this.tableWithFrontloadIndividualContributions();
+        break;
+      }
+    }
+  }
+
+  tableWithFrontloadIndividualContributions() {
     const tableRows: RetirementTableRow[] = [];
 
     const payPerPayPeriod = this.salary / this.numberOfPayPeriods;
@@ -414,7 +433,205 @@ export class RetirementTable {
         cumulativeAmountTotal,
       });
     }
+    this.table = tableRows;
+  }
 
+  tableWithEqualPeriodContributions() {
+    const tableRows: RetirementTableRow[] = [];
+
+    const payPerPayPeriod = this.salary / this.numberOfPayPeriods;
+    const maxPeriodContributionAmount =
+      (this.maxContributionPercent / 100) * payPerPayPeriod;
+    const contributionAmountForFullMatch =
+      (this.minIndividualContributionPercent / 100) * payPerPayPeriod;
+
+    const numberOfMaxIndividualContributions = Math.floor(
+      (this.individualContributionAmountSoFar -
+        this.max401kIndividualAmount +
+        contributionAmountForFullMatch *
+          (this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar)) /
+        (contributionAmountForFullMatch - maxPeriodContributionAmount)
+    );
+
+    // special single contribution percent between maxing out and tapering to the minimum desired contribution
+    const singleContributionPercent = Math.floor(
+      ((this.max401kIndividualAmount -
+        (this.individualContributionAmountSoFar +
+          numberOfMaxIndividualContributions * maxPeriodContributionAmount +
+          (this.numberOfPayPeriods -
+            numberOfMaxIndividualContributions -
+            this.numberOfPayPeriodsSoFar -
+            1) *
+            contributionAmountForFullMatch)) /
+        this.salary) *
+        this.numberOfPayPeriods *
+        100
+    );
+    const singleContributionAmount =
+      (singleContributionPercent / 100) * payPerPayPeriod;
+
+    let individualContributionFraction = 0;
+    let individualContributionAmount = 0;
+    let cumulativeIndividualAmount = 0;
+    let employerAmount = 0;
+    let cumulativeEmployerAmount = 0;
+    let afterTaxCapacity = this.maxAfterTaxAmount;
+    let afterTaxAmount = 0;
+    let cumulativeAfterTaxAmount = 0;
+    let cumulativeAmountTotal = 0;
+
+    let match = 0;
+    let contributionAmount = 0;
+    let employerMatchAmount = 0;
+    let cumulativeAmountIndividual: number = 0;
+    let cumulativeAmountEmployer: number = 0;
+
+    for (let i = 0; i < this.numberOfPayPeriods; i++) {
+      // initialize RetirementTableRow with key for paycheck number (index 1) and pay per pay period.
+      const row: RetirementTableRow = generateDefaultRetirementTableRow(
+        (i + 1).toString(),
+        payPerPayPeriod
+      );
+
+      // base cases when pay periods have passed
+      const isOverOnePeriodPassed = i < this.numberOfPayPeriodsSoFar - 1;
+      const isLastPeriodPassed = i == this.numberOfPayPeriodsSoFar - 1;
+
+      // base case: if row pay period is over 1 period than current
+      // insert payPeriodAlreadyPassedIcon and move on
+      if (isOverOnePeriodPassed) {
+        row.rowKey += this.payPeriodAlreadyPassedIcon;
+        row.payPerPayPeriod = 0;
+        tableRows.push(row);
+        continue;
+      }
+
+      // base case: if row pay period is last period,
+      // insert payPeriodAlreadyPassedIcon to row key, add amounts contributed so far, and move on
+      if (isLastPeriodPassed) {
+        row.rowKey += this.payPeriodAlreadyPassedIcon;
+        row.payPerPayPeriod = 0;
+        row.contributionAmount = this.individualContributionAmountSoFar;
+        row.cumulativeIndividualAmount = this.individualContributionAmountSoFar;
+        row.employerAmount = this.employerContributionAmountSoFar;
+        row.cumulativeEmployerAmount = row.employerAmount;
+        row.afterTaxAmount = this.individualContributionAfterTaxAmountSoFar;
+        row.cumulativeAfterTaxAmount = row.afterTaxAmount;
+        row.cumulativeAmountTotal =
+          row.contributionAmount + row.employerAmount + row.afterTaxAmount;
+        tableRows.push(row);
+        continue;
+      }
+
+      match = this.employerMatchPercent;
+      contributionAmount = match * payPerPayPeriod;
+
+      // if previous row is above max individual contribution, stop
+      // else if new contribution will push over the limit and we auto cap, adjust
+      if (
+        i > 0 &&
+        tableRows[i - 1].cumulativeIndividualAmount >=
+          this.max401kIndividualAmount
+      ) {
+        match = 0;
+        contributionAmount = 0;
+        row.rowKey += this.maxReachedEarlyIcon;
+        this.maxReachedEarly = true;
+      } else if (
+        i > 0 &&
+        this.automaticallyCap401k &&
+        tableRows[i - 1].cumulativeIndividualAmount + contributionAmount >=
+          this.max401kIndividualAmount
+      ) {
+        contributionAmount = Math.max(
+          0,
+          this.max401kIndividualAmount -
+            tableRows[i - 1].cumulativeIndividualAmount
+        );
+        match = Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
+        // show note only if it's before the last pay period
+        if (i < this.numberOfPayPeriods - 1) {
+          row.rowKey += this.maxReachedEarlyIcon;
+          this.maxReachedEarly = true;
+        }
+      }
+
+      // edge case for last paycheck and autocap and backload is true
+      if (
+        this.automaticallyCap401k &&
+        backloadToggle &&
+        i == this.numberOfPayPeriods - 1
+      ) {
+        contributionAmount = Math.min(
+          _401k_maximum_contribution_individual - cumulativeAmountIndividual,
+          _401k_maximum_contribution_total - cumulativeAmountTotal,
+          (this.maxContributionFromPaycheck / 100) * payPerPayPeriod
+        );
+        match = Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
+      }
+
+      // Employer match cannot exceed contribution amount
+      employerMatchAmount = Math.min(
+        (employerMatch / 100) * payPerPayPeriod,
+        contributionAmount
+      );
+      if (
+        i > 0 &&
+        table_rows[i - 1][7] + contributionAmount > _401kMaximum &&
+        megabackdoorEligible
+      ) {
+        employerMatchAmount = 0;
+      } else if (
+        i > 0 &&
+        table_rows[i - 1][7] + employerMatchAmount + contributionAmount >
+          _401kMaximum &&
+        _401kAutoCap &&
+        megabackdoorEligible
+      ) {
+        employerMatchAmount =
+          _401kMaximum - table_rows[i - 1][7] - contributionAmount;
+      }
+
+      //if prev row exists, add value to period contribution, else use period contribution
+      cumulativeAmountIndividual =
+        i != 0 ? table_rows[i - 1][4] + contributionAmount : contributionAmount;
+
+      cumulativeAmountEmployer =
+        i != 0
+          ? table_rows[i - 1][6] + employerMatchAmount
+          : employerMatchAmount;
+
+      cumulativeAmountTotal =
+        i != 0
+          ? table_rows[i - 1][7] + contributionAmount + employerMatchAmount
+          : contributionAmount + employerMatchAmount;
+
+      // if last paycheck, cumulative is < 401k max, and last match isnt the maximum,
+      // with the last check meaning you're unable to hit maximum contribution limit,
+      // add dagger to let user know to bump up contribution
+      if (
+        !_401kAutoCap &&
+        i === numberOfPayPeriods - 1 &&
+        Math.round(cumulativeAmountIndividual) != _401kMaximumIndividual &&
+        match != maxContributionFromPaycheck / 100
+      ) {
+        concatKey += _401kMaxNotReachedIcon;
+      }
+
+      // row values: key, compensation, match, contribution, cumulative
+      tableRows.push({
+        ...row,
+        contributionFraction: individualContributionFraction,
+        contributionAmount: individualContributionAmount,
+        cumulativeIndividualAmount,
+        employerAmount,
+        cumulativeEmployerAmount,
+        afterTaxPercent,
+        afterTaxAmount,
+        cumulativeAfterTaxAmount,
+        cumulativeAmountTotal,
+      });
+    }
     this.table = tableRows;
   }
 }

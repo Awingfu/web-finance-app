@@ -7,6 +7,7 @@ import {
   formatStateValue,
   RetirementTable,
   RetirementTableRow,
+  RetirementTableStrategy,
 } from "../../src/utils";
 import {
   _401k_maximum_contribution_individual,
@@ -60,9 +61,8 @@ function Frontload() {
   // customization options
   const [automaticallyCap401k, toggleAutomaticallyCap401k] =
     React.useState(false);
-  // TODO; add this toggle then update retirement table logic
-  const [prioritizeMegaBackdoor, togglePrioritizeMegaBackdoor] =
-    React.useState(false);
+  const [contributionStrategy, setContributionStrategy] =
+    React.useState<RetirementTableStrategy>(RetirementTableStrategy.FRONTLOAD);
 
   // form options
   const [addExistingContributions, toggleAddExistingContributions] =
@@ -110,7 +110,7 @@ function Frontload() {
     maxReachedEarlyIcon,
     automaticallyCap401k,
     showMegaBackdoor,
-    prioritizeMegaBackdoor
+    contributionStrategy
   );
 
   if (numberOfPayPeriodsSoFar > 0) {
@@ -257,6 +257,22 @@ function Frontload() {
 
       <div className={styles.content}>
         <Form className={styles.form}>
+          <Form.Label>Contribution Strategy</Form.Label>
+          <InputGroup className="mb-3 w-100">
+            <Form.Select
+              onChange={(e) =>
+                setContributionStrategy(
+                  e.target.value as RetirementTableStrategy
+                )
+              }
+            >
+              <option key="frontload">
+                {RetirementTableStrategy.FRONTLOAD}
+              </option>
+              <option key="equal">{RetirementTableStrategy.EQUAL}</option>
+            </Form.Select>
+          </InputGroup>
+
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
             <InputGroup.Text>$</InputGroup.Text>
