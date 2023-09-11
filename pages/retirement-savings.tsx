@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useMemo } from "react";
 import { Alert, Form, FormGroup, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../src/components";
 import {
@@ -13,7 +13,23 @@ import {
   _401k_maximum_contribution_individual,
   _401k_maximum_contribution_total,
 } from "../src/utils/constants";
-import styles from "../../styles/Retirement.module.scss";
+import styles from "../styles/Retirement.module.scss";
+import { FinanceState, PreferencesState } from "../src/utils/types";
+
+const payPeriodAlreadyPassedIcon = "\u203E"; // overline
+const payPeriodAlreadyPassedText =
+  payPeriodAlreadyPassedIcon + " Pay period has already passed";
+const maxNotReachedIcon = "\u2020"; // dagger
+const _401kMaxNotReachedNote =
+  maxNotReachedIcon +
+  " If your employer limits your 401k contribution, bump the last contribution up in order to max your 401k.";
+const _401kMaxReachedWithAutoCapNote =
+  maxNotReachedIcon +
+  " Since your employer limits your 401k contribution, this last contribution should max your contributions.";
+const maxReachedEarlyIcon = "\u2021"; // double dagger
+const _401kMaxReachedEarlyNote =
+  maxReachedEarlyIcon +
+  " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer limits your contributions";
 
 /**
  * Future Goals
@@ -23,140 +39,58 @@ import styles from "../../styles/Retirement.module.scss";
  * 3. cost analysis with fv assumption for each strategy
  */
 
-function Frontload() {
-  const [salary, changeSalary] = React.useState(60000);
-  const [max401kIndividualAmount, changeMax401kIndividualAmount] =
-    React.useState(_401k_maximum_contribution_individual);
-  const [max401kTotalAmount, changeMax401kTotalAmount] = React.useState(
-    _401k_maximum_contribution_total
-  );
-  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(24);
-  const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
-    React.useState(0);
-  const [
-    individualContributionAmountSoFar,
-    changeIndividualContributionAmountSoFar,
-  ] = React.useState(0);
-  const [
-    employerContributionAmountSoFar,
-    changeEmployerContributionAmountSoFar,
-  ] = React.useState(0);
-  const [
-    individualContributionAfterTaxAmountSoFar,
-    changeIndividualContributionAfterTaxAmountSoFar,
-  ] = React.useState(0);
-  // make sure to divide minIndividualContributionPercent, maxContributionPercent, employerMatchPercent by 100 to get percentage
-  const [
-    minIndividualContributionPercent,
-    changeMinIndividualContributionPercent,
-  ] = React.useState(6);
-  const [maxContributionPercent, changeMaxContributionPercent] =
-    React.useState(90);
-  const [employerMatchBasePercent, changeEmployerMatchBasePercent] =
-    React.useState(0);
-  const [employerMatchPercent, changeEmployerMatchPercent] = React.useState(0);
-  const [employerMatchUpToPercent, changeEmployerMatchUpToPercent] =
-    React.useState(6);
+function RetirementSavings() {
+  const [finance, setFinance] = useState<FinanceState>({
+    salary: 60000,
+    max401kIndividualAmount: _401k_maximum_contribution_individual,
+    max401kTotalAmount: _401k_maximum_contribution_total,
+    numberOfPayPeriods: 24,
+    numberOfPayPeriodsSoFar: 0,
+    individualContributionAmountSoFar: 0,
+    employerContributionAmountSoFar: 0,
+    individualContributionAfterTaxAmountSoFar: 0,
+    minIndividualContributionPercent: 6,
+    maxContributionPercent: 90,
+    employerMatchBasePercent: 0,
+    employerMatchPercent: 0,
+    employerMatchUpToPercent: 6,
+  });
 
-  // customization options
-  const [automaticallyCap401k, toggleAutomaticallyCap401k] =
-    React.useState(false);
-  const [contributionStrategy, setContributionStrategy] =
-    React.useState<RetirementTableStrategy>(RetirementTableStrategy.FRONTLOAD);
+  const [preferences, setPreferences] = useState<PreferencesState>({
+    automaticallyCap401k: false,
+    contributionStrategy: RetirementTableStrategy.FRONTLOAD,
+    addExistingContributions: false,
+    update401kLimits: false,
+    showEmployerMatch: false,
+    showMegaBackdoor: false,
+  });
 
-  // form options
-  const [addExistingContributions, toggleAddExistingContributions] =
-    React.useState(false);
-  const [update401kLimits, toggleUpdate401kLimits] = React.useState(false);
-  const [showEmployerMatch, toggleShowEmployerMatch] = React.useState(false);
-  const [showMegaBackdoor, toggleShowMegaBackdoor] = React.useState(false);
-
-  const payPeriodAlreadyPassedIcon = "\u203E"; // overline
-  const payPeriodAlreadyPassedText =
-    payPeriodAlreadyPassedIcon + " Pay period has already passed";
-  const maxNotReachedIcon = "\u2020"; // dagger
-  const _401kMaxNotReachedNote =
-    maxNotReachedIcon +
-    " If your employer limits your 401k contribution, bump the last contribution up in order to max your 401k.";
-  const _401kMaxReachedWithAutoCapNote =
-    maxNotReachedIcon +
-    " Since your employer limits your 401k contribution, this last contribution should max your contributions.";
-  const maxReachedEarlyIcon = "\u2021"; // double dagger
-  const _401kMaxReachedEarlyNote =
-    maxReachedEarlyIcon +
-    " You will reach your maximum contribution early even with minimum matching available. Future contributions for the year will not be possible if your employer limits your contributions";
-
-  let payPeriodAlreadyPassedAlertHTML = <></>;
-  let _401kMaxNotReachedAlertHTML = <></>;
-  let _401kMaxReachedWithAutoCapAlertHTML = <></>;
-  let _401kMaxReachedEarlyAlertHTML = <></>;
-
-  const table = new RetirementTable(
-    salary,
-    numberOfPayPeriods,
-    numberOfPayPeriodsSoFar,
-    individualContributionAmountSoFar,
-    employerContributionAmountSoFar,
-    individualContributionAfterTaxAmountSoFar,
-    max401kIndividualAmount,
-    max401kTotalAmount,
-    minIndividualContributionPercent,
-    maxContributionPercent,
-    employerMatchBasePercent,
-    employerMatchPercent,
-    employerMatchUpToPercent,
-    payPeriodAlreadyPassedIcon,
-    maxNotReachedIcon,
-    maxReachedEarlyIcon,
-    automaticallyCap401k,
-    showMegaBackdoor,
-    contributionStrategy
+  const table = useMemo(
+    () =>
+      new RetirementTable({
+        ...finance,
+        payPeriodAlreadyPassedIcon: "\u203E",
+        maxNotReachedIcon: "\u2020",
+        maxReachedEarlyIcon: "\u2021",
+        ...preferences,
+      }),
+    [finance, preferences]
   );
 
-  if (numberOfPayPeriodsSoFar > 0) {
-    payPeriodAlreadyPassedAlertHTML = (
-      <Alert className="mb-3" variant="secondary">
-        {payPeriodAlreadyPassedText}
-      </Alert>
-    );
-  }
+  const setFinanceValue = (key: string, value: number) => {
+    setFinance((prev) => ({ ...prev, [key]: value }));
+  };
 
-  if (table.maxReachedEarly) {
-    _401kMaxReachedEarlyAlertHTML = (
-      <Alert className="mb-3" variant="secondary">
-        {_401kMaxReachedEarlyNote}
-      </Alert>
-    );
-  }
+  const setPreferenceValue = (
+    key: string,
+    value: boolean | RetirementTableStrategy
+  ) => {
+    setPreferences((prev) => ({ ...prev, [key]: value }));
+  };
 
-  if (table.maxNotReached) {
-    _401kMaxNotReachedAlertHTML = (
-      <Alert className="mb-3" variant="secondary">
-        {_401kMaxNotReachedNote}
-      </Alert>
-    );
-  }
-
-  if (table.maxReachedWithAutomaticCap) {
-    _401kMaxReachedWithAutoCapAlertHTML = (
-      <Alert className="mb-3" variant="secondary">
-        {_401kMaxReachedWithAutoCapNote}
-      </Alert>
-    );
-  }
-
-  /**
-   * @param e event handler
-   * @param changeFunction change function that updates float values
-   * @param min if event value is NaN or less than min, set to min
-   * @param max if event value is greater than max, set to max
-   * If changeFunction is changeNumber of PayPeriods,
-   * ensure payPeriodsSoFar is less.
-   * If payPeriodsSoFar is 0, set contribution amounts so far to 0
-   */
   const updateAmount = (
     e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void },
+    key: string,
     min: number = 0,
     max: number = 1000000000
   ) => {
@@ -167,66 +101,25 @@ function Frontload() {
       value = max;
     }
     if (
-      changeFunction === changeNumberOfPayPeriods &&
-      value <= numberOfPayPeriodsSoFar
+      key === "numberOfPayPeriods" &&
+      value <= finance.numberOfPayPeriodsSoFar
     ) {
-      changeNumberOfPayPeriodsSoFar(value - 1);
+      setFinanceValue("numberOfPayPeriodsSoFar", value - 1);
       if (value === 1) {
         setAmountsSoFarToZero();
       }
     }
-    if (changeFunction === changeNumberOfPayPeriodsSoFar) {
+    if (key === "numberOfPayPeriodsSoFar") {
       if (value === 0) {
         setAmountsSoFarToZero();
       }
     }
-    changeFunction(value);
+    setFinanceValue(key, value);
   };
 
-  const updateToggle = (
-    e: React.FormEvent<HTMLElement>,
-    toggleFunction: { (value: React.SetStateAction<any>): void }
-  ) => {
-    let value = (e.target as HTMLInputElement).checked;
-    if (toggleFunction === toggleAddExistingContributions && !value) {
-      changeNumberOfPayPeriodsSoFar(0);
-      setAmountsSoFarToZero();
-    }
-    if (toggleFunction === toggleUpdate401kLimits) {
-      set401kLimitsToDefault();
-    }
-    if (toggleFunction === toggleShowEmployerMatch) {
-      setEmployerMatchToDefault();
-    }
-    toggleFunction(value);
-  };
-
-  const setAmountsSoFarToZero = () => {
-    changeIndividualContributionAmountSoFar(0);
-    changeEmployerContributionAmountSoFar(0);
-    changeIndividualContributionAfterTaxAmountSoFar(0);
-  };
-
-  const set401kLimitsToDefault = () => {
-    changeMax401kIndividualAmount(_401k_maximum_contribution_individual);
-    changeMax401kTotalAmount(_401k_maximum_contribution_total);
-  };
-
-  const setEmployerMatchToDefault = () => {
-    changeEmployerMatchBasePercent(0);
-    changeEmployerMatchPercent(0);
-  };
-
-  /**
-   * @param e event handler
-   * @param changeFunction change function that updates integer values
-   * @param min if event value is NaN or less than min, set to min
-   * @param max if event value is greater than max, set to max
-   * @param allowDecimal allows decimal input rounded to 2 places
-   */
   const updateContribution = (
     e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void },
+    key: string,
     min: number = 0,
     max: number = 100,
     allowDecimal: boolean = false
@@ -240,7 +133,58 @@ function Frontload() {
     } else if (value > max) {
       value = max;
     }
-    changeFunction(value);
+    setFinanceValue(key, value);
+  };
+
+  const updateToggle = (e: React.FormEvent<HTMLElement>, key: string) => {
+    setPreferenceValue(key, (e.target as HTMLInputElement).checked);
+  };
+
+  const alerts: { [key: string]: boolean } = {
+    payPeriodAlreadyPassed: finance.numberOfPayPeriodsSoFar > 0,
+    _401kMaxReachedEarly: table.maxReachedEarly,
+    _401kMaxNotReached: table.maxNotReached,
+    _401kMaxReachedWithAutoCap: table.maxReachedWithAutomaticCap,
+  };
+
+  const alertMessages: { [key: string]: string } = {
+    payPeriodAlreadyPassed: payPeriodAlreadyPassedText,
+    _401kMaxReachedEarly: _401kMaxReachedEarlyNote,
+    _401kMaxNotReached: _401kMaxNotReachedNote,
+    _401kMaxReachedWithAutoCap: _401kMaxReachedWithAutoCapNote,
+  };
+
+  const generatedAlerts = Object.keys(alerts).reduce(
+    (acc: { [key: string]: JSX.Element }, alertKey) => {
+      if (alerts[alertKey]) {
+        acc[alertKey] = (
+          <Alert className="mb-3" variant="secondary">
+            {alertMessages[alertKey]}
+          </Alert>
+        );
+      }
+      return acc;
+    },
+    {}
+  );
+
+  const setAmountsSoFarToZero = () => {
+    setFinanceValue("individualContributionAmountSoFar", 0);
+    setFinanceValue("employerContributionAmountSoFar", 0);
+    setFinanceValue("individualContributionAfterTaxAmountSoFar", 0);
+  };
+
+  const set401kLimitsToDefault = () => {
+    setFinanceValue(
+      "max401kIndividualAmount",
+      _401k_maximum_contribution_individual
+    );
+    setFinanceValue("max401kTotalAmount", _401k_maximum_contribution_total);
+  };
+
+  const setEmployerMatchToDefault = () => {
+    setFinanceValue("employerMatchBasePercent", 0);
+    setFinanceValue("changeEmployerMatchPercent", 0);
   };
 
   return (
@@ -261,7 +205,8 @@ function Frontload() {
           <InputGroup className="mb-3 w-100">
             <Form.Select
               onChange={(e) =>
-                setContributionStrategy(
+                setPreferenceValue(
+                  "contributionStrategy",
                   e.target.value as RetirementTableStrategy
                 )
               }
@@ -279,8 +224,8 @@ function Frontload() {
             <Form.Control
               type="number"
               onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(salary)}
-              onChange={(e) => updateAmount(e, changeSalary)}
+              value={formatStateValue(finance.salary)}
+              onChange={(e) => updateAmount(e, "salary")}
             />
           </InputGroup>
 
@@ -289,10 +234,8 @@ function Frontload() {
             <Form.Control
               type="number"
               onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(numberOfPayPeriods)}
-              onChange={(e) =>
-                updateAmount(e, changeNumberOfPayPeriods, 1, 260)
-              }
+              value={formatStateValue(finance.numberOfPayPeriods)}
+              onChange={(e) => updateAmount(e, "numberOfPayPeriods", 1, 260)}
             />
           </InputGroup>
 
@@ -304,11 +247,15 @@ function Frontload() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(minIndividualContributionPercent)}
+                  value={formatStateValue(
+                    finance.minIndividualContributionPercent
+                  )}
                   onChange={(e) =>
                     updateContribution(
                       e,
-                      changeMinIndividualContributionPercent
+                      "minIndividualContributionPercent",
+                      0,
+                      100
                     )
                   }
                 />
@@ -325,9 +272,9 @@ function Frontload() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(maxContributionPercent)}
+                  value={formatStateValue(finance.maxContributionPercent)}
                   onChange={(e) =>
-                    updateContribution(e, changeMaxContributionPercent)
+                    updateContribution(e, "maxContributionPercent")
                   }
                 />
                 <InputGroup.Text>%</InputGroup.Text>
@@ -341,11 +288,9 @@ function Frontload() {
               <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
-                  onChange={() =>
-                    toggleAutomaticallyCap401k(!automaticallyCap401k)
-                  }
+                  onChange={(e) => updateToggle(e, "automaticallyCap401k")}
                   label="401k Limits Contributions"
-                  checked={automaticallyCap401k}
+                  checked={preferences.automaticallyCap401k}
                 />
               </InputGroup>
             }
@@ -357,29 +302,27 @@ function Frontload() {
               <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
-                  onChange={(e) =>
-                    updateToggle(e, toggleAddExistingContributions)
-                  }
+                  onChange={(e) => updateToggle(e, "addExistingContributions")}
                   label="Add Existing Contributions"
-                  checked={addExistingContributions}
+                  checked={preferences.addExistingContributions}
                 />
               </InputGroup>
             }
           />
-          {addExistingContributions && (
+          {preferences.addExistingContributions && (
             <FormGroup>
               <Form.Label>Number of Pay Periods So Far</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(numberOfPayPeriodsSoFar)}
+                  value={formatStateValue(finance.numberOfPayPeriodsSoFar)}
                   onChange={(e) =>
                     updateAmount(
                       e,
-                      changeNumberOfPayPeriodsSoFar,
+                      "numberOfPayPeriodsSoFar",
                       0,
-                      numberOfPayPeriods - 1
+                      finance.numberOfPayPeriods - 1
                     )
                   }
                 />
@@ -389,16 +332,18 @@ function Frontload() {
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
-                  disabled={numberOfPayPeriodsSoFar === 0}
+                  disabled={finance.numberOfPayPeriodsSoFar === 0}
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(individualContributionAmountSoFar)}
+                  value={formatStateValue(
+                    finance.individualContributionAmountSoFar
+                  )}
                   onChange={(e) =>
                     updateAmount(
                       e,
-                      changeIndividualContributionAmountSoFar,
+                      "individualContributionAmountSoFar",
                       0,
-                      max401kIndividualAmount
+                      finance.max401kIndividualAmount
                     )
                   }
                 />
@@ -412,31 +357,34 @@ function Frontload() {
               <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
-                  onChange={(e) => updateToggle(e, toggleShowEmployerMatch)}
+                  onChange={(e) => updateToggle(e, "showEmployerMatch")}
                   label="Employer Contributions"
-                  checked={showEmployerMatch}
+                  checked={preferences.showEmployerMatch}
                 />
               </InputGroup>
             }
           />
-          {showEmployerMatch && (
+          {preferences.showEmployerMatch && (
             <FormGroup>
-              {addExistingContributions && (
+              {preferences.addExistingContributions && (
                 <>
                   <Form.Label>Employer Contributions So Far</Form.Label>
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
                     <Form.Control
-                      disabled={numberOfPayPeriodsSoFar === 0}
+                      disabled={finance.numberOfPayPeriodsSoFar === 0}
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(employerContributionAmountSoFar)}
+                      value={formatStateValue(
+                        finance.employerContributionAmountSoFar
+                      )}
                       onChange={(e) =>
                         updateAmount(
                           e,
-                          changeEmployerContributionAmountSoFar,
+                          "employerContributionAmountSoFar",
                           0,
-                          max401kTotalAmount - max401kIndividualAmount
+                          finance.max401kTotalAmount -
+                            finance.max401kIndividualAmount
                         )
                       }
                     />
@@ -452,11 +400,11 @@ function Frontload() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(employerMatchBasePercent)}
+                      value={formatStateValue(finance.employerMatchBasePercent)}
                       onChange={(e) =>
                         updateContribution(
                           e,
-                          changeEmployerMatchBasePercent,
+                          "employerMatchBasePercent",
                           0,
                           100,
                           true
@@ -478,11 +426,11 @@ function Frontload() {
                       <Form.Control
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(employerMatchPercent)}
+                        value={formatStateValue(finance.employerMatchPercent)}
                         onChange={(e) =>
                           updateContribution(
                             e,
-                            changeEmployerMatchPercent,
+                            "employerMatchPercent",
                             0,
                             500,
                             true
@@ -496,11 +444,13 @@ function Frontload() {
                       <Form.Control
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(employerMatchUpToPercent)}
+                        value={formatStateValue(
+                          finance.employerMatchUpToPercent
+                        )}
                         onChange={(e) =>
                           updateContribution(
                             e,
-                            changeEmployerMatchUpToPercent,
+                            "employerMatchUpToPercent",
                             0,
                             100,
                             true
@@ -521,38 +471,39 @@ function Frontload() {
               <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
-                  onChange={(e) => updateToggle(e, toggleShowMegaBackdoor)}
+                  onChange={(e) => updateToggle(e, "showMegaBackdoor")}
                   label="Show After-Tax 401k"
-                  checked={showMegaBackdoor}
+                  checked={preferences.showMegaBackdoor}
                 />
               </InputGroup>
             }
           />
-          {addExistingContributions && showMegaBackdoor && (
-            <>
-              <Form.Label>After-Tax Contributions So Far</Form.Label>
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  disabled={numberOfPayPeriodsSoFar === 0}
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(
-                    individualContributionAfterTaxAmountSoFar
-                  )}
-                  onChange={(e) =>
-                    updateAmount(
-                      e,
-                      changeIndividualContributionAfterTaxAmountSoFar,
-                      0,
-                      table.maxAfterTaxAmount
-                    )
-                  }
-                />
-              </InputGroup>
-            </>
-          )}
-          {showMegaBackdoor && (
+          {preferences.addExistingContributions &&
+            preferences.showMegaBackdoor && (
+              <>
+                <Form.Label>After-Tax Contributions So Far</Form.Label>
+                <InputGroup className="mb-3 w-100">
+                  <InputGroup.Text>$</InputGroup.Text>
+                  <Form.Control
+                    disabled={finance.numberOfPayPeriodsSoFar === 0}
+                    type="number"
+                    onWheel={(e) => e.currentTarget.blur()}
+                    value={formatStateValue(
+                      finance.individualContributionAfterTaxAmountSoFar
+                    )}
+                    onChange={(e) =>
+                      updateAmount(
+                        e,
+                        "individualContributionAfterTaxAmountSoFar",
+                        0,
+                        table.maxAfterTaxAmount
+                      )
+                    }
+                  />
+                </InputGroup>
+              </>
+            )}
+          {preferences.showMegaBackdoor && (
             <>
               <Form.Label>Estimated Maximum Employer Contribution</Form.Label>
               <InputGroup className="mb-3 w-100">
@@ -565,7 +516,7 @@ function Frontload() {
               </InputGroup>
               <Form.Label>Maximum After-Tax Contribution</Form.Label>
               <TooltipOnHover
-                text={`This is the result of (Total - Individual - Employer) Contribution Maximums = ${max401kTotalAmount} - ${max401kIndividualAmount} - ${table.maxEmployerAmount}.`}
+                text={`This is the result of (Total - Individual - Employer) Contribution Maximums = ${finance.max401kTotalAmount} - ${finance.max401kIndividualAmount} - ${table.maxEmployerAmount}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -584,12 +535,12 @@ function Frontload() {
           <InputGroup className={styles.checkbox}>
             <Form.Check
               type="checkbox"
-              onChange={(e) => updateToggle(e, toggleUpdate401kLimits)}
+              onChange={(e) => updateToggle(e, "update401kLimits")}
               label="Update 401k Limits"
-              checked={update401kLimits}
+              checked={preferences.update401kLimits}
             />
           </InputGroup>
-          {update401kLimits && (
+          {preferences.update401kLimits && (
             <>
               <Form.Label>401k Maximum for Individual Contribution</Form.Label>
               <TooltipOnHover
@@ -600,9 +551,9 @@ function Frontload() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(max401kIndividualAmount)}
+                      value={formatStateValue(finance.max401kIndividualAmount)}
                       onChange={(e) =>
-                        updateAmount(e, changeMax401kIndividualAmount)
+                        updateAmount(e, "max401kIndividualAmount")
                       }
                     />
                   </InputGroup>
@@ -610,7 +561,7 @@ function Frontload() {
               />
             </>
           )}
-          {update401kLimits && showMegaBackdoor && (
+          {preferences.update401kLimits && preferences.showMegaBackdoor && (
             <>
               <Form.Label>401k Total Maximum</Form.Label>
               <TooltipOnHover
@@ -621,10 +572,8 @@ function Frontload() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(max401kTotalAmount)}
-                      onChange={(e) =>
-                        updateAmount(e, changeMax401kTotalAmount)
-                      }
+                      value={formatStateValue(finance.max401kTotalAmount)}
+                      onChange={(e) => updateAmount(e, "max401kTotalAmount")}
                     />
                   </InputGroup>
                 }
@@ -641,9 +590,15 @@ function Frontload() {
                 <th>Gross Pay ($)</th>
                 <th>Contribution (%)</th>
                 <th>Contribution ($)</th>
-                {showEmployerMatch && <th> Employer Contribution ($) </th>}
-                {showMegaBackdoor && <th> After-Tax Contribution (%) </th>}
-                {showMegaBackdoor && <th> After-Tax Contribution ($) </th>}
+                {preferences.showEmployerMatch && (
+                  <th> Employer Contribution ($) </th>
+                )}
+                {preferences.showMegaBackdoor && (
+                  <th> After-Tax Contribution (%) </th>
+                )}
+                {preferences.showMegaBackdoor && (
+                  <th> After-Tax Contribution ($) </th>
+                )}
                 <th>Cumulative ($)</th>
               </tr>
             </thead>
@@ -654,13 +609,13 @@ function Frontload() {
                   <td>{formatCurrency(row.payPerPayPeriod)}</td>
                   <td>{formatPercent(row.contributionFraction)}</td>
                   <td>{formatCurrency(row.contributionAmount)}</td>
-                  {showEmployerMatch && (
+                  {preferences.showEmployerMatch && (
                     <td>{formatCurrency(row.employerAmount)}</td>
                   )}
-                  {showMegaBackdoor && (
+                  {preferences.showMegaBackdoor && (
                     <td>{formatPercent(row.afterTaxPercent)}</td>
                   )}
-                  {showMegaBackdoor && (
+                  {preferences.showMegaBackdoor && (
                     <td>{formatCurrency(row.afterTaxAmount)}</td>
                   )}
                   <td>{formatCurrency(row.cumulativeAmountTotal)}</td>
@@ -674,40 +629,39 @@ function Frontload() {
                 <td></td>
                 <td>
                   {formatCurrency(
-                    table.getTable()[numberOfPayPeriods - 1]
+                    table.getTable()[finance.numberOfPayPeriods - 1]
                       .cumulativeIndividualAmount
                   )}
                 </td>
-                {showEmployerMatch && (
+                {preferences.showEmployerMatch && (
                   <td>
                     {formatCurrency(
-                      table.getTable()[numberOfPayPeriods - 1]
+                      table.getTable()[finance.numberOfPayPeriods - 1]
                         .cumulativeEmployerAmount
                     )}
                   </td>
                 )}
-                {showMegaBackdoor && <td></td>}
-                {showMegaBackdoor && (
+                {preferences.showMegaBackdoor && <td></td>}
+                {preferences.showMegaBackdoor && (
                   <td>
                     {formatCurrency(
-                      table.getTable()[numberOfPayPeriods - 1]
+                      table.getTable()[finance.numberOfPayPeriods - 1]
                         .cumulativeAfterTaxAmount
                     )}
                   </td>
                 )}
                 <td>
                   {formatCurrency(
-                    table.getTable()[numberOfPayPeriods - 1]
+                    table.getTable()[finance.numberOfPayPeriods - 1]
                       .cumulativeAmountTotal
                   )}
                 </td>
               </tr>
             </tfoot>
           </Table>
-          {payPeriodAlreadyPassedAlertHTML}
-          {_401kMaxNotReachedAlertHTML}
-          {_401kMaxReachedWithAutoCapAlertHTML}
-          {_401kMaxReachedEarlyAlertHTML}
+          {Object.values(generatedAlerts).map((alert, index) => (
+            <React.Fragment key={index}>{alert}</React.Fragment>
+          ))}
         </div>
       </div>
 
@@ -716,4 +670,4 @@ function Frontload() {
   );
 }
 
-export default Frontload;
+export default RetirementSavings;

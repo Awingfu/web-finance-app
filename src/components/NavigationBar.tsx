@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useLayoutEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Container, Nav, Navbar } from "react-bootstrap";
@@ -13,7 +13,7 @@ const NavigationBar = () => {
   const iconPath = prefix + "/favicon.ico";
 
   // useLayoutEffect over useEffect as useEffect shows artifacts of lower resolution options briefly during routing
-  React.useLayoutEffect(() => {
+  useLayoutEffect(() => {
     function handleResize() {
       if (window.innerWidth > 425) {
         setIsGreaterThan425px(true);
@@ -50,11 +50,8 @@ const NavigationBar = () => {
           <Link href="/paycheck" className="nav-link" passHref>
             Paycheck
           </Link>
-          <Link href="/retirement/maximize" className="nav-link" passHref>
-            {isGreaterThan425px && "401k "} Maximizer
-          </Link>
-          <Link href="/retirement/frontload" className="nav-link" passHref>
-            {isGreaterThan425px && "401k "} Frontloader
+          <Link href="/retirement-savings" className="nav-link" passHref>
+            401k Optimizer
           </Link>
         </Nav>
       </Container>

@@ -17,5 +17,5 @@ export {
   formatStateValue,
 } from "./helperFunctions";
 export { prefix } from "./prefix";
-export { RetirementTable, RetirementTableStrategy } from "./retirement_table";
-export type { RetirementTableRow } from "./retirement_table";
+export { RetirementTable } from "./retirement_table";
+export { RetirementTableStrategy, RetirementTableRow } from "./types";
