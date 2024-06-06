@@ -471,7 +471,7 @@ function Paycheck() {
 
       <main className={styles.main}>
         <h1>Paycheck Calculator</h1>
-        <p>Here we will estimate your take home pay (for 2023)!</p>
+        <p>Here we will estimate your take home pay (for 2024)!</p>
       </main>
 
       <div className={styles.content}>

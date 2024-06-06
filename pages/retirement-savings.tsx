@@ -548,7 +548,7 @@ function RetirementSavings() {
             <>
               <Form.Label>401k Maximum for Individual Contribution</Form.Label>
               <TooltipOnHover
-                text="The maximum in 2023 is $22,500."
+                text={`The maximum in 2024 is $${_401k_maximum_contribution_individual}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -571,7 +571,7 @@ function RetirementSavings() {
             <>
               <Form.Label>401k Total Maximum</Form.Label>
               <TooltipOnHover
-                text="The maximum in 2023 is $66,000."
+                text={`The maximum in 2024 is $${_401k_maximum_contribution_total}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>

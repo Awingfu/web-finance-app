@@ -167,4 +167,4 @@ export const _IRA_roth_get_max_contribution = (
 };
 
 // HSA
-export const maximum_HSA_contribution = 3850; // 2023
+export const maximum_HSA_contribution = 4150; // 2024
