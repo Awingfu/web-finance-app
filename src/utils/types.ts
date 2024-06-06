@@ -1,4 +1,4 @@
-export type FinanceState = {
+export type RetirementState = {
   salary: number;
   max401kIndividualAmount: number;
   max401kTotalAmount: number;
@@ -23,7 +23,7 @@ export type PreferencesState = {
   showMegaBackdoor: boolean;
 };
 
-export type RetirementTableOptions = FinanceState &
+export type RetirementTableOptions = RetirementState &
   PreferencesState & {
     payPeriodAlreadyPassedIcon?: string;
     maxNotReachedIcon?: string;

@@ -14,7 +14,7 @@ import {
   _401k_maximum_contribution_total,
 } from "../src/utils/constants";
 import styles from "../styles/Retirement.module.scss";
-import { FinanceState, PreferencesState } from "../src/utils/types";
+import { RetirementState, PreferencesState } from "../src/utils/types";
 
 const payPeriodAlreadyPassedIcon = "\u203E"; // overline
 const payPeriodAlreadyPassedText =
@@ -40,7 +40,7 @@ const _401kMaxReachedEarlyNote =
  */
 
 function RetirementSavings() {
-  const [finance, setFinance] = useState<FinanceState>({
+  const [retirement, setRetirement] = useState<RetirementState>({
     salary: 60000,
     max401kIndividualAmount: _401k_maximum_contribution_individual,
     max401kTotalAmount: _401k_maximum_contribution_total,
@@ -68,17 +68,17 @@ function RetirementSavings() {
   const table = useMemo(
     () =>
       new RetirementTable({
-        ...finance,
+        ...retirement,
         payPeriodAlreadyPassedIcon: "\u203E",
         maxNotReachedIcon: "\u2020",
         maxReachedEarlyIcon: "\u2021",
         ...preferences,
       }),
-    [finance, preferences]
+    [retirement, preferences]
   );
 
-  const setFinanceValue = (key: string, value: number) => {
-    setFinance((prev) => ({ ...prev, [key]: value }));
+  const setRetirementValue = (key: string, value: number) => {
+    setRetirement((prev) => ({ ...prev, [key]: value }));
   };
 
   const setPreferenceValue = (
@@ -102,9 +102,9 @@ function RetirementSavings() {
     }
     if (
       key === "numberOfPayPeriods" &&
-      value <= finance.numberOfPayPeriodsSoFar
+      value <= retirement.numberOfPayPeriodsSoFar
     ) {
-      setFinanceValue("numberOfPayPeriodsSoFar", value - 1);
+      setRetirementValue("numberOfPayPeriodsSoFar", value - 1);
       if (value === 1) {
         setAmountsSoFarToZero();
       }
@@ -114,7 +114,7 @@ function RetirementSavings() {
         setAmountsSoFarToZero();
       }
     }
-    setFinanceValue(key, value);
+    setRetirementValue(key, value);
   };
 
   const updateContribution = (
@@ -133,7 +133,7 @@ function RetirementSavings() {
     } else if (value > max) {
       value = max;
     }
-    setFinanceValue(key, value);
+    setRetirementValue(key, value);
   };
 
   const updateToggle = (e: React.FormEvent<HTMLElement>, key: string) => {
@@ -141,7 +141,7 @@ function RetirementSavings() {
   };
 
   const alerts: { [key: string]: boolean } = {
-    payPeriodAlreadyPassed: finance.numberOfPayPeriodsSoFar > 0,
+    payPeriodAlreadyPassed: retirement.numberOfPayPeriodsSoFar > 0,
     _401kMaxReachedEarly: table.maxReachedEarly,
     _401kMaxNotReached: table.maxNotReached,
     _401kMaxReachedWithAutoCap: table.maxReachedWithAutomaticCap,
@@ -169,22 +169,22 @@ function RetirementSavings() {
   );
 
   const setAmountsSoFarToZero = () => {
-    setFinanceValue("individualContributionAmountSoFar", 0);
-    setFinanceValue("employerContributionAmountSoFar", 0);
-    setFinanceValue("individualContributionAfterTaxAmountSoFar", 0);
+    setRetirementValue("individualContributionAmountSoFar", 0);
+    setRetirementValue("employerContributionAmountSoFar", 0);
+    setRetirementValue("individualContributionAfterTaxAmountSoFar", 0);
   };
 
   const set401kLimitsToDefault = () => {
-    setFinanceValue(
+    setRetirementValue(
       "max401kIndividualAmount",
       _401k_maximum_contribution_individual
     );
-    setFinanceValue("max401kTotalAmount", _401k_maximum_contribution_total);
+    setRetirementValue("max401kTotalAmount", _401k_maximum_contribution_total);
   };
 
   const setEmployerMatchToDefault = () => {
-    setFinanceValue("employerMatchBasePercent", 0);
-    setFinanceValue("changeEmployerMatchPercent", 0);
+    setRetirementValue("employerMatchBasePercent", 0);
+    setRetirementValue("changeEmployerMatchPercent", 0);
   };
 
   return (
@@ -192,16 +192,16 @@ function RetirementSavings() {
       <Header titleName="401k Frontload" />
 
       <main className={styles.main}>
-        <h1>401k Frontloader</h1>
+        <h1>401k Optimizer</h1>
         <p>
-          Maximize your 401k contributions by frontloading while ensuring
+          Optimize your 401k contributions by frontloading while ensuring
           minimum contributions throughout the year.
         </p>
       </main>
 
       <div className={styles.content}>
         <Form className={styles.form}>
-          <Form.Label>Contribution Strategy</Form.Label>
+          {/* <Form.Label>Contribution Strategy</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Select
               onChange={(e) =>
@@ -216,7 +216,7 @@ function RetirementSavings() {
               </option>
               <option key="equal">{RetirementTableStrategy.EQUAL}</option>
             </Form.Select>
-          </InputGroup>
+          </InputGroup> */}
 
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
@@ -224,7 +224,7 @@ function RetirementSavings() {
             <Form.Control
               type="number"
               onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(finance.salary)}
+              value={formatStateValue(retirement.salary)}
               onChange={(e) => updateAmount(e, "salary")}
             />
           </InputGroup>
@@ -234,7 +234,7 @@ function RetirementSavings() {
             <Form.Control
               type="number"
               onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(finance.numberOfPayPeriods)}
+              value={formatStateValue(retirement.numberOfPayPeriods)}
               onChange={(e) => updateAmount(e, "numberOfPayPeriods", 1, 260)}
             />
           </InputGroup>
@@ -248,7 +248,7 @@ function RetirementSavings() {
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(
-                    finance.minIndividualContributionPercent
+                    retirement.minIndividualContributionPercent
                   )}
                   onChange={(e) =>
                     updateContribution(
@@ -272,7 +272,7 @@ function RetirementSavings() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(finance.maxContributionPercent)}
+                  value={formatStateValue(retirement.maxContributionPercent)}
                   onChange={(e) =>
                     updateContribution(e, "maxContributionPercent")
                   }
@@ -316,13 +316,13 @@ function RetirementSavings() {
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(finance.numberOfPayPeriodsSoFar)}
+                  value={formatStateValue(retirement.numberOfPayPeriodsSoFar)}
                   onChange={(e) =>
                     updateAmount(
                       e,
                       "numberOfPayPeriodsSoFar",
                       0,
-                      finance.numberOfPayPeriods - 1
+                      retirement.numberOfPayPeriods - 1
                     )
                   }
                 />
@@ -332,18 +332,18 @@ function RetirementSavings() {
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
-                  disabled={finance.numberOfPayPeriodsSoFar === 0}
+                  disabled={retirement.numberOfPayPeriodsSoFar === 0}
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(
-                    finance.individualContributionAmountSoFar
+                    retirement.individualContributionAmountSoFar
                   )}
                   onChange={(e) =>
                     updateAmount(
                       e,
                       "individualContributionAmountSoFar",
                       0,
-                      finance.max401kIndividualAmount
+                      retirement.max401kIndividualAmount
                     )
                   }
                 />
@@ -372,19 +372,19 @@ function RetirementSavings() {
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
                     <Form.Control
-                      disabled={finance.numberOfPayPeriodsSoFar === 0}
+                      disabled={retirement.numberOfPayPeriodsSoFar === 0}
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
                       value={formatStateValue(
-                        finance.employerContributionAmountSoFar
+                        retirement.employerContributionAmountSoFar
                       )}
                       onChange={(e) =>
                         updateAmount(
                           e,
                           "employerContributionAmountSoFar",
                           0,
-                          finance.max401kTotalAmount -
-                            finance.max401kIndividualAmount
+                          retirement.max401kTotalAmount -
+                            retirement.max401kIndividualAmount
                         )
                       }
                     />
@@ -400,7 +400,9 @@ function RetirementSavings() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(finance.employerMatchBasePercent)}
+                      value={formatStateValue(
+                        retirement.employerMatchBasePercent
+                      )}
                       onChange={(e) =>
                         updateContribution(
                           e,
@@ -426,7 +428,9 @@ function RetirementSavings() {
                       <Form.Control
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(finance.employerMatchPercent)}
+                        value={formatStateValue(
+                          retirement.employerMatchPercent
+                        )}
                         onChange={(e) =>
                           updateContribution(
                             e,
@@ -445,7 +449,7 @@ function RetirementSavings() {
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
                         value={formatStateValue(
-                          finance.employerMatchUpToPercent
+                          retirement.employerMatchUpToPercent
                         )}
                         onChange={(e) =>
                           updateContribution(
@@ -485,11 +489,11 @@ function RetirementSavings() {
                 <InputGroup className="mb-3 w-100">
                   <InputGroup.Text>$</InputGroup.Text>
                   <Form.Control
-                    disabled={finance.numberOfPayPeriodsSoFar === 0}
+                    disabled={retirement.numberOfPayPeriodsSoFar === 0}
                     type="number"
                     onWheel={(e) => e.currentTarget.blur()}
                     value={formatStateValue(
-                      finance.individualContributionAfterTaxAmountSoFar
+                      retirement.individualContributionAfterTaxAmountSoFar
                     )}
                     onChange={(e) =>
                       updateAmount(
@@ -516,7 +520,7 @@ function RetirementSavings() {
               </InputGroup>
               <Form.Label>Maximum After-Tax Contribution</Form.Label>
               <TooltipOnHover
-                text={`This is the result of (Total - Individual - Employer) Contribution Maximums = ${finance.max401kTotalAmount} - ${finance.max401kIndividualAmount} - ${table.maxEmployerAmount}.`}
+                text={`This is the result of (Total - Individual - Employer) Contribution Maximums = ${retirement.max401kTotalAmount} - ${retirement.max401kIndividualAmount} - ${table.maxEmployerAmount}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -551,7 +555,9 @@ function RetirementSavings() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(finance.max401kIndividualAmount)}
+                      value={formatStateValue(
+                        retirement.max401kIndividualAmount
+                      )}
                       onChange={(e) =>
                         updateAmount(e, "max401kIndividualAmount")
                       }
@@ -572,7 +578,7 @@ function RetirementSavings() {
                     <Form.Control
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(finance.max401kTotalAmount)}
+                      value={formatStateValue(retirement.max401kTotalAmount)}
                       onChange={(e) => updateAmount(e, "max401kTotalAmount")}
                     />
                   </InputGroup>
@@ -629,14 +635,14 @@ function RetirementSavings() {
                 <td></td>
                 <td>
                   {formatCurrency(
-                    table.getTable()[finance.numberOfPayPeriods - 1]
+                    table.getTable()[retirement.numberOfPayPeriods - 1]
                       .cumulativeIndividualAmount
                   )}
                 </td>
                 {preferences.showEmployerMatch && (
                   <td>
                     {formatCurrency(
-                      table.getTable()[finance.numberOfPayPeriods - 1]
+                      table.getTable()[retirement.numberOfPayPeriods - 1]
                         .cumulativeEmployerAmount
                     )}
                   </td>
@@ -645,14 +651,14 @@ function RetirementSavings() {
                 {preferences.showMegaBackdoor && (
                   <td>
                     {formatCurrency(
-                      table.getTable()[finance.numberOfPayPeriods - 1]
+                      table.getTable()[retirement.numberOfPayPeriods - 1]
                         .cumulativeAfterTaxAmount
                     )}
                   </td>
                 )}
                 <td>
                   {formatCurrency(
-                    table.getTable()[finance.numberOfPayPeriods - 1]
+                    table.getTable()[retirement.numberOfPayPeriods - 1]
                       .cumulativeAmountTotal
                   )}
                 </td>

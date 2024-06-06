@@ -13,8 +13,8 @@ import {
 import styles from "../../styles/Retirement.module.scss";
 
 /**
- * TODO's:
- * - allow user to choose between maximize and frontload
+ * Deprecated tool
+ * TODO: Merge logic into retirement savings
  */
 function Maximize() {
   const [salary, changeSalary] = React.useState(60000);
