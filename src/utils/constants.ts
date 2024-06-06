@@ -66,32 +66,35 @@ export const ALL_MONTH_NAMES = Object.keys(MONTH_NAMES);
 
 // Only assuming traditional 401k (which is the same for 403b, tsp, etc.)
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits
-export const _401k_maximum_contribution_individual = 22500; // 2023
-export const _401k_catchup = 7500; // 2023
+// last updated: 2024
+export const _401k_maximum_contribution_individual = 23000;
+export const _401k_catchup = 7500;
 export const _401k_maximum_contribution_individual_over50 =
   _401k_maximum_contribution_individual + _401k_catchup;
-export const _401k_maximum_contribution_total = 66000; // 2023
+export const _401k_maximum_contribution_total = 69000;
 
 // IRA
-export const _IRA_maximum_contribution_individual = 6500; // 2023
-export const _IRA_catchup = 1000; // 2023
+// not used, last updated 2022
+export const _IRA_maximum_contribution_individual = 7000;
+export const _IRA_catchup = 1000;
 export const _IRA_maximum_contribution_individual_over50 =
   _IRA_maximum_contribution_individual + _IRA_catchup;
-export const _IRA_traditional_phase_out_income_limit_single_covered = 78000; // 2022
-export const _IRA_traditional_phase_out_income_limit_married_joint_covered = 129000; // 2022
-export const _IRA_traditional_phase_out_income_limit_married_joint_not_covered = 214000; // 2022
-export const _IRA_traditional_phase_out_income_limit_married_separate_covered = 10000; // 2022
+export const _IRA_traditional_phase_out_income_limit_single_covered = 78000;
+export const _IRA_traditional_phase_out_income_limit_married_joint_covered = 129000;
+export const _IRA_traditional_phase_out_income_limit_married_joint_not_covered = 214000;
+export const _IRA_traditional_phase_out_income_limit_married_separate_covered = 10000;
 
 // Roth IRA
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/amount-of-roth-ira-contributions-that-you-can-make-for-2022
-export const _IRA_roth_phase_out_income_start_single = 138000; // 2023
-export const _IRA_roth_phase_out_income_limit_single = 153000; // 2023
+// not used, last updated 2023
+export const _IRA_roth_phase_out_income_start_single = 138000;
+export const _IRA_roth_phase_out_income_limit_single = 153000;
 export const _IRA_roth_phase_out_income_start_head_of_household =
   _IRA_roth_phase_out_income_start_single;
 export const _IRA_roth_phase_out_income_limit_head_of_household =
   _IRA_roth_phase_out_income_limit_single;
-export const _IRA_roth_phase_out_income_start_married_joint = 218000; // 2023
-export const _IRA_roth_phase_out_income_limit_married_joint = 228000; // 2023
+export const _IRA_roth_phase_out_income_start_married_joint = 218000;
+export const _IRA_roth_phase_out_income_limit_married_joint = 228000;
 export const _IRA_roth_phase_out_income_limit_married_separate = 10000; // no start amount
 // Source: https://www.irs.gov/retirement-plans/amount-of-roth-ira-contributions-that-you-can-make-for-2021
 export const _IRA_roth_reduced_contribution_divisor_single = 15000;
@@ -164,4 +167,4 @@ export const _IRA_roth_get_max_contribution = (
 };
 
 // HSA
-export const maximum_HSA_contribution = 3850; // 2023
+export const maximum_HSA_contribution = 4150; // 2024
