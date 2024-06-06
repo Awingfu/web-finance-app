@@ -18,4 +18,5 @@ export {
 } from "./helperFunctions";
 export { prefix } from "./prefix";
 export { RetirementTable } from "./retirement_table";
-export type { RetirementTableRow } from "./retirement_table";
+export { RetirementTableStrategy } from "./types";
+export type { RetirementTableRow } from "./types";

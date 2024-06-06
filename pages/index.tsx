@@ -22,16 +22,9 @@ const Home: NextPage = () => {
             <p>Estimate your take home pay</p>
           </Link>
 
-          <Link href="/retirement/maximize" className={styles.card} passHref>
-            <h2>401k Maximizer &rarr;</h2>
-            <p>
-              Maximize your 401k contributions with equal period contributions
-            </p>
-          </Link>
-
-          <Link href="/retirement/frontload" className={styles.card} passHref>
-            <h2>401k Frontloader &rarr;</h2>
-            <p>Plan your 401k frontloading strategy</p>
+          <Link href="/retirement-savings" className={styles.card} passHref>
+            <h2>401k Optimizer &rarr;</h2>
+            <p>Plan your 401k strategy</p>
           </Link>
         </div>
       </main>

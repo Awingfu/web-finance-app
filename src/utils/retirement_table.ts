@@ -10,20 +10,11 @@ import {
   _401k_maximum_contribution_individual,
   _401k_maximum_contribution_total,
 } from "./constants";
-
-export interface RetirementTableRow {
-  rowKey: string;
-  payPerPayPeriod: number;
-  contributionFraction: number;
-  contributionAmount: number;
-  cumulativeIndividualAmount: number;
-  employerAmount: number;
-  cumulativeEmployerAmount: number;
-  afterTaxPercent: number;
-  afterTaxAmount: number;
-  cumulativeAfterTaxAmount: number;
-  cumulativeAmountTotal: number; // Individual + Employer + After Tax
-}
+import {
+  RetirementTableOptions,
+  RetirementTableRow,
+  RetirementTableStrategy,
+} from "./types";
 
 /**
  * Generates a RetirementTableRow object.
@@ -75,7 +66,8 @@ export class RetirementTable {
 
   // table options
   automaticallyCap401k: boolean = false;
-  prioritizeMegaBackdoor: boolean = false;
+  contributionStrategy: RetirementTableStrategy =
+    RetirementTableStrategy.FRONTLOAD;
 
   // icons for table
   payPeriodAlreadyPassedIcon: string;
@@ -89,46 +81,31 @@ export class RetirementTable {
   maxReachedEarly: boolean = false;
   table: RetirementTableRow[] = [];
 
-  constructor(
-    salary: number,
-    numberOfPayPeriods: number,
-    numberOfPayPeriodsSoFar: number = 0,
-    individualContributionAmountSoFar: number = 0,
-    employerContributionAmountSoFar: number = 0,
-    individualContributionAfterTaxAmountSoFar: number = 0,
-    max401kIndividualAmount: number = _401k_maximum_contribution_individual,
-    max401kTotalAmount: number = _401k_maximum_contribution_total,
-    minIndividualContributionPercent: number = 0,
-    maxContributionPercent: number = 50,
-    employerMatchBasePercent: number = 0,
-    employerMatchPercent: number = 0,
-    employerMatchUpToPercent: number = 0,
-    payPeriodAlreadyPassedIcon: string = "\u203E",
-    maxNotReachedIcon: string = "\u2020",
-    maxReachedEarlyIcon: string = "\u2021",
-    automaticallyCap401k: boolean = false,
-    showMegaBackdoor: boolean = false,
-    prioritizeMegaBackdoor: boolean = false
-  ) {
-    this.salary = salary;
-    this.numberOfPayPeriods = numberOfPayPeriods;
-    this.numberOfPayPeriodsSoFar = numberOfPayPeriodsSoFar;
-    this.individualContributionAmountSoFar = individualContributionAmountSoFar;
+  constructor(options: RetirementTableOptions) {
+    this.salary = options.salary;
+    this.numberOfPayPeriods = options.numberOfPayPeriods;
+    this.numberOfPayPeriodsSoFar = options.numberOfPayPeriodsSoFar;
+    this.individualContributionAmountSoFar =
+      options.individualContributionAmountSoFar;
+
     this.individualContributionAfterTaxAmountSoFar =
-      individualContributionAfterTaxAmountSoFar;
-    this.max401kIndividualAmount = max401kIndividualAmount;
-    this.max401kTotalAmount = max401kTotalAmount;
-    this.minIndividualContributionPercent = minIndividualContributionPercent;
-    this.maxContributionPercent = maxContributionPercent;
-    this.employerMatchBasePercent = employerMatchBasePercent;
-    this.employerMatchPercent = employerMatchPercent;
-    this.employerMatchUpToPercent = employerMatchUpToPercent;
-    this.employerContributionAmountSoFar = employerContributionAmountSoFar;
-    this.payPeriodAlreadyPassedIcon = payPeriodAlreadyPassedIcon;
-    this.maxNotReachedIcon = maxNotReachedIcon;
-    this.maxReachedEarlyIcon = maxReachedEarlyIcon;
-    this.automaticallyCap401k = automaticallyCap401k;
-    this.prioritizeMegaBackdoor = prioritizeMegaBackdoor;
+      options.individualContributionAfterTaxAmountSoFar;
+    this.max401kIndividualAmount = options.max401kIndividualAmount;
+    this.max401kTotalAmount = options.max401kTotalAmount;
+    this.minIndividualContributionPercent =
+      options.minIndividualContributionPercent;
+    this.maxContributionPercent = options.maxContributionPercent;
+    this.employerMatchBasePercent = options.employerMatchBasePercent;
+    this.employerMatchPercent = options.employerMatchPercent;
+    this.employerMatchUpToPercent = options.employerMatchUpToPercent;
+    this.employerContributionAmountSoFar =
+      options.employerContributionAmountSoFar;
+    this.payPeriodAlreadyPassedIcon =
+      options.payPeriodAlreadyPassedIcon || "\u203E";
+    this.maxNotReachedIcon = options.maxNotReachedIcon || "\u2020";
+    this.maxReachedEarlyIcon = options.maxReachedEarlyIcon || "\u2021";
+    this.automaticallyCap401k = options.automaticallyCap401k;
+    this.contributionStrategy = options.contributionStrategy;
 
     // constants for after tax calculations
     const numberOfPayPeriodsRemaining =
@@ -142,7 +119,7 @@ export class RetirementTable {
         this.salaryRemaining +
       this.employerContributionAmountSoFar;
 
-    this.maxAfterTaxAmount = showMegaBackdoor
+    this.maxAfterTaxAmount = options.showMegaBackdoor
       ? Math.max(
           _401k_maximum_contribution_total -
             _401k_maximum_contribution_individual -
@@ -165,7 +142,20 @@ export class RetirementTable {
     this.maxNotReached = false;
     this.table = [];
 
-    // data for table
+    switch (this.contributionStrategy) {
+      // TODO: Implement other strategies
+      // case RetirementTableStrategy.EQUAL: {
+      //   this.tableWithEqualPeriodContributions();
+      //   break;
+      // }
+      default: {
+        this.tableWithFrontloadIndividualContributions();
+        break;
+      }
+    }
+  }
+
+  tableWithFrontloadIndividualContributions() {
     const tableRows: RetirementTableRow[] = [];
 
     const payPerPayPeriod = this.salary / this.numberOfPayPeriods;
@@ -360,9 +350,9 @@ export class RetirementTable {
       }
 
       // set employer match
-      let employerBaseAmount =
+      const employerBaseAmount =
         (this.employerMatchBasePercent / 100) * payPerPayPeriod;
-      let employerMatchAmount =
+      const employerMatchAmount =
         ((this.employerMatchPercent / 100) *
           Math.min(
             this.employerMatchUpToPercent,
@@ -414,7 +404,6 @@ export class RetirementTable {
         cumulativeAmountTotal,
       });
     }
-
     this.table = tableRows;
   }
 }
