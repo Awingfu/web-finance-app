@@ -95,7 +95,7 @@ export const _IRA_roth_phase_out_income_limit_head_of_household =
   _IRA_roth_phase_out_income_limit_single;
 export const _IRA_roth_phase_out_income_start_married_joint = 218000;
 export const _IRA_roth_phase_out_income_limit_married_joint = 228000;
-export const _IRA_roth_phase_out_income_limit_married_separate = 10000;
+export const _IRA_roth_phase_out_income_limit_married_separate = 10000; // no start amount
 // Source: https://www.irs.gov/retirement-plans/amount-of-roth-ira-contributions-that-you-can-make-for-2021
 export const _IRA_roth_reduced_contribution_divisor_single = 15000;
 export const _IRA_roth_reduced_contribution_divisor_head_of_household =
