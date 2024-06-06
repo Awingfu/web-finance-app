@@ -40,6 +40,7 @@ import {
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
  * 3. Split form and table to separate components
  * 4. save info to local storage + clear data button -> so we don't lose data on refresh
+ * 5. city tax dropdown or custom %
  */
 
 const calculateContributionFromPercentage = (
@@ -68,13 +69,6 @@ const calculateAnnualFromAmountAndFrequency = (
   }
 };
 
-/**
- *
- * Next goals:
- * State income tax withholding
- * save info to local storage + clear data button -> so we don't lose data on refresh
- *
- * */
 function Paycheck() {
   // Form States
   const [salary, changeSalary] = React.useState(60000);
