@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, FormEvent, SetStateAction } from "react";
 import {
   Form,
   Table,
@@ -45,14 +45,14 @@ import {
 
 const calculateContributionFromPercentage = (
   amount: number,
-  contributionPercentage: number
+  contributionPercentage: number,
 ): number => {
   return amount * (contributionPercentage / 100);
 };
 
 const convertAnnualAmountToPaySchedule = (
   amount: number,
-  paySchedule: PAY_SCHEDULE
+  paySchedule: PAY_SCHEDULE,
 ): number => {
   return amount / PAY_SCHEDULE_TO_ANNUM[paySchedule];
 };
@@ -60,7 +60,7 @@ const convertAnnualAmountToPaySchedule = (
 const calculateAnnualFromAmountAndFrequency = (
   contributionAmount: number,
   frequency: FREQUENCIES = FREQUENCIES.ANNUM,
-  paySchedule: PAY_SCHEDULE = PAY_SCHEDULE.BIWEEKLY
+  paySchedule: PAY_SCHEDULE = PAY_SCHEDULE.BIWEEKLY,
 ): number => {
   if (frequency === FREQUENCIES.PAYCHECK) {
     return contributionAmount * PAY_SCHEDULE_TO_ANNUM[paySchedule];
@@ -71,17 +71,13 @@ const calculateAnnualFromAmountAndFrequency = (
 
 function Paycheck() {
   // Form States
-  const [salary, changeSalary] = React.useState(60000);
-  const [bonus, changeBonus] = React.useState(0);
-  const [bonusEligible, changeBonusEligible] = React.useState(false);
+  const [salary, changeSalary] = useState(60000);
+  const [bonus, changeBonus] = useState(0);
+  const [bonusEligible, changeBonusEligible] = useState(false);
 
-  const [paySchedule, changePaySchedule] = React.useState(
-    PAY_SCHEDULE.BIWEEKLY
-  );
-  const [taxClass, changeTaxClass] = React.useState(TAX_CLASSES.SINGLE);
-  const [usState, changeUSState] = React.useState(
-    US_STATES_MAP["None"].abbreviation
-  );
+  const [paySchedule, changePaySchedule] = useState(PAY_SCHEDULE.BIWEEKLY);
+  const [taxClass, changeTaxClass] = useState(TAX_CLASSES.SINGLE);
+  const [usState, changeUSState] = useState(US_STATES_MAP["None"].abbreviation);
 
   // if bonus is elegible for contributions, add it to salary
   let totalCompensation_annual = salary;
@@ -90,79 +86,79 @@ function Paycheck() {
   }
 
   // Pre Tax
-  const [t401kContribution, changeT401kContribution] = React.useState(0);
+  const [t401kContribution, changeT401kContribution] = useState(0);
   const t401k_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    t401kContribution
+    t401kContribution,
   );
   const t401k_paycheck = convertAnnualAmountToPaySchedule(
     t401k_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [tIRAContribution, changeTIRAContribution] = React.useState(0);
+  const [tIRAContribution, changeTIRAContribution] = useState(0);
   const tIRA_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    tIRAContribution
+    tIRAContribution,
   );
   const tIRA_paycheck = convertAnnualAmountToPaySchedule(
     tIRA_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [medicalContribution, changeMedicalContribution] = React.useState(0);
+  const [medicalContribution, changeMedicalContribution] = useState(0);
   const [medicalContributionFrequency, changeMedicalContributionFrequency] =
-    React.useState(FREQUENCIES.PAYCHECK);
+    useState(FREQUENCIES.PAYCHECK);
   const medical_annual = calculateAnnualFromAmountAndFrequency(
     medicalContribution,
     medicalContributionFrequency,
-    paySchedule
+    paySchedule,
   );
   const medical_paycheck = convertAnnualAmountToPaySchedule(
     medical_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [commuterContribution, changeCommuterContribution] = React.useState(0);
+  const [commuterContribution, changeCommuterContribution] = useState(0);
   const [commuterContributionFrequency, changeCommuterContributionFrequency] =
-    React.useState(FREQUENCIES.PAYCHECK);
+    useState(FREQUENCIES.PAYCHECK);
   const commuter_annual = calculateAnnualFromAmountAndFrequency(
     commuterContribution,
     commuterContributionFrequency,
-    paySchedule
+    paySchedule,
   );
   const commuter_paycheck = convertAnnualAmountToPaySchedule(
     commuter_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [hsaContribution, changeHSAContribution] = React.useState(0);
-  const [hsaContributionFrequency, changeHSAContributionFrequency] =
-    React.useState(FREQUENCIES.PAYCHECK);
+  const [hsaContribution, changeHSAContribution] = useState(0);
+  const [hsaContributionFrequency, changeHSAContributionFrequency] = useState(
+    FREQUENCIES.PAYCHECK,
+  );
   const hsa_annual = calculateAnnualFromAmountAndFrequency(
     hsaContribution,
     hsaContributionFrequency,
-    paySchedule
+    paySchedule,
   );
   const hsa_paycheck = convertAnnualAmountToPaySchedule(
     hsa_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [otherPreTaxContribution, changeOtherPreTaxContribution] =
-    React.useState(0);
+  const [otherPreTaxContribution, changeOtherPreTaxContribution] = useState(0);
   const [
     otherPreTaxContributionFrequency,
     changeOtherPreTaxContributionFrequency,
-  ] = React.useState(FREQUENCIES.PAYCHECK);
+  ] = useState(FREQUENCIES.PAYCHECK);
   const otherPreTax_annual = calculateAnnualFromAmountAndFrequency(
     otherPreTaxContribution,
     otherPreTaxContributionFrequency,
-    paySchedule
+    paySchedule,
   );
   const otherPreTax_paycheck = convertAnnualAmountToPaySchedule(
     otherPreTax_annual,
-    paySchedule
+    paySchedule,
   );
 
   // used to remove pre tax rows in table with $0 contributions
@@ -177,12 +173,12 @@ function Paycheck() {
 
   // if all Pre tax deductions are 0, dont render the section at all
   const shouldRenderPreTaxDeductions = !!Object.keys(preTaxTableMap).filter(
-    (key) => preTaxTableMap[key][0] != 0
+    (key) => preTaxTableMap[key][0] != 0,
   ).length;
 
   const sumOfPreTaxContributions_annual = Object.keys(preTaxTableMap).reduce(
     (prev, curr) => prev + preTaxTableMap[curr][0],
-    0
+    0,
   );
   let taxableIncome_annual =
     totalCompensation_annual - sumOfPreTaxContributions_annual;
@@ -194,14 +190,14 @@ function Paycheck() {
   taxableIncome_annual = Math.max(0, taxableIncome_annual);
   const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(
     taxableIncome_annual,
-    paySchedule
+    paySchedule,
   );
 
   // Taxes Withheld, should use taxableIncome_annual over salary
   const federalWithholding_paycheck = getFederalWithholding(
     taxableIncome_paycheck,
     taxClass,
-    paySchedule
+    paySchedule,
   );
   const federalWithholding_annual =
     federalWithholding_paycheck * PAY_SCHEDULE_TO_ANNUM[paySchedule];
@@ -209,14 +205,14 @@ function Paycheck() {
   const grossTaxableIncome_annual = salary + bonus;
   const grossTaxableIncome_paycheck = convertAnnualAmountToPaySchedule(
     grossTaxableIncome_annual,
-    paySchedule
+    paySchedule,
   );
   const socialSecurityWithholding_annual = getFICAWithholding(
-    grossTaxableIncome_annual
+    grossTaxableIncome_annual,
   );
   let socialSecurityWithholding_paycheck = convertAnnualAmountToPaySchedule(
     socialSecurityWithholding_annual,
-    paySchedule
+    paySchedule,
   );
   const socialSecurityMaxedIcon = "\u2020"; // dagger
   const socialSecurityMaxedNote =
@@ -225,7 +221,7 @@ function Paycheck() {
     formatCurrency(maxFICAContribution) +
     " this year. Once you have withheld the maximum, which is after withholding for " +
     Math.ceil(
-      maxFICAContribution / (grossTaxableIncome_paycheck * getFICATaxRate)
+      maxFICAContribution / (grossTaxableIncome_paycheck * getFICATaxRate),
     ) +
     " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
   let socialSecurityMaxedAlertTableFooter = <></>;
@@ -241,17 +237,17 @@ function Paycheck() {
     socialSecurity_key = "Social Security" + socialSecurityMaxedIcon;
     socialSecurityWithholding_paycheck = Math.min(
       grossTaxableIncome_paycheck * getFICATaxRate,
-      maxFICAContribution
+      maxFICAContribution,
     );
   }
 
   const medicareWithholding_annual = getMedicareWithholding(
     grossTaxableIncome_annual,
-    taxClass
+    taxClass,
   );
   const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(
     medicareWithholding_annual,
-    paySchedule
+    paySchedule,
   );
 
   let stateTaxInvalidAlert = <></>;
@@ -266,11 +262,11 @@ function Paycheck() {
   const stateWithholding_annual = determineStateTaxesWithheld(
     usState,
     taxableIncome_annual,
-    taxClass
+    taxClass,
   );
   const stateWithholding_paycheck = convertAnnualAmountToPaySchedule(
     stateWithholding_annual,
-    paySchedule
+    paySchedule,
   );
   const stateWithholding_key =
     US_STATES_MAP[usState].abbreviation + " State Withholding";
@@ -300,66 +296,66 @@ function Paycheck() {
     stateWithholding_annual;
   const netPay_paycheck = convertAnnualAmountToPaySchedule(
     netPay_annual,
-    paySchedule
+    paySchedule,
   );
 
   // Post Tax, uses totalCompensation_annual for calculations instead of taxableIncome_annual
-  const [r401kContribution, changeR401kContribution] = React.useState(0);
+  const [r401kContribution, changeR401kContribution] = useState(0);
   const r401k_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    r401kContribution
+    r401kContribution,
   );
   const r401k_paycheck = convertAnnualAmountToPaySchedule(
     r401k_annual,
-    paySchedule
+    paySchedule,
   );
 
   // After tax 401k
-  const [at401kContribution, changeAT401kContribution] = React.useState(0);
+  const [at401kContribution, changeAT401kContribution] = useState(0);
   const at401k_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    at401kContribution
+    at401kContribution,
   );
   const at401k_paycheck = convertAnnualAmountToPaySchedule(
     at401k_annual,
-    paySchedule
+    paySchedule,
   );
 
-  const [rIRAContribution, changeRIRAContribution] = React.useState(0);
+  const [rIRAContribution, changeRIRAContribution] = useState(0);
   const rIRA_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    rIRAContribution
+    rIRAContribution,
   );
   const rIRA_paycheck = convertAnnualAmountToPaySchedule(
     rIRA_annual,
-    paySchedule
+    paySchedule,
   );
 
   // stock purchase plans which are usually percentages and after tax
-  const [sppContribution, changeSPPContribution] = React.useState(0);
+  const [sppContribution, changeSPPContribution] = useState(0);
   const stockPurchasePlan_annual = calculateContributionFromPercentage(
     totalCompensation_annual,
-    sppContribution
+    sppContribution,
   );
   const stockPurchasePlan_paycheck = convertAnnualAmountToPaySchedule(
     stockPurchasePlan_annual,
-    paySchedule
+    paySchedule,
   );
 
   const [otherPostTaxContribution, changeOtherPostTaxContribution] =
-    React.useState(0);
+    useState(0);
   const [
     otherPostTaxContributionFrequency,
     changeOtherPostTaxContributionFrequency,
-  ] = React.useState(FREQUENCIES.PAYCHECK);
+  ] = useState(FREQUENCIES.PAYCHECK);
   const otherPostTax_annual = calculateAnnualFromAmountAndFrequency(
     otherPostTaxContribution,
     otherPostTaxContributionFrequency,
-    paySchedule
+    paySchedule,
   );
   const otherPostTax_paycheck = convertAnnualAmountToPaySchedule(
     otherPostTax_annual,
-    paySchedule
+    paySchedule,
   );
 
   // used to remove post tax rows in table with $0 contributions
@@ -376,18 +372,18 @@ function Paycheck() {
 
   // if all post tax deductions are 0, dont render the section at all
   const shouldRenderPostTaxDeductions = !!Object.keys(postTaxTableMap).filter(
-    (key) => postTaxTableMap[key][0] != 0
+    (key) => postTaxTableMap[key][0] != 0,
   ).length;
 
   const sumOfPostTaxContributions_annual = Object.keys(postTaxTableMap).reduce(
     (prev, curr) => prev + postTaxTableMap[curr][0],
-    0
+    0,
   );
 
   const takeHomePay_annual = netPay_annual - sumOfPostTaxContributions_annual;
   const takeHomePay_paycheck = convertAnnualAmountToPaySchedule(
     takeHomePay_annual,
-    paySchedule
+    paySchedule,
   );
 
   // helper map for form fields with custom frequencies
@@ -425,15 +421,15 @@ function Paycheck() {
   };
 
   const update = (
-    e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    e: FormEvent<HTMLElement>,
+    changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     changeFunction((e.target as HTMLInputElement).value);
   };
 
   const updateAmount = (
-    e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    e: FormEvent<HTMLElement>,
+    changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < 0) {
@@ -445,8 +441,8 @@ function Paycheck() {
   };
 
   const updateContribution = (
-    e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    e: FormEvent<HTMLElement>,
+    changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < 0) {
@@ -459,7 +455,7 @@ function Paycheck() {
 
   const updateWithEventKey = (
     e: string | null,
-    changeFunction: { (value: React.SetStateAction<any>): void }
+    changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     if (e) changeFunction(e);
     else console.log("Null event key");
@@ -776,8 +772,8 @@ function Paycheck() {
                   {formatCurrency(
                     convertAnnualAmountToPaySchedule(
                       totalCompensation_annual,
-                      paySchedule
-                    )
+                      paySchedule,
+                    ),
                   )}
                 </td>
               </tr>
@@ -855,7 +851,7 @@ function Paycheck() {
                   <td></td>
                   <td>
                     {formatCurrency(
-                      takeHomePay_paycheck + socialSecurityWithholding_paycheck
+                      takeHomePay_paycheck + socialSecurityWithholding_paycheck,
                     )}
                   </td>
                 </tr>

@@ -45,7 +45,8 @@ export type RetirementTableRow = {
 };
 
 export enum RetirementTableStrategy {
-  FRONTLOAD = "Fronload Individual Contributions",
+  FRONTLOAD = "Frontload Individual Contributions",
   EQUAL = "Equal Period Contributions",
+  BACKLOAD = "Backload Individual Contributions",
   FRONTLOAD_AT = "Frontload After Tax Contributions",
 }
