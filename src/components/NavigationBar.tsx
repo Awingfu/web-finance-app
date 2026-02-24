@@ -1,15 +1,17 @@
-import React, { useLayoutEffect } from "react";
+import React, { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Container, Nav, Navbar } from "react-bootstrap";
+import { Button, Container, Nav, Navbar } from "react-bootstrap";
 import { prefix } from "../utils";
+import { useTheme } from "../utils/ThemeContext";
 
 /**
  * Navbar items are for CSS, we have to wrap in next/link in order for single page behavior
  * @returns NavigationBar JSX
  */
 const NavigationBar = () => {
-  const [isGreaterThan425px, setIsGreaterThan425px] = React.useState(false);
+  const [isGreaterThan425px, setIsGreaterThan425px] = useState(false);
+  const { theme, toggleTheme } = useTheme();
   const iconPath = prefix + "/favicon.ico";
 
   // useLayoutEffect over useEffect as useEffect shows artifacts of lower resolution options briefly during routing
@@ -54,6 +56,15 @@ const NavigationBar = () => {
             401k Optimizer
           </Link>
         </Nav>
+        <Button
+          variant="link"
+          onClick={toggleTheme}
+          className="text-white p-0 ms-2"
+          aria-label="Toggle theme"
+          style={{ fontSize: "1.25rem", lineHeight: 1 }}
+        >
+          {theme === "dark" ? "☀" : "☾"}
+        </Button>
       </Container>
     </Navbar>
   );
