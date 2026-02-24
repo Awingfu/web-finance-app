@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button, Container, Nav, Navbar } from "react-bootstrap";

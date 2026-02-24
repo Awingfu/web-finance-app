@@ -1,11 +1,11 @@
-import React from "react";
+import type { JSX } from "react";
 import { OverlayTrigger, Tooltip } from "react-bootstrap";
 import { Placement } from "react-bootstrap/esm/types";
 
 interface TooltipOnHoverProps {
   placement?: Placement;
   text: string;
-  nest: React.JSX.Element;
+  nest: JSX.Element;
 }
 
 interface TooltipProps {
