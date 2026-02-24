@@ -74,7 +74,7 @@ function RetirementSavings() {
         maxReachedEarlyIcon: "\u2021",
         ...preferences,
       }),
-    [retirement, preferences]
+    [retirement, preferences],
   );
 
   const setRetirementValue = (key: string, value: number) => {
@@ -83,7 +83,7 @@ function RetirementSavings() {
 
   const setPreferenceValue = (
     key: string,
-    value: boolean | RetirementTableStrategy
+    value: boolean | RetirementTableStrategy,
   ) => {
     setPreferences((prev) => ({ ...prev, [key]: value }));
   };
@@ -92,7 +92,7 @@ function RetirementSavings() {
     e: React.FormEvent<HTMLElement>,
     key: string,
     min: number = 0,
-    max: number = 1000000000
+    max: number = 1000000000,
   ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < min) {
@@ -122,7 +122,7 @@ function RetirementSavings() {
     key: string,
     min: number = 0,
     max: number = 100,
-    allowDecimal: boolean = false
+    allowDecimal: boolean = false,
   ) => {
     const inputValue = (e.target as HTMLInputElement).value;
     let value = allowDecimal
@@ -155,7 +155,7 @@ function RetirementSavings() {
   };
 
   const generatedAlerts = Object.keys(alerts).reduce(
-    (acc: { [key: string]: JSX.Element }, alertKey) => {
+    (acc: { [key: string]: React.JSX.Element }, alertKey) => {
       if (alerts[alertKey]) {
         acc[alertKey] = (
           <Alert className="mb-3" variant="secondary">
@@ -165,7 +165,7 @@ function RetirementSavings() {
       }
       return acc;
     },
-    {}
+    {},
   );
 
   const setAmountsSoFarToZero = () => {
@@ -177,7 +177,7 @@ function RetirementSavings() {
   const set401kLimitsToDefault = () => {
     setRetirementValue(
       "max401kIndividualAmount",
-      _401k_maximum_contribution_individual
+      _401k_maximum_contribution_individual,
     );
     setRetirementValue("max401kTotalAmount", _401k_maximum_contribution_total);
   };
@@ -248,14 +248,14 @@ function RetirementSavings() {
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(
-                    retirement.minIndividualContributionPercent
+                    retirement.minIndividualContributionPercent,
                   )}
                   onChange={(e) =>
                     updateContribution(
                       e,
                       "minIndividualContributionPercent",
                       0,
-                      100
+                      100,
                     )
                   }
                 />
@@ -322,7 +322,7 @@ function RetirementSavings() {
                       e,
                       "numberOfPayPeriodsSoFar",
                       0,
-                      retirement.numberOfPayPeriods - 1
+                      retirement.numberOfPayPeriods - 1,
                     )
                   }
                 />
@@ -336,14 +336,14 @@ function RetirementSavings() {
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(
-                    retirement.individualContributionAmountSoFar
+                    retirement.individualContributionAmountSoFar,
                   )}
                   onChange={(e) =>
                     updateAmount(
                       e,
                       "individualContributionAmountSoFar",
                       0,
-                      retirement.max401kIndividualAmount
+                      retirement.max401kIndividualAmount,
                     )
                   }
                 />
@@ -376,7 +376,7 @@ function RetirementSavings() {
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
                       value={formatStateValue(
-                        retirement.employerContributionAmountSoFar
+                        retirement.employerContributionAmountSoFar,
                       )}
                       onChange={(e) =>
                         updateAmount(
@@ -384,7 +384,7 @@ function RetirementSavings() {
                           "employerContributionAmountSoFar",
                           0,
                           retirement.max401kTotalAmount -
-                            retirement.max401kIndividualAmount
+                            retirement.max401kIndividualAmount,
                         )
                       }
                     />
@@ -401,7 +401,7 @@ function RetirementSavings() {
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
                       value={formatStateValue(
-                        retirement.employerMatchBasePercent
+                        retirement.employerMatchBasePercent,
                       )}
                       onChange={(e) =>
                         updateContribution(
@@ -409,7 +409,7 @@ function RetirementSavings() {
                           "employerMatchBasePercent",
                           0,
                           100,
-                          true
+                          true,
                         )
                       }
                     />
@@ -429,7 +429,7 @@ function RetirementSavings() {
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
                         value={formatStateValue(
-                          retirement.employerMatchPercent
+                          retirement.employerMatchPercent,
                         )}
                         onChange={(e) =>
                           updateContribution(
@@ -437,7 +437,7 @@ function RetirementSavings() {
                             "employerMatchPercent",
                             0,
                             500,
-                            true
+                            true,
                           )
                         }
                       />
@@ -449,7 +449,7 @@ function RetirementSavings() {
                         type="number"
                         onWheel={(e) => e.currentTarget.blur()}
                         value={formatStateValue(
-                          retirement.employerMatchUpToPercent
+                          retirement.employerMatchUpToPercent,
                         )}
                         onChange={(e) =>
                           updateContribution(
@@ -457,7 +457,7 @@ function RetirementSavings() {
                             "employerMatchUpToPercent",
                             0,
                             100,
-                            true
+                            true,
                           )
                         }
                       />
@@ -493,14 +493,14 @@ function RetirementSavings() {
                     type="number"
                     onWheel={(e) => e.currentTarget.blur()}
                     value={formatStateValue(
-                      retirement.individualContributionAfterTaxAmountSoFar
+                      retirement.individualContributionAfterTaxAmountSoFar,
                     )}
                     onChange={(e) =>
                       updateAmount(
                         e,
                         "individualContributionAfterTaxAmountSoFar",
                         0,
-                        table.maxAfterTaxAmount
+                        table.maxAfterTaxAmount,
                       )
                     }
                   />
@@ -556,7 +556,7 @@ function RetirementSavings() {
                       type="number"
                       onWheel={(e) => e.currentTarget.blur()}
                       value={formatStateValue(
-                        retirement.max401kIndividualAmount
+                        retirement.max401kIndividualAmount,
                       )}
                       onChange={(e) =>
                         updateAmount(e, "max401kIndividualAmount")
@@ -636,14 +636,14 @@ function RetirementSavings() {
                 <td>
                   {formatCurrency(
                     table.getTable()[retirement.numberOfPayPeriods - 1]
-                      .cumulativeIndividualAmount
+                      .cumulativeIndividualAmount,
                   )}
                 </td>
                 {preferences.showEmployerMatch && (
                   <td>
                     {formatCurrency(
                       table.getTable()[retirement.numberOfPayPeriods - 1]
-                        .cumulativeEmployerAmount
+                        .cumulativeEmployerAmount,
                     )}
                   </td>
                 )}
@@ -652,14 +652,14 @@ function RetirementSavings() {
                   <td>
                     {formatCurrency(
                       table.getTable()[retirement.numberOfPayPeriods - 1]
-                        .cumulativeAfterTaxAmount
+                        .cumulativeAfterTaxAmount,
                     )}
                   </td>
                 )}
                 <td>
                   {formatCurrency(
                     table.getTable()[retirement.numberOfPayPeriods - 1]
-                      .cumulativeAmountTotal
+                      .cumulativeAmountTotal,
                   )}
                 </td>
               </tr>
