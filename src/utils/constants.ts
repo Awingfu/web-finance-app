@@ -104,66 +104,54 @@ export const _IRA_roth_reduced_contribution_divisor_married_joint = 10000;
 export const _IRA_roth_reduced_contribution_divisor_married_separate =
   _IRA_roth_reduced_contribution_divisor_married_joint;
 
+const ROTH_PHASE_OUT: Partial<
+  Record<TAX_CLASSES, { start: number; limit: number; divisor: number }>
+> = {
+  [TAX_CLASSES.SINGLE]: {
+    start: _IRA_roth_phase_out_income_start_single,
+    limit: _IRA_roth_phase_out_income_limit_single,
+    divisor: _IRA_roth_reduced_contribution_divisor_single,
+  },
+  [TAX_CLASSES.HEAD_OF_HOUSEHOLD]: {
+    start: _IRA_roth_phase_out_income_start_head_of_household,
+    limit: _IRA_roth_phase_out_income_limit_head_of_household,
+    divisor: _IRA_roth_reduced_contribution_divisor_head_of_household,
+  },
+  [TAX_CLASSES.MARRIED_FILING_JOINTLY]: {
+    start: _IRA_roth_phase_out_income_start_married_joint,
+    limit: _IRA_roth_phase_out_income_limit_married_joint,
+    divisor: _IRA_roth_reduced_contribution_divisor_married_joint,
+  },
+};
+
 // maximum contribution calculation. function of age, income, and filing status
-// could probably refactor this using linear algebra
 export const _IRA_roth_get_max_contribution = (
   age: number,
   income: number,
-  tax_class: string
+  tax_class: string,
 ): number => {
   const IRA_max =
     age >= 50
       ? _IRA_maximum_contribution_individual_over50
       : _IRA_maximum_contribution_individual;
-  switch (tax_class) {
-    case TAX_CLASSES.SINGLE:
-      if (income < _IRA_roth_phase_out_income_start_single) return IRA_max;
-      else if (income > _IRA_roth_phase_out_income_limit_single) return 0;
-      else {
-        let amount_over_limit =
-          income - _IRA_roth_phase_out_income_start_single;
-        let divided_amount =
-          amount_over_limit / _IRA_roth_reduced_contribution_divisor_single;
-        let multiply_by_max_contribution = divided_amount * IRA_max;
-        return IRA_max - multiply_by_max_contribution;
-      } // shouldn't need to break since we return
-    case TAX_CLASSES.HEAD_OF_HOUSEHOLD:
-      if (income < _IRA_roth_phase_out_income_start_head_of_household)
-        return IRA_max;
-      else if (income > _IRA_roth_phase_out_income_limit_head_of_household)
-        return 0;
-      else {
-        let amount_over_limit =
-          income - _IRA_roth_phase_out_income_start_head_of_household;
-        let divided_amount =
-          amount_over_limit /
-          _IRA_roth_reduced_contribution_divisor_head_of_household;
-        let multiply_by_max_contribution = divided_amount * IRA_max;
-        return IRA_max - multiply_by_max_contribution;
-      }
-    case TAX_CLASSES.MARRIED_FILING_JOINTLY:
-      if (income < _IRA_roth_phase_out_income_start_married_joint)
-        return IRA_max;
-      else if (income > _IRA_roth_phase_out_income_limit_married_joint)
-        return 0;
-      else {
-        let amount_over_limit =
-          income - _IRA_roth_phase_out_income_start_married_joint;
-        let divided_amount =
-          amount_over_limit /
-          _IRA_roth_reduced_contribution_divisor_married_joint;
-        let multiply_by_max_contribution = divided_amount * IRA_max;
-        return IRA_max - multiply_by_max_contribution;
-      }
-    case TAX_CLASSES.MARRIED_FILING_SEPARATELY:
-      if (income > _IRA_roth_phase_out_income_limit_married_separate) return 0;
-      else return IRA_max;
-    default:
-      console.log(
-        "Something wen't wrong in calculating max Roth IRA contribution. Invalid tax class"
-      );
-      return 0;
+
+  // MFS has no phase-out range, just a hard cutoff
+  if (tax_class === TAX_CLASSES.MARRIED_FILING_SEPARATELY)
+    return income > _IRA_roth_phase_out_income_limit_married_separate
+      ? 0
+      : IRA_max;
+
+  const params = ROTH_PHASE_OUT[tax_class as TAX_CLASSES];
+  if (!params) {
+    console.log(
+      "Something wen't wrong in calculating max Roth IRA contribution. Invalid tax class",
+    );
+    return 0;
   }
+
+  if (income < params.start) return IRA_max;
+  if (income > params.limit) return 0;
+  return IRA_max - ((income - params.start) / params.divisor) * IRA_max;
 };
 
 // HSA
