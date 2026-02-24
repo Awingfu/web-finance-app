@@ -27,14 +27,18 @@ jobs:
       - name: Get files
         uses: actions/checkout@v4
       - name: Use Node.js ${{ matrix.node-version }}
+        if: github.event.action != 'closed'
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install packages
+        if: github.event.action != 'closed'
         run: npm ci
       - name: Build project
+        if: github.event.action != 'closed'
         run: npm run build
       - name: Add .nojekyll file
+        if: github.event.action != 'closed'
         run: touch ./out/.nojekyll
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1
