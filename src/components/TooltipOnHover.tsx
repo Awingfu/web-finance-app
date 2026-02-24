@@ -5,7 +5,7 @@ import { Placement } from "react-bootstrap/esm/types";
 interface TooltipOnHoverProps {
   placement?: Placement;
   text: string;
-  nest: JSX.Element;
+  nest: React.JSX.Element;
 }
 
 interface TooltipProps {
