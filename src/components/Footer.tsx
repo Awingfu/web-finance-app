@@ -7,7 +7,7 @@ const Footer = () => {
       <SocialIcon
         url="https://github.com/Awingfu/web-finance-app"
         bgColor="transparent"
-        fgColor="black"
+        fgColor="currentColor"
         target="_blank"
         rel="noreferrer noopener"
       />
