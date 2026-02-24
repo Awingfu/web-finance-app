@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from "react";
+import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Container, Nav, Navbar } from "react-bootstrap";
@@ -9,7 +9,7 @@ import { prefix } from "../utils";
  * @returns NavigationBar JSX
  */
 const NavigationBar = () => {
-  const [isGreaterThan425px, setIsGreaterThan425px] = React.useState(false);
+  const [isGreaterThan425px, setIsGreaterThan425px] = useState(false);
   const iconPath = prefix + "/favicon.ico";
 
   // useLayoutEffect over useEffect as useEffect shows artifacts of lower resolution options briefly during routing

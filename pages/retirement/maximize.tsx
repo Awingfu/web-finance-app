@@ -1,4 +1,4 @@
-import React from "react";
+import { useState, FormEvent, SetStateAction } from "react";
 import { Alert, Form, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
 import {
@@ -17,37 +17,35 @@ import styles from "../../styles/Retirement.module.scss";
  * TODO: Merge logic into retirement savings
  */
 function Maximize() {
-  const [salary, changeSalary] = React.useState(60000);
-  const [_401kMaximumIndividual, change401kMaximumIndividual] = React.useState(
-    _401k_maximum_contribution_individual
+  const [salary, changeSalary] = useState(60000);
+  const [_401kMaximumIndividual, change401kMaximumIndividual] = useState(
+    _401k_maximum_contribution_individual,
   );
-  const [_401kMaximum, change401kMaximum] = React.useState(
-    _401k_maximum_contribution_total
+  const [_401kMaximum, change401kMaximum] = useState(
+    _401k_maximum_contribution_total,
   );
-  const [numberOfPayPeriods, changeNumberOfPayPeriods] = React.useState(24);
-  const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] =
-    React.useState(0);
+  const [numberOfPayPeriods, changeNumberOfPayPeriods] = useState(24);
+  const [numberOfPayPeriodsSoFar, changeNumberOfPayPeriodsSoFar] = useState(0);
   const [
     amountContributedSoFarIndividual,
     changeAmountContributedSoFarIndividual,
-  ] = React.useState(0);
+  ] = useState(0);
   const [amountContributedSoFarEmployer, changeAmountContributedSoFarEmployer] =
-    React.useState(0);
+    useState(0);
   const [amountContributedSoFarMBD, changeAmountContributedSoFarMBD] =
-    React.useState(0);
+    useState(0);
   // make sure to divide minContributionForMaxMatch, maxContributionFromPaycheck,
   // and employerMatch by 100 to get percentage
   // const [minContributionForMaxMatch, changeMinContributionForMaxMatch] =
-  //   React.useState(5);
+  //   useState(5);
   const [maxContributionFromPaycheck, changeMaxContributionFromPaycheck] =
-    React.useState(90);
-  const [employerMatch, changeEmployerMatch] = React.useState(6);
+    useState(90);
+  const [employerMatch, changeEmployerMatch] = useState(6);
 
   // Toggle
-  const [megabackdoorEligible, changeMegabackdoorEligible] =
-    React.useState(false);
-  const [_401kAutoCap, change401kAutoCap] = React.useState(false);
-  const [backloadToggle, changeBackloadToggle] = React.useState(false);
+  const [megabackdoorEligible, changeMegabackdoorEligible] = useState(false);
+  const [_401kAutoCap, change401kAutoCap] = useState(false);
+  const [backloadToggle, changeBackloadToggle] = useState(false);
 
   const payPeriodAlreadyPassedIcon = "\u203E"; // overline
   const payPeriodAlreadyPassedText =
@@ -141,7 +139,7 @@ function Maximize() {
     ) {
       contributionAmount = Math.max(
         0,
-        _401kMaximumIndividual - table_rows[i - 1][4]
+        _401kMaximumIndividual - table_rows[i - 1][4],
       );
       match = Math.ceil((contributionAmount / payPerPayPeriod) * 100) / 100;
       // show note only if it's before the last pay period
@@ -160,7 +158,7 @@ function Maximize() {
       contributionAmount = Math.min(
         _401k_maximum_contribution_individual - cumulativeAmountIndividual,
         _401k_maximum_contribution_total - cumulativeAmountTotal,
-        (maxContributionFromPaycheck / 100) * payPerPayPeriod
+        (maxContributionFromPaycheck / 100) * payPerPayPeriod,
       );
       match =
         Math.ceil((contributionAmount / (salary / numberOfPayPeriods)) * 100) /
@@ -170,7 +168,7 @@ function Maximize() {
     // Employer match cannot exceed contribution amount
     employerMatchAmount = Math.min(
       (employerMatch / 100) * payPerPayPeriod,
-      contributionAmount
+      contributionAmount,
     );
     if (
       i > 0 &&
@@ -241,10 +239,10 @@ function Maximize() {
    * If payPeriodsSoFar is 0, set amountContributedSoFarIndividual to 0
    */
   const updateAmount = (
-    e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void },
+    e: FormEvent<HTMLElement>,
+    changeFunction: { (value: SetStateAction<any>): void },
     min: number = 0,
-    max: number = 1000000000
+    max: number = 1000000000,
   ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < min) {
@@ -280,10 +278,10 @@ function Maximize() {
    * @param max if event value is greater than max, set to max
    */
   const updateContribution = (
-    e: React.FormEvent<HTMLElement>,
-    changeFunction: { (value: React.SetStateAction<any>): void },
+    e: FormEvent<HTMLElement>,
+    changeFunction: { (value: SetStateAction<any>): void },
     min: number = 0,
-    max: number = 100
+    max: number = 100,
   ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
     if (isNaN(value) || value < min) {
@@ -355,7 +353,7 @@ function Maximize() {
                   e,
                   changeNumberOfPayPeriodsSoFar,
                   0,
-                  numberOfPayPeriods - 1
+                  numberOfPayPeriods - 1,
                 )
               }
             />
@@ -374,7 +372,7 @@ function Maximize() {
                   e,
                   changeAmountContributedSoFarIndividual,
                   0,
-                  _401kMaximumIndividual
+                  _401kMaximumIndividual,
                 )
               }
             />
@@ -393,7 +391,7 @@ function Maximize() {
                   e,
                   changeAmountContributedSoFarEmployer,
                   0,
-                  _401kMaximum - _401kMaximumIndividual
+                  _401kMaximum - _401kMaximumIndividual,
                 )
               }
             />

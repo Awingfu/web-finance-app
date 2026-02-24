@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo, FormEvent, Fragment, JSX } from "react";
 import { Alert, Form, FormGroup, InputGroup, Table } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../src/components";
 import {
@@ -89,7 +89,7 @@ function RetirementSavings() {
   };
 
   const updateAmount = (
-    e: React.FormEvent<HTMLElement>,
+    e: FormEvent<HTMLElement>,
     key: string,
     min: number = 0,
     max: number = 1000000000,
@@ -118,7 +118,7 @@ function RetirementSavings() {
   };
 
   const updateContribution = (
-    e: React.FormEvent<HTMLElement>,
+    e: FormEvent<HTMLElement>,
     key: string,
     min: number = 0,
     max: number = 100,
@@ -136,7 +136,7 @@ function RetirementSavings() {
     setRetirementValue(key, value);
   };
 
-  const updateToggle = (e: React.FormEvent<HTMLElement>, key: string) => {
+  const updateToggle = (e: FormEvent<HTMLElement>, key: string) => {
     setPreferenceValue(key, (e.target as HTMLInputElement).checked);
   };
 
@@ -155,7 +155,7 @@ function RetirementSavings() {
   };
 
   const generatedAlerts = Object.keys(alerts).reduce(
-    (acc: { [key: string]: React.JSX.Element }, alertKey) => {
+    (acc: { [key: string]: JSX.Element }, alertKey) => {
       if (alerts[alertKey]) {
         acc[alertKey] = (
           <Alert className="mb-3" variant="secondary">
@@ -189,7 +189,7 @@ function RetirementSavings() {
 
   return (
     <div className={styles.container}>
-      <Header titleName="401k Frontload" />
+      <Header titleName="401k Optimizer" />
 
       <main className={styles.main}>
         <h1>401k Optimizer</h1>
@@ -201,22 +201,27 @@ function RetirementSavings() {
 
       <div className={styles.content}>
         <Form className={styles.form}>
-          {/* <Form.Label>Contribution Strategy</Form.Label>
+          <Form.Label>Contribution Strategy</Form.Label>
           <InputGroup className="mb-3 w-100">
             <Form.Select
               onChange={(e) =>
                 setPreferenceValue(
                   "contributionStrategy",
-                  e.target.value as RetirementTableStrategy
+                  e.target.value as RetirementTableStrategy,
                 )
               }
             >
-              <option key="frontload">
+              <option key="frontload" value={RetirementTableStrategy.FRONTLOAD}>
                 {RetirementTableStrategy.FRONTLOAD}
               </option>
-              <option key="equal">{RetirementTableStrategy.EQUAL}</option>
+              <option key="equal" value={RetirementTableStrategy.EQUAL}>
+                {RetirementTableStrategy.EQUAL}
+              </option>
+              <option key="backload" value={RetirementTableStrategy.BACKLOAD}>
+                {RetirementTableStrategy.BACKLOAD}
+              </option>
             </Form.Select>
-          </InputGroup> */}
+          </InputGroup>
 
           <Form.Label>Annual Salary</Form.Label>
           <InputGroup className="mb-3 w-100">
@@ -666,7 +671,7 @@ function RetirementSavings() {
             </tfoot>
           </Table>
           {Object.values(generatedAlerts).map((alert, index) => (
-            <React.Fragment key={index}>{alert}</React.Fragment>
+            <Fragment key={index}>{alert}</Fragment>
           ))}
         </div>
       </div>
