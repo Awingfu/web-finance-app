@@ -12,6 +12,7 @@ import {
 import {
   _401k_maximum_contribution_individual,
   _401k_maximum_contribution_total,
+  _401k_numbers_last_updated,
 } from "../src/utils/constants";
 import styles from "../styles/Retirement.module.scss";
 import { RetirementState, PreferencesState } from "../src/utils/types";
@@ -63,6 +64,7 @@ function RetirementSavings() {
     update401kLimits: false,
     showEmployerMatch: false,
     showMegaBackdoor: false,
+    prioritizeMegaBackdoor: false,
   });
 
   const table = useMemo(
@@ -475,18 +477,38 @@ function RetirementSavings() {
           )}
 
           <TooltipOnHover
-            text="A.K.A. Mega Backdoor Roth. This tool assumes your plan cannot limit this amount and may round down the after-tax contribution. This tool will prioritize individual over after-tax contributions."
+            text="A.K.A. Mega Backdoor Roth. This tool assumes your plan cannot limit this amount and may round down the after-tax contribution."
             nest={
               <InputGroup className={styles.checkbox}>
                 <Form.Check
                   type="checkbox"
-                  onChange={(e) => updateToggle(e, "showMegaBackdoor")}
+                  onChange={(e) => {
+                    updateToggle(e, "showMegaBackdoor");
+                    if (preferences.showMegaBackdoor) {
+                      setPreferenceValue("prioritizeMegaBackdoor", false);
+                    }
+                  }}
                   label="Show After-Tax 401k"
                   checked={preferences.showMegaBackdoor}
                 />
               </InputGroup>
             }
           />
+          {preferences.showMegaBackdoor && (
+            <TooltipOnHover
+              text="When enabled, each paycheck contributes the minimum needed for employer match, then fills remaining capacity with after-tax (mega backdoor). Once the after-tax max is reached, reverts to the selected strategy for individual pre-tax contributions."
+              nest={
+                <InputGroup className={styles.checkbox}>
+                  <Form.Check
+                    type="checkbox"
+                    onChange={(e) => updateToggle(e, "prioritizeMegaBackdoor")}
+                    label="Prioritize Mega Backdoor"
+                    checked={preferences.prioritizeMegaBackdoor}
+                  />
+                </InputGroup>
+              }
+            />
+          )}
           {preferences.addExistingContributions &&
             preferences.showMegaBackdoor && (
               <>
@@ -553,7 +575,7 @@ function RetirementSavings() {
             <>
               <Form.Label>401k Maximum for Individual Contribution</Form.Label>
               <TooltipOnHover
-                text={`The maximum in 2024 is $${_401k_maximum_contribution_individual}.`}
+                text={`The maximum in ${_401k_numbers_last_updated} is $${_401k_maximum_contribution_individual}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -576,7 +598,7 @@ function RetirementSavings() {
             <>
               <Form.Label>401k Total Maximum</Form.Label>
               <TooltipOnHover
-                text={`The maximum in 2024 is $${_401k_maximum_contribution_total}.`}
+                text={`The maximum in ${_401k_numbers_last_updated} is $${_401k_maximum_contribution_total}.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>

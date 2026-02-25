@@ -21,6 +21,7 @@ export type PreferencesState = {
   update401kLimits: boolean;
   showEmployerMatch: boolean;
   showMegaBackdoor: boolean;
+  prioritizeMegaBackdoor: boolean;
 };
 
 export type RetirementTableOptions = RetirementState &
