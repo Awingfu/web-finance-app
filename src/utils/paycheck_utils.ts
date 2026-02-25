@@ -4,6 +4,14 @@ import {
   FREQUENCY_TO_ANNUM,
   PAY_SCHEDULE,
   PAY_SCHEDULE_TO_ANNUM,
+  _401k_numbers_last_updated,
+  _401k_maximum_contribution_individual,
+  _401k_catchup,
+  _401k_maximum_contribution_individual_over50,
+  _401k_maximum_contribution_total,
+  _IRA_maximum_contribution_individual,
+  _IRA_catchup,
+  _IRA_maximum_contribution_individual_over50,
 } from "./constants";
 import {
   determineStateTaxesWithheld,
@@ -125,6 +133,8 @@ export interface PaycheckResults {
   takeHomePay_paycheck: number;
   // Local tax (needed by form for checkbox rendering)
   localTaxKeys: string[];
+  // Contribution limit alerts
+  contributionLimitAlerts: string[];
 }
 
 // --- Core pure computation ---
@@ -225,9 +235,74 @@ export function computePaycheck(inputs: PaycheckInputs): PaycheckResults {
     paySchedule,
   );
 
+  // Post-tax contribution amounts — computed here so over-limit flags
+  // can be used when building both the pre-tax and post-tax maps.
+  const r401k_annual = calculateContributionFromPercentage(
+    totalCompensation_annual,
+    r401kContribution,
+  );
+  const r401k_paycheck = convertAnnualAmountToPaySchedule(
+    r401k_annual,
+    paySchedule,
+  );
+
+  const at401k_annual = calculateContributionFromPercentage(
+    totalCompensation_annual,
+    at401kContribution,
+  );
+  const at401k_paycheck = convertAnnualAmountToPaySchedule(
+    at401k_annual,
+    paySchedule,
+  );
+
+  const rIRA_annual = calculateContributionFromPercentage(
+    totalCompensation_annual,
+    rIRAContribution,
+  );
+  const rIRA_paycheck = convertAnnualAmountToPaySchedule(
+    rIRA_annual,
+    paySchedule,
+  );
+
+  const stockPurchasePlan_annual = calculateContributionFromPercentage(
+    totalCompensation_annual,
+    sppContribution,
+  );
+  const stockPurchasePlan_paycheck = convertAnnualAmountToPaySchedule(
+    stockPurchasePlan_annual,
+    paySchedule,
+  );
+
+  const otherPostTax_annual = calculateAnnualFromAmountAndFrequency(
+    otherPostTaxContribution,
+    otherPostTaxContributionFrequency,
+    paySchedule,
+  );
+  const otherPostTax_paycheck = convertAnnualAmountToPaySchedule(
+    otherPostTax_annual,
+    paySchedule,
+  );
+
+  // Over-limit flags — drive both the row icons and the footer alerts
+  const CONTRIBUTION_LIMIT_ICON = "\u2021"; // double dagger ‡
+  const total401k_annual = t401k_annual + r401k_annual;
+  const totalAll401k_annual = t401k_annual + r401k_annual + at401k_annual;
+  const totalIRA_annual = tIRA_annual + rIRA_annual;
+  const is401kElectiveOverLimit =
+    total401k_annual > _401k_maximum_contribution_individual;
+  const is401kTotalOverLimit =
+    totalAll401k_annual > _401k_maximum_contribution_total;
+  const isIRAOverLimit = totalIRA_annual > _IRA_maximum_contribution_individual;
+
+  const icon401k =
+    is401kElectiveOverLimit || is401kTotalOverLimit
+      ? CONTRIBUTION_LIMIT_ICON
+      : "";
+  const iconIRA = isIRAOverLimit ? CONTRIBUTION_LIMIT_ICON : "";
+
   const preTaxTableMap: Record<string, SimpleEntry> = {
-    "Traditional 401k": [t401k_annual, t401k_paycheck],
-    "Traditional IRA": [tIRA_annual, tIRA_paycheck],
+    ["Traditional 401k" + icon401k]: [t401k_annual, t401k_paycheck],
+    ["Traditional IRA" + iconIRA]: [tIRA_annual, tIRA_paycheck],
     "Medical Insurance": [medical_annual, medical_paycheck],
     "Commuter Benefits": [commuter_annual, commuter_paycheck],
     "HSA/FSA": [hsa_annual, hsa_paycheck],
@@ -438,57 +513,10 @@ export function computePaycheck(inputs: PaycheckInputs): PaycheckResults {
     paySchedule,
   );
 
-  // Post-tax deductions
-  const r401k_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    r401kContribution,
-  );
-  const r401k_paycheck = convertAnnualAmountToPaySchedule(
-    r401k_annual,
-    paySchedule,
-  );
-
-  const at401k_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    at401kContribution,
-  );
-  const at401k_paycheck = convertAnnualAmountToPaySchedule(
-    at401k_annual,
-    paySchedule,
-  );
-
-  const rIRA_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    rIRAContribution,
-  );
-  const rIRA_paycheck = convertAnnualAmountToPaySchedule(
-    rIRA_annual,
-    paySchedule,
-  );
-
-  const stockPurchasePlan_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    sppContribution,
-  );
-  const stockPurchasePlan_paycheck = convertAnnualAmountToPaySchedule(
-    stockPurchasePlan_annual,
-    paySchedule,
-  );
-
-  const otherPostTax_annual = calculateAnnualFromAmountAndFrequency(
-    otherPostTaxContribution,
-    otherPostTaxContributionFrequency,
-    paySchedule,
-  );
-  const otherPostTax_paycheck = convertAnnualAmountToPaySchedule(
-    otherPostTax_annual,
-    paySchedule,
-  );
-
   const postTaxTableMap: Record<string, SimpleEntry> = {
-    "Roth 401k": [r401k_annual, r401k_paycheck],
-    "After Tax 401k": [at401k_annual, at401k_paycheck],
-    "Roth IRA": [rIRA_annual, rIRA_paycheck],
+    ["Roth 401k" + icon401k]: [r401k_annual, r401k_paycheck],
+    ["After Tax 401k" + icon401k]: [at401k_annual, at401k_paycheck],
+    ["Roth IRA" + iconIRA]: [rIRA_annual, rIRA_paycheck],
     "Stock Purchase Plan": [
       stockPurchasePlan_annual,
       stockPurchasePlan_paycheck,
@@ -510,6 +538,39 @@ export function computePaycheck(inputs: PaycheckInputs): PaycheckResults {
     takeHomePay_annual,
     paySchedule,
   );
+
+  // Contribution limit alerts — flags and totals are already computed above
+  const contributionLimitAlerts: string[] = [];
+
+  if (is401kElectiveOverLimit) {
+    contributionLimitAlerts.push(
+      `${CONTRIBUTION_LIMIT_ICON} Your 401k contributions ` +
+        `(${formatCurrency(total401k_annual)}/year) exceed the ` +
+        `${_401k_numbers_last_updated} elective deferral limit of ` +
+        `${formatCurrency(_401k_maximum_contribution_individual)}` +
+        ` (${formatCurrency(_401k_maximum_contribution_individual_over50)} if 50 or older).`,
+    );
+  }
+
+  if (is401kTotalOverLimit) {
+    contributionLimitAlerts.push(
+      `${CONTRIBUTION_LIMIT_ICON} Your total 401k contributions ` +
+        `(${formatCurrency(totalAll401k_annual)}/year) exceed the ` +
+        `${_401k_numbers_last_updated} annual additions limit of ` +
+        `${formatCurrency(_401k_maximum_contribution_total)}` +
+        ` (${formatCurrency(_401k_maximum_contribution_total + _401k_catchup)} if 50 or older).` +
+        ` Note: this limit also includes any employer contributions.`,
+    );
+  }
+
+  if (isIRAOverLimit) {
+    contributionLimitAlerts.push(
+      `${CONTRIBUTION_LIMIT_ICON} Your IRA contributions ` +
+        `(${formatCurrency(totalIRA_annual)}/year) exceed the annual limit of ` +
+        `${formatCurrency(_IRA_maximum_contribution_individual)}` +
+        ` (${formatCurrency(_IRA_maximum_contribution_individual_over50)} if 50 or older).`,
+    );
+  }
 
   return {
     totalCompensation_annual,
@@ -534,5 +595,6 @@ export function computePaycheck(inputs: PaycheckInputs): PaycheckResults {
     takeHomePay_annual,
     takeHomePay_paycheck,
     localTaxKeys,
+    contributionLimitAlerts,
   };
 }

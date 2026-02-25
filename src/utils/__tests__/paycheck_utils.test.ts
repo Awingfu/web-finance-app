@@ -390,4 +390,169 @@ describe("computePaycheck", () => {
       expect(r.takeHomePay_paycheck).toBeCloseTo(r.takeHomePay_annual / 26, 5);
     });
   });
+
+  // ── contribution limit alerts ────────────────────────────────────────────────
+
+  describe("contributionLimitAlerts", () => {
+    it("no alerts when contributions are below all limits", () => {
+      const r = computePaycheck(makeInputs());
+      expect(r.contributionLimitAlerts).toHaveLength(0);
+    });
+
+    describe("401k elective deferral", () => {
+      it("fires when traditional + roth exceeds the individual deferral limit", () => {
+        // salary $300k; t401k 5% = $15k, r401k 5% = $15k → $30k > $24,500
+        const r = computePaycheck(
+          makeInputs({
+            salary: 300000,
+            t401kContribution: 5,
+            r401kContribution: 5,
+          }),
+        );
+        expect(r.contributionLimitAlerts[0]).toContain("\u2021");
+        expect(r.contributionLimitAlerts[0]).toContain("401k");
+      });
+
+      it("alert always mentions the 50+ catch-up limit", () => {
+        const r = computePaycheck(
+          makeInputs({
+            salary: 300000,
+            t401kContribution: 5,
+            r401kContribution: 5,
+          }),
+        );
+        expect(r.contributionLimitAlerts[0]).toContain("50 or older");
+      });
+
+      it("no alert when contributions are exactly at the base limit", () => {
+        // 24500 / 0.10 = 245000
+        const r = computePaycheck(
+          makeInputs({ salary: 245000, t401kContribution: 10 }),
+        );
+        expect(r.contributionLimitAlerts).toHaveLength(0);
+      });
+
+      it("double dagger icon appears in Traditional 401k and Roth 401k row keys when over limit", () => {
+        const r = computePaycheck(
+          makeInputs({
+            salary: 300000,
+            t401kContribution: 5,
+            r401kContribution: 5,
+          }),
+        );
+        expect(
+          Object.keys(r.preTaxTableMap).some(
+            (k) => k.startsWith("Traditional 401k") && k.includes("\u2021"),
+          ),
+        ).toBe(true);
+        expect(
+          Object.keys(r.postTaxTableMap).some(
+            (k) => k.startsWith("Roth 401k") && k.includes("\u2021"),
+          ),
+        ).toBe(true);
+      });
+
+      it("no icon in 401k row keys when under limit", () => {
+        const r = computePaycheck(makeInputs());
+        expect(
+          Object.keys(r.preTaxTableMap).find((k) =>
+            k.startsWith("Traditional 401k"),
+          ),
+        ).toBe("Traditional 401k");
+        expect(
+          Object.keys(r.postTaxTableMap).find((k) => k.startsWith("Roth 401k")),
+        ).toBe("Roth 401k");
+      });
+    });
+
+    describe("401k mega backdoor (annual additions limit)", () => {
+      it("fires when total 401k (trad + roth + after-tax) exceeds the annual additions limit", () => {
+        // salary $800k; each at 10% → $80k + $80k + $80k = $240k > $72,000
+        const r = computePaycheck(
+          makeInputs({
+            salary: 800000,
+            t401kContribution: 10,
+            r401kContribution: 10,
+            at401kContribution: 10,
+          }),
+        );
+        const megaAlert = r.contributionLimitAlerts.find((a) =>
+          a.includes("Mega Backdoor"),
+        );
+        expect(megaAlert).toBeDefined();
+        expect(megaAlert).toContain("\u2021");
+      });
+
+      it("double dagger appears on After Tax 401k row when total limit exceeded", () => {
+        const r = computePaycheck(
+          makeInputs({
+            salary: 800000,
+            t401kContribution: 10,
+            r401kContribution: 10,
+            at401kContribution: 10,
+          }),
+        );
+        expect(
+          Object.keys(r.postTaxTableMap).some(
+            (k) => k.startsWith("After Tax 401k") && k.includes("\u2021"),
+          ),
+        ).toBe(true);
+      });
+
+      it("no mega backdoor alert when after-tax keeps total under the limit", () => {
+        const r = computePaycheck(
+          makeInputs({ salary: 100000, at401kContribution: 5 }),
+        );
+        expect(
+          r.contributionLimitAlerts.some((a) => a.includes("Mega Backdoor")),
+        ).toBe(false);
+      });
+    });
+
+    describe("IRA", () => {
+      it("fires when traditional IRA + roth IRA exceeds the annual limit", () => {
+        // tIRA 5% of $200k = $10k > $7,000
+        const r = computePaycheck(
+          makeInputs({ salary: 200000, tIRAContribution: 5 }),
+        );
+        expect(r.contributionLimitAlerts[0]).toContain("IRA");
+      });
+
+      it("alert always mentions the 50+ catch-up limit", () => {
+        const r = computePaycheck(
+          makeInputs({ salary: 200000, tIRAContribution: 5 }),
+        );
+        expect(r.contributionLimitAlerts[0]).toContain("50 or older");
+      });
+
+      it("double dagger appears in Traditional IRA and Roth IRA row keys when over limit", () => {
+        const r = computePaycheck(
+          makeInputs({ salary: 200000, tIRAContribution: 5 }),
+        );
+        expect(
+          Object.keys(r.preTaxTableMap).some(
+            (k) => k.startsWith("Traditional IRA") && k.includes("\u2021"),
+          ),
+        ).toBe(true);
+        expect(
+          Object.keys(r.postTaxTableMap).some(
+            (k) => k.startsWith("Roth IRA") && k.includes("\u2021"),
+          ),
+        ).toBe(true);
+      });
+    });
+
+    it("multiple alerts fire independently", () => {
+      // Exceed both 401k elective deferral and IRA simultaneously
+      const r = computePaycheck(
+        makeInputs({
+          salary: 400000,
+          t401kContribution: 5, // $20k traditional
+          r401kContribution: 5, // $20k roth → total $40k > $24,500
+          tIRAContribution: 5, // $20k IRA > $7,000
+        }),
+      );
+      expect(r.contributionLimitAlerts).toHaveLength(2);
+    });
+  });
 });

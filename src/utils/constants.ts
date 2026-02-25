@@ -159,3 +159,9 @@ export const _IRA_roth_get_max_contribution = (
 export const maximum_HSA_contribution = 4400;
 export const maximum_HSA_contribution_family = 8750;
 export const HSA_catchup_contribution = 1000;
+
+// FSA
+// last updated 2026
+export const maximum_FSA_contribution = 3400;
+export const maximum_FSA_contribution_dependent_care = 7500;
+export const FSA_carryover_limit = 680;

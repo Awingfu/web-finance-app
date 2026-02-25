@@ -27,13 +27,8 @@ import { computePaycheck, formatTaxRate } from "../src/utils/paycheck_utils";
 /**
  * TODO:
  * 1. Create more advanced table
- *  - Company match
- *  - Other tax deductions, company match on HSA/FSA
  *  - multiple states
- *  - maximums on 401k, IRA, HSA
- * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
- * 3. Split form and table to separate components
- * 4. save info to local storage + clear data button -> so we don't lose data on refresh
+ * 2. save info to local storage + clear data button -> so we don't lose data on refresh
  */
 
 function Paycheck() {
@@ -668,6 +663,11 @@ function Paycheck() {
           </Table>
           {socialSecurityMaxedAlertTableFooter}
           {stateEstimateTableFooter}
+          {results.contributionLimitAlerts.map((msg, i) => (
+            <Alert key={i} className="mb-3" variant="secondary">
+              {msg}
+            </Alert>
+          ))}
         </div>
       </div>
       <Footer />

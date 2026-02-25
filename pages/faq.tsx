@@ -2,6 +2,20 @@ import Link from "next/link";
 import { Accordion } from "react-bootstrap";
 import styles from "../styles/Home.module.scss";
 import { Header, Footer } from "../src/components";
+import {
+  _401k_numbers_last_updated,
+  _401k_maximum_contribution_individual,
+  _401k_catchup,
+  _401k_maximum_contribution_individual_over50,
+  _401k_maximum_contribution_total,
+  _IRA_maximum_contribution_individual,
+  _IRA_catchup,
+  _IRA_maximum_contribution_individual_over50,
+  maximum_HSA_contribution,
+  maximum_HSA_contribution_family,
+  HSA_catchup_contribution,
+} from "../src/utils/constants";
+import { formatCurrency } from "../src/utils";
 
 interface FaqItem {
   id: string;
@@ -152,6 +166,154 @@ const FAQ_SECTIONS: FaqSection[] = [
               <li>Dependent credits claimed on the W-4</li>
               <li>Itemized deductions beyond the standard deduction</li>
             </ul>
+          </>
+        ),
+      },
+      {
+        id: "401k-limits",
+        question: `What are the ${_401k_numbers_last_updated} 401k contribution limits?`,
+        answer: (
+          <>
+            <p>There are two separate 401k limits to be aware of:</p>
+            <p>
+              <strong>Elective deferral limit</strong> — the maximum you can
+              contribute from your own paycheck across traditional and Roth 401k
+              combined:
+            </p>
+            <ul>
+              <li>
+                Under 50:{" "}
+                {formatCurrency(_401k_maximum_contribution_individual)}
+              </li>
+              <li>
+                50 or older (catch-up):{" "}
+                {formatCurrency(_401k_maximum_contribution_individual_over50)}{" "}
+                (an extra {formatCurrency(_401k_catchup)})
+              </li>
+            </ul>
+            <p>
+              <strong>Annual additions limit</strong> — the cap on <em>all</em>{" "}
+              contributions to a 401k including your elective deferrals,
+              after-tax (Mega Backdoor Roth) contributions, and any employer
+              match or profit sharing:
+            </p>
+            <ul>
+              <li>
+                Under 50: {formatCurrency(_401k_maximum_contribution_total)}
+              </li>
+              <li>
+                50 or older (catch-up):{" "}
+                {formatCurrency(
+                  _401k_maximum_contribution_total + _401k_catchup,
+                )}
+              </li>
+            </ul>
+            <p>
+              The Mega Backdoor Roth strategy uses after-tax contributions to
+              fill the gap between your elective deferrals and the annual
+              additions limit. The available room depends on how much your
+              employer contributes.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "ira-limits",
+        question: "What are the IRA contribution limits?",
+        answer: (
+          <>
+            <p>
+              Your combined contributions across{" "}
+              <strong>all traditional and Roth IRAs</strong> cannot exceed:
+            </p>
+            <ul>
+              <li>
+                Under 50: {formatCurrency(_IRA_maximum_contribution_individual)}
+                /year
+              </li>
+              <li>
+                50 or older (catch-up):{" "}
+                {formatCurrency(_IRA_maximum_contribution_individual_over50)}
+                /year (an extra {formatCurrency(_IRA_catchup)})
+              </li>
+            </ul>
+            <p>A few additional rules to keep in mind:</p>
+            <ul>
+              <li>
+                <strong>Roth IRA income limits:</strong> your ability to
+                contribute to a Roth IRA phases out at higher incomes
+                ($138,000–$153,000 for single filers; $218,000–$228,000 for
+                married filing jointly in recent years). Above the limit you
+                cannot contribute directly, though a Backdoor Roth conversion is
+                an option.
+              </li>
+              <li>
+                <strong>Traditional IRA deductibility:</strong> contributions
+                are always allowed, but the tax deduction phases out if you (or
+                your spouse) are covered by a workplace retirement plan and your
+                income exceeds certain thresholds.
+              </li>
+              <li>
+                You must have earned income at least equal to your contribution
+                for the year.
+              </li>
+            </ul>
+          </>
+        ),
+      },
+      {
+        id: "hsa-limits",
+        question: "What are the HSA and FSA contribution limits?",
+        answer: (
+          <>
+            <p>
+              <strong>HSA (Health Savings Account)</strong> — available only if
+              you are enrolled in a qualifying High Deductible Health Plan
+              (HDHP). Contributions are pre-tax, grow tax-free, and withdrawals
+              for qualified medical expenses are tax-free (triple tax
+              advantage). Unused balances roll over indefinitely.
+            </p>
+            <ul>
+              <li>
+                Self-only coverage: {formatCurrency(maximum_HSA_contribution)}
+                /year
+              </li>
+              <li>
+                Family coverage:{" "}
+                {formatCurrency(maximum_HSA_contribution_family)}/year
+              </li>
+              <li>
+                55 or older (catch-up): add{" "}
+                {formatCurrency(HSA_catchup_contribution)}/year to whichever
+                limit applies
+              </li>
+            </ul>
+            <p>
+              <strong>FSA (Flexible Spending Account)</strong> —
+              employer-sponsored account that also lets you pay for qualified
+              medical expenses pre-tax, but with different rules:
+            </p>
+            <ul>
+              <li>
+                The IRS limit for a healthcare FSA is $3,400/year (2025); your
+                employer may set a lower cap.
+              </li>
+              <li>
+                FSAs are generally <em>use-it-or-lose-it</em> — unused funds do
+                not roll over (though employers may offer a grace period or
+                allow a small rollover amount).
+              </li>
+              <li>
+                You can have an FSA regardless of your health plan type, but you{" "}
+                <strong>cannot</strong> contribute to an HSA while enrolled in a
+                general-purpose healthcare FSA.
+              </li>
+            </ul>
+            <p>
+              This calculator&apos;s HSA/FSA field applies pre-tax treatment to
+              whatever amount you enter. Check with your employer or plan
+              documents for which account type you have.
+            </p>
           </>
         ),
       },
