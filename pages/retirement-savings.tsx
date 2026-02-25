@@ -1,7 +1,15 @@
 import { useState, useMemo, FormEvent, Fragment, JSX } from "react";
-import { Alert, Form, FormGroup, InputGroup, Table } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  Form,
+  FormGroup,
+  InputGroup,
+  Table,
+} from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../src/components";
 import {
+  downloadCSV,
   formatCurrency,
   formatPercent,
   formatStateValue,
@@ -174,6 +182,54 @@ function RetirementSavings() {
     setRetirementValue("individualContributionAmountSoFar", 0);
     setRetirementValue("employerContributionAmountSoFar", 0);
     setRetirementValue("individualContributionAfterTaxAmountSoFar", 0);
+  };
+
+  const download401kCSV = () => {
+    const headers: string[] = [
+      "Pay Period",
+      "Gross Pay ($)",
+      "Contribution (%)",
+      "Contribution ($)",
+    ];
+    if (preferences.showEmployerMatch)
+      headers.push("Employer Contribution ($)");
+    if (preferences.showMegaBackdoor) {
+      headers.push("After-Tax Contribution (%)", "After-Tax Contribution ($)");
+    }
+    headers.push("Cumulative ($)");
+
+    const rows: (string | number)[][] = [headers];
+    table.getTable().forEach((row: RetirementTableRow) => {
+      const dataRow: (string | number)[] = [
+        row.rowKey,
+        row.payPerPayPeriod,
+        Math.round(row.contributionFraction * 100),
+        row.contributionAmount,
+      ];
+      if (preferences.showEmployerMatch) dataRow.push(row.employerAmount);
+      if (preferences.showMegaBackdoor) {
+        dataRow.push(Math.round(row.afterTaxPercent * 100), row.afterTaxAmount);
+      }
+      dataRow.push(row.cumulativeAmountTotal);
+      rows.push(dataRow);
+    });
+
+    const lastRow = table.getTable()[retirement.numberOfPayPeriods - 1];
+    const totalsRow: (string | number)[] = [
+      "Total",
+      table.salaryRemaining,
+      "",
+      lastRow.cumulativeIndividualAmount,
+    ];
+    if (preferences.showEmployerMatch)
+      totalsRow.push(lastRow.cumulativeEmployerAmount);
+    if (preferences.showMegaBackdoor) {
+      totalsRow.push("", lastRow.cumulativeAfterTaxAmount);
+    }
+    totalsRow.push(lastRow.cumulativeAmountTotal);
+    rows.push(totalsRow);
+
+    downloadCSV("401k-optimizer.csv", rows);
   };
 
   const set401kLimitsToDefault = () => {
@@ -616,6 +672,14 @@ function RetirementSavings() {
         </Form>
 
         <div className={styles.table}>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="mb-2"
+            onClick={download401kCSV}
+          >
+            Download CSV
+          </Button>
           <Table hover responsive size="sm" className="mb-3">
             <thead>
               <tr>

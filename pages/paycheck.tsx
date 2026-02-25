@@ -1,5 +1,6 @@
 import { useState, ChangeEvent, SetStateAction } from "react";
 import {
+  Button,
   Form,
   Table,
   InputGroup,
@@ -17,6 +18,7 @@ import {
 } from "../src/utils/constants";
 import {
   US_STATES_MAP,
+  downloadCSV,
   formatCurrency,
   formatStateValue,
   LOCAL_TAXES,
@@ -197,6 +199,63 @@ function Paycheck() {
       value = 90;
     }
     changeFunction(value);
+  };
+
+  const downloadPaycheckCSV = () => {
+    const rows: (string | number)[][] = [
+      ["Category", "Annual", `Paycheck - ${paySchedule}`],
+      [
+        "Gross Income",
+        results.totalCompensation_annual,
+        results.totalCompensation_paycheck,
+      ],
+    ];
+    if (results.shouldRenderPreTaxDeductions) {
+      rows.push(["Pre-Tax Deductions", "", ""]);
+      Object.keys(results.preTaxTableMap)
+        .filter((key) => results.preTaxTableMap[key][0] !== 0)
+        .forEach((key) => {
+          rows.push([
+            key,
+            -results.preTaxTableMap[key][0],
+            -results.preTaxTableMap[key][1],
+          ]);
+        });
+    }
+    rows.push([
+      "Taxable Pay",
+      results.taxableIncome_annual,
+      results.taxableIncome_paycheck,
+    ]);
+    rows.push(["Tax Withholdings", "", ""]);
+    Object.keys(results.taxTableMap)
+      .filter((key) => results.taxTableMap[key][0] !== 0)
+      .forEach((key) => {
+        rows.push([
+          key,
+          -results.taxTableMap[key][0],
+          -results.taxTableMap[key][1],
+        ]);
+      });
+    rows.push(["Net Pay", results.netPay_annual, results.netPay_paycheck]);
+    if (results.shouldRenderPostTaxDeductions) {
+      rows.push(["Post-Tax Deductions", "", ""]);
+      Object.keys(results.postTaxTableMap)
+        .filter((key) => results.postTaxTableMap[key][0] !== 0)
+        .forEach((key) => {
+          rows.push([
+            key,
+            -results.postTaxTableMap[key][0],
+            -results.postTaxTableMap[key][1],
+          ]);
+        });
+    }
+    rows.push([
+      "Take Home Pay",
+      results.takeHomePay_annual,
+      results.takeHomePay_paycheck,
+    ]);
+    downloadCSV("paycheck.csv", rows);
   };
 
   const updateWithEventKey = (
@@ -544,6 +603,14 @@ function Paycheck() {
         </Form>
 
         <div className={styles.table}>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="mb-2"
+            onClick={downloadPaycheckCSV}
+          >
+            Download CSV
+          </Button>
           <Table hover responsive size="sm" className="mb-3">
             <thead>
               <tr>

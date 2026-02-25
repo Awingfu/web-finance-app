@@ -25,6 +25,7 @@ export {
   formatCurrency,
   formatPercent,
   formatStateValue,
+  downloadCSV,
 } from "./helperFunctions";
 export { prefix } from "./prefix";
 export { RetirementTable } from "./retirement_table";
