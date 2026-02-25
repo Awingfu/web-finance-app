@@ -465,7 +465,7 @@ describe("computePaycheck", () => {
       });
     });
 
-    describe("401k mega backdoor (annual additions limit)", () => {
+    describe("401k annual additions limit", () => {
       it("fires when total 401k (trad + roth + after-tax) exceeds the annual additions limit", () => {
         // salary $800k; each at 10% → $80k + $80k + $80k = $240k > $72,000
         const r = computePaycheck(
@@ -477,7 +477,7 @@ describe("computePaycheck", () => {
           }),
         );
         const megaAlert = r.contributionLimitAlerts.find((a) =>
-          a.includes("Mega Backdoor"),
+          a.includes("total 401k contributions"),
         );
         expect(megaAlert).toBeDefined();
         expect(megaAlert).toContain("\u2021");
