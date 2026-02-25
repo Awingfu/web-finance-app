@@ -3,14 +3,24 @@ export {
   getFICAWithholding,
   getFederalWithholding,
   getMedicareWithholding,
+  getFederalMarginalRate,
+  getFICAMarginalRate,
+  getMedicareMarginalRate,
   maxFICAContribution,
   getFICATaxRate,
-} from "./federal_withholding";
+} from "./withholdings_federal";
 export {
   US_STATES_MAP,
   instanceOfTaxUnknown,
   determineStateTaxesWithheld,
-} from "./state_withholding";
+  getStateMarginalRate,
+} from "./withholdings_state";
+export {
+  LOCAL_TAXES,
+  LOCAL_TAXES_BY_STATE,
+  getLocalWithholding,
+  getLocalMarginalRate,
+} from "./withholdings_local";
 export {
   formatCurrency,
   formatPercent,

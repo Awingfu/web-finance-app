@@ -187,6 +187,53 @@ export const getFederalWithholding = (
   );
 };
 
+export const getFederalMarginalRate = (
+  taxableWage: number,
+  rawTaxClass: TAX_CLASSES,
+  payPeriod: PAY_SCHEDULE,
+): number => {
+  let taxClass = rawTaxClass;
+  if (
+    taxClass === TAX_CLASSES.MARRIED_FILING_SEPARATELY ||
+    taxClass === TAX_CLASSES.HEAD_OF_HOUSEHOLD
+  ) {
+    taxClass = TAX_CLASSES.SINGLE;
+  }
+  let withholdingBrackets = BIWEEKLY_WITHHOLDING[taxClass];
+  switch (payPeriod) {
+    case PAY_SCHEDULE.BIWEEKLY:
+      break;
+    case PAY_SCHEDULE.SEMIMONTHLY:
+      withholdingBrackets = SEMIMONTHLY_WITHHOLDING[taxClass];
+      break;
+    case PAY_SCHEDULE.MONTHLY:
+      withholdingBrackets = MONTHLY_WITHHOLDING[taxClass];
+      break;
+    default:
+      break;
+  }
+  let row = 0;
+  while (
+    row < withholdingBrackets.length - 1 &&
+    withholdingBrackets[row][1] < taxableWage
+  ) {
+    row += 1;
+  }
+  return withholdingBrackets[row][3];
+};
+
+export const getFICAMarginalRate = (annualIncome: number): number =>
+  annualIncome >= FICA_INCOME_CAP ? 0 : FICA_TAX_RATE;
+
+export const getMedicareMarginalRate = (
+  annualIncome: number,
+  tax_class: TAX_CLASSES,
+): number => {
+  const brackets = MEDICARE_WITHHOLDING[tax_class];
+  if (!brackets) return MEDICARE_TAX_RATE;
+  return annualIncome >= brackets[1][0] ? MEDICARE_TOP_RATE : MEDICARE_TAX_RATE;
+};
+
 export const maxFICAContribution = FICA_WITHHOLDING[TAX_CLASSES.SINGLE][1][2];
 export const getFICATaxRate = FICA_WITHHOLDING[TAX_CLASSES.SINGLE][0][3];
 export const getFICAWithholding = (annualIncome: number): number => {

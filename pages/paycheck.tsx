@@ -19,17 +19,25 @@ import {
 } from "../src/utils/constants";
 import {
   determineStateTaxesWithheld,
+  getStateMarginalRate,
   getFICAWithholding,
   getFederalWithholding,
   getMedicareWithholding,
+  getFederalMarginalRate,
+  getFICAMarginalRate,
+  getMedicareMarginalRate,
   US_STATES_MAP,
   instanceOfTaxUnknown,
   formatCurrency,
   formatStateValue,
   maxFICAContribution,
   getFICATaxRate,
+  LOCAL_TAXES,
+  LOCAL_TAXES_BY_STATE,
+  getLocalWithholding,
+  getLocalMarginalRate,
 } from "../src/utils";
-import { PAYROLL_LAST_UPDATED } from "../src/utils/federal_withholding";
+import { PAYROLL_LAST_UPDATED } from "../src/utils/withholdings_federal";
 
 /**
  * TODO:
@@ -41,7 +49,6 @@ import { PAYROLL_LAST_UPDATED } from "../src/utils/federal_withholding";
  * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
  * 3. Split form and table to separate components
  * 4. save info to local storage + clear data button -> so we don't lose data on refresh
- * 5. city tax dropdown or custom %
  */
 
 const calculateContributionFromPercentage = (
@@ -79,6 +86,7 @@ function Paycheck() {
   const [paySchedule, changePaySchedule] = useState(PAY_SCHEDULE.BIWEEKLY);
   const [taxClass, changeTaxClass] = useState(TAX_CLASSES.SINGLE);
   const [usState, changeUSState] = useState(US_STATES_MAP["None"].abbreviation);
+  const [localTaxes, setLocalTaxes] = useState<Record<string, boolean>>({});
 
   // if bonus is elegible for contributions, add it to salary
   let totalCompensation_annual = salary;
@@ -251,6 +259,34 @@ function Paycheck() {
     paySchedule,
   );
 
+  // Marginal and effective rates for the three federal tax types
+  const federalMarginalRate = getFederalMarginalRate(
+    taxableIncome_paycheck,
+    taxClass,
+    paySchedule,
+  );
+  const federalEffectiveRate =
+    taxableIncome_annual > 0
+      ? federalWithholding_annual / taxableIncome_annual
+      : 0;
+
+  const ficaMarginalRate = getFICAMarginalRate(grossTaxableIncome_annual);
+  const ficaEffectiveRate =
+    grossTaxableIncome_annual > 0
+      ? socialSecurityWithholding_annual / grossTaxableIncome_annual
+      : 0;
+
+  const medicareMarginalRate = getMedicareMarginalRate(
+    grossTaxableIncome_annual,
+    taxClass,
+  );
+  const medicareEffectiveRate =
+    grossTaxableIncome_annual > 0
+      ? medicareWithholding_annual / grossTaxableIncome_annual
+      : 0;
+
+  const formatTaxRate = (rate: number) => (rate * 100).toFixed(2) + "%";
+
   let stateTaxInvalidAlert = <></>;
   if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
     stateTaxInvalidAlert = (
@@ -269,24 +305,90 @@ function Paycheck() {
     stateWithholding_annual,
     paySchedule,
   );
+  const stateMarginalRate = getStateMarginalRate(
+    usState,
+    taxableIncome_annual,
+    taxClass,
+  );
+  const stateEffectiveRate =
+    taxableIncome_annual > 0
+      ? stateWithholding_annual / taxableIncome_annual
+      : 0;
+  const stateIsUnknown = instanceOfTaxUnknown(US_STATES_MAP[usState]);
+  const stateIsNone = usState === "None";
+  const stateIsEstimate = !stateIsNone && !stateIsUnknown;
+  const stateEstimateIcon = "\u002A"; // asterisk
   const stateWithholding_key =
-    US_STATES_MAP[usState].abbreviation + " State Withholding";
+    US_STATES_MAP[usState].abbreviation +
+    " Withholding" +
+    (stateIsEstimate ? stateEstimateIcon : "");
+  const stateEstimateTableFooter = stateIsEstimate ? (
+    <Alert className="mb-3" variant="secondary">
+      {stateEstimateIcon} State withholding may be estimated using income tax
+      brackets and standard deduction. See the FAQ for details.
+    </Alert>
+  ) : (
+    <></>
+  );
+
+  const localTaxKeys = LOCAL_TAXES_BY_STATE[usState] ?? [];
+  const localWithholdings = localTaxKeys
+    .filter((key) => localTaxes[key])
+    .map((key) => {
+      const { paycheck, annual } = getLocalWithholding(
+        key,
+        taxableIncome_paycheck,
+        taxableIncome_annual,
+        paySchedule,
+        PAY_SCHEDULE_TO_ANNUM[paySchedule],
+      );
+      const marginal = getLocalMarginalRate(
+        key,
+        taxableIncome_paycheck,
+        paySchedule,
+      );
+      const effective =
+        taxableIncome_annual > 0 ? annual / taxableIncome_annual : 0;
+      return { key, paycheck, annual, marginal, effective };
+    });
+  const totalLocalWithholding_annual = localWithholdings.reduce(
+    (sum, lw) => sum + lw.annual,
+    0,
+  );
 
   // used to remove tax rows in table with $0 contributions
+  // [annual, paycheck, optional rates { marginal, effective }]
   const taxTableMap: { [key: string]: any } = {
     "Federal Withholding": [
       federalWithholding_annual,
       federalWithholding_paycheck,
+      { marginal: federalMarginalRate, effective: federalEffectiveRate },
     ],
     [socialSecurity_key]: [
       socialSecurityWithholding_annual,
       socialSecurityWithholding_paycheck,
+      { marginal: ficaMarginalRate, effective: ficaEffectiveRate },
     ],
-    Medicare: [medicareWithholding_annual, medicareWithholding_paycheck],
+    Medicare: [
+      medicareWithholding_annual,
+      medicareWithholding_paycheck,
+      { marginal: medicareMarginalRate, effective: medicareEffectiveRate },
+    ],
     [stateWithholding_key]: [
       stateWithholding_annual,
       stateWithholding_paycheck,
+      stateIsEstimate
+        ? { marginal: stateMarginalRate, effective: stateEffectiveRate }
+        : undefined,
     ],
+    ...Object.fromEntries(
+      localWithholdings.map(
+        ({ key, annual, paycheck, marginal, effective }) => [
+          LOCAL_TAXES[key].name + " Withholding",
+          [annual, paycheck, { marginal, effective }],
+        ],
+      ),
+    ),
   };
 
   const netPay_annual =
@@ -294,7 +396,8 @@ function Paycheck() {
     federalWithholding_annual -
     socialSecurityWithholding_annual -
     medicareWithholding_annual -
-    stateWithholding_annual;
+    stateWithholding_annual -
+    totalLocalWithholding_annual;
   const netPay_paycheck = convertAnnualAmountToPaySchedule(
     netPay_annual,
     paySchedule,
@@ -585,20 +688,62 @@ function Paycheck() {
             />
           </Form.Group>
 
-          <Form.Label>US State Withholding Tax</Form.Label>
-          <DropdownButton
-            className="mb-3"
-            id="us-state-dropdown-button"
-            title={US_STATES_MAP[usState].name}
-            variant="secondary"
-            onSelect={(e) => updateWithEventKey(e, changeUSState)}
-          >
-            {Object.keys(US_STATES_MAP).map((key) => (
-              <Dropdown.Item eventKey={key} key={key}>
-                {key}
-              </Dropdown.Item>
-            ))}
-          </DropdownButton>
+          <Form.Group className="mb-3">
+            <div
+              className={styles.inlineGroup}
+              style={{ alignItems: "flex-start" }}
+            >
+              <div className={styles.inlineChildren}>
+                <Form.Label>US State Withholding</Form.Label>
+                <DropdownButton
+                  id="us-state-dropdown-button"
+                  title={US_STATES_MAP[usState].name}
+                  variant="secondary"
+                  onSelect={(e) => {
+                    updateWithEventKey(e, changeUSState);
+                    setLocalTaxes({});
+                  }}
+                >
+                  {Object.keys(US_STATES_MAP).map((key) => (
+                    <Dropdown.Item eventKey={key} key={key}>
+                      {key}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton>
+              </div>
+              {localTaxKeys.length > 0 && (
+                <div className={styles.inlineChildren}>
+                  <Form.Label>Local Tax</Form.Label>
+                  {localTaxKeys.map((key) => {
+                    const tax = LOCAL_TAXES[key];
+                    const checkbox = (
+                      <Form.Check
+                        key={key}
+                        type="checkbox"
+                        label={tax.name}
+                        checked={!!localTaxes[key]}
+                        onChange={() =>
+                          setLocalTaxes((prev) => ({
+                            ...prev,
+                            [key]: !prev[key],
+                          }))
+                        }
+                      />
+                    );
+                    return tax.tooltip ? (
+                      <TooltipOnHover
+                        key={key}
+                        text={tax.tooltip}
+                        nest={checkbox}
+                      />
+                    ) : (
+                      checkbox
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </Form.Group>
           {stateTaxInvalidAlert}
 
           <Form.Group className="mb-3">
@@ -810,13 +955,24 @@ function Paycheck() {
               </tr>
               {Object.keys(taxTableMap)
                 .filter((key) => taxTableMap[key][0] != 0)
-                .map((key) => (
-                  <tr key={key}>
-                    <td>{key}</td>
-                    <td>{formatCurrency(-taxTableMap[key][0])}</td>
-                    <td>{formatCurrency(-taxTableMap[key][1])}</td>
-                  </tr>
-                ))}
+                .map((key) => {
+                  const rates = taxTableMap[key][2];
+                  return (
+                    <tr key={key}>
+                      <td>
+                        {key}
+                        {rates && (
+                          <small className="text-muted d-block">
+                            Marginal: {formatTaxRate(rates.marginal)} &middot;{" "}
+                            Effective: {formatTaxRate(rates.effective)}
+                          </small>
+                        )}
+                      </td>
+                      <td>{formatCurrency(-taxTableMap[key][0])}</td>
+                      <td>{formatCurrency(-taxTableMap[key][1])}</td>
+                    </tr>
+                  );
+                })}
               <tr>
                 <td>Net Pay</td>
                 <td>{formatCurrency(netPay_annual)}</td>
@@ -862,6 +1018,7 @@ function Paycheck() {
             </tbody>
           </Table>
           {socialSecurityMaxedAlertTableFooter}
+          {stateEstimateTableFooter}
         </div>
       </div>
       <Footer />
