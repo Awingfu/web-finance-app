@@ -31,7 +31,7 @@ const BIWEEKLY_WITHHOLDING: Withholding = {
     [0, 619, 0, 0.0],
     [619, 1096, 0, 0.1],
     [1096, 2558, 47.7, 0.12],
-    [2558, 4685, 2223.14, 0.22],
+    [2558, 4685, 223.14, 0.22],
     [4685, 8380, 691.08, 0.24],
     [8380, 10474, 1577.88, 0.32],
     [10474, 25258, 2247.96, 0.35],
@@ -111,8 +111,7 @@ const MEDICARE_WITHHOLDING: Withholding = {
     [
       MEDICARE_INCOME_CAP_SINGLE,
       Infinity,
-      MEDICARE_INCOME_CAP_SINGLE * MEDICARE_TAX_RATE +
-        MEDICARE_ADDITIONAL_TAX_RATE * MEDICARE_INCOME_CAP_SINGLE,
+      MEDICARE_INCOME_CAP_SINGLE * MEDICARE_TAX_RATE,
       MEDICARE_TOP_RATE,
     ],
   ],
@@ -121,8 +120,7 @@ const MEDICARE_WITHHOLDING: Withholding = {
     [
       MEDICARE_INCOME_CAP_MARRIED,
       Infinity,
-      MEDICARE_INCOME_CAP_MARRIED * MEDICARE_TAX_RATE +
-        MEDICARE_ADDITIONAL_TAX_RATE * MEDICARE_INCOME_CAP_MARRIED,
+      MEDICARE_INCOME_CAP_MARRIED * MEDICARE_TAX_RATE,
       MEDICARE_TOP_RATE,
     ],
   ],
@@ -131,8 +129,7 @@ const MEDICARE_WITHHOLDING: Withholding = {
     [
       MEDICARE_INCOME_CAP_SEPARATE,
       Infinity,
-      MEDICARE_INCOME_CAP_SEPARATE * MEDICARE_TAX_RATE +
-        MEDICARE_ADDITIONAL_TAX_RATE * MEDICARE_INCOME_CAP_SEPARATE,
+      MEDICARE_INCOME_CAP_SEPARATE * MEDICARE_TAX_RATE,
       MEDICARE_TOP_RATE,
     ],
   ],
@@ -184,11 +181,6 @@ export const getFederalWithholding = (
   ) {
     row += 1;
   }
-  // console.log(
-  //   "You're at the " +
-  //     withholdingBrackets[row][3] * 100 +
-  //     "% Federal withholding bracket."
-  // );
   return (
     withholdingBrackets[row][2] +
     (taxableWage - withholdingBrackets[row][0]) * withholdingBrackets[row][3]
@@ -217,5 +209,5 @@ export const getMedicareWithholding = (
       (annualIncome - threshold) * withholdingBrackets[1][3]
     );
   }
-  return annualIncome * withholdingBrackets[1][3];
+  return annualIncome * withholdingBrackets[0][3];
 };

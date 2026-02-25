@@ -4,7 +4,7 @@
 export enum TAX_CLASSES {
   SINGLE = "Single",
   MARRIED_FILING_JOINTLY = "Married Filing Jointly",
-  MARRIED_FILING_SEPARATELY = "Married Filing Separatly",
+  MARRIED_FILING_SEPARATELY = "Married Filing Separately",
   HEAD_OF_HOUSEHOLD = "Head of Household",
 }
 
@@ -46,7 +46,7 @@ export const PAY_SCHEDULE_TO_ANNUM = {
 
 export const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
-// Types of pay schedules
+// Month names
 export enum MONTH_NAMES {
   JANUARY = "January",
   FEBRUARY = "February",
@@ -144,7 +144,7 @@ export const _IRA_roth_get_max_contribution = (
   const params = ROTH_PHASE_OUT[tax_class as TAX_CLASSES];
   if (!params) {
     console.log(
-      "Something wen't wrong in calculating max Roth IRA contribution. Invalid tax class",
+      "Something went wrong in calculating max Roth IRA contribution. Invalid tax class",
     );
     return 0;
   }
