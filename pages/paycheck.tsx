@@ -29,6 +29,7 @@ import {
   maxFICAContribution,
   getFICATaxRate,
 } from "../src/utils";
+import { PAYROLL_LAST_UPDATED } from "../src/utils/federal_withholding";
 
 /**
  * TODO:
@@ -467,7 +468,9 @@ function Paycheck() {
 
       <main className={styles.main}>
         <h1>Paycheck Calculator</h1>
-        <p>Here we will estimate your take home pay (for 2024)!</p>
+        <p>
+          Here we will estimate your take home pay (for {PAYROLL_LAST_UPDATED})!
+        </p>
       </main>
 
       <div className={styles.content}>

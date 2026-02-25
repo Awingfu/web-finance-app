@@ -68,6 +68,7 @@ export class RetirementTable {
   automaticallyCap401k: boolean = false;
   contributionStrategy: RetirementTableStrategy =
     RetirementTableStrategy.FRONTLOAD;
+  prioritizeMegaBackdoor: boolean = false;
 
   // icons for table
   payPeriodAlreadyPassedIcon: string;
@@ -106,6 +107,7 @@ export class RetirementTable {
     this.maxReachedEarlyIcon = options.maxReachedEarlyIcon || "\u2021";
     this.automaticallyCap401k = options.automaticallyCap401k;
     this.contributionStrategy = options.contributionStrategy;
+    this.prioritizeMegaBackdoor = options.prioritizeMegaBackdoor ?? false;
 
     // constants for after tax calculations
     const numberOfPayPeriodsRemaining =
@@ -167,28 +169,59 @@ export class RetirementTable {
     const contributionAmountForFullMatch =
       (this.minIndividualContributionPercent / 100) * payPerPayPeriod;
 
-    const numberOfMaxIndividualContributions = Math.floor(
-      (this.individualContributionAmountSoFar -
-        this.max401kIndividualAmount +
-        contributionAmountForFullMatch *
-          (this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar)) /
-        (contributionAmountForFullMatch - maxPeriodContributionAmount),
+    // === MBD priority pre-computation ===
+    // How many active periods are needed to fill remaining after-tax capacity
+    // while contributing only the minimum individual amount each period.
+    const prioritizeMBD =
+      this.prioritizeMegaBackdoor && this.maxAfterTaxAmount > 0;
+    const afterTaxPerPeriodMax = Math.max(
+      maxPeriodContributionAmount - contributionAmountForFullMatch,
+      0,
     );
+    const remainingAfterTaxCapacity =
+      this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
+    const totalActivePeriods =
+      this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar;
+    const mbdPeriods =
+      prioritizeMBD && afterTaxPerPeriodMax > 0 && remainingAfterTaxCapacity > 0
+        ? Math.min(
+            Math.ceil(remainingAfterTaxCapacity / afterTaxPerPeriodMax),
+            totalActivePeriods,
+          )
+        : 0;
+
+    // Individual contribution made during MBD phase (min% * mbdPeriods)
+    const individualFromMBDPhase = contributionAmountForFullMatch * mbdPeriods;
+    // Effective "so far" for frontload param computation in phase 2
+    const adjustedIndividualSoFar =
+      this.individualContributionAmountSoFar + individualFromMBDPhase;
+    const periodsForPhase2 = totalActivePeriods - mbdPeriods;
+
+    const numberOfMaxIndividualContributions =
+      periodsForPhase2 <= 0
+        ? 0
+        : Math.floor(
+            (adjustedIndividualSoFar -
+              this.max401kIndividualAmount +
+              contributionAmountForFullMatch * periodsForPhase2) /
+              (contributionAmountForFullMatch - maxPeriodContributionAmount),
+          );
 
     // special single contribution percent between maxing out and tapering to the minimum desired contribution
-    const singleContributionPercent = Math.floor(
-      ((this.max401kIndividualAmount -
-        (this.individualContributionAmountSoFar +
-          numberOfMaxIndividualContributions * maxPeriodContributionAmount +
-          (this.numberOfPayPeriods -
-            numberOfMaxIndividualContributions -
-            this.numberOfPayPeriodsSoFar -
-            1) *
-            contributionAmountForFullMatch)) /
-        this.salary) *
-        this.numberOfPayPeriods *
-        100,
-    );
+    const singleContributionPercent =
+      periodsForPhase2 <= 0
+        ? 0
+        : Math.floor(
+            ((this.max401kIndividualAmount -
+              (adjustedIndividualSoFar +
+                numberOfMaxIndividualContributions *
+                  maxPeriodContributionAmount +
+                (periodsForPhase2 - numberOfMaxIndividualContributions - 1) *
+                  contributionAmountForFullMatch)) /
+              this.salary) *
+              this.numberOfPayPeriods *
+              100,
+          );
     const singleContributionAmount =
       (singleContributionPercent / 100) * payPerPayPeriod;
 
@@ -240,26 +273,31 @@ export class RetirementTable {
         continue;
       }
 
-      // set general case individual contribution fraction and contribution amount
+      // relative index within active (non-passed) periods
+      const r = i - this.numberOfPayPeriodsSoFar;
+      const inMBDPhase = prioritizeMBD && r < mbdPeriods;
+
+      // set individual contribution: MBD phase keeps min%, phase 2 uses frontload logic
       individualContributionFraction =
         this.minIndividualContributionPercent / 100;
-      individualContributionAmount =
-        individualContributionFraction * payPerPayPeriod;
+      individualContributionAmount = contributionAmountForFullMatch;
 
-      // cases to override individual contribution
-      // do max contributions, then single contribution, then default to min match
-      const shouldMaxIndividualContributions =
-        i - this.numberOfPayPeriodsSoFar < numberOfMaxIndividualContributions;
-      const shouldDoSpecialIndividualContribution =
-        i - this.numberOfPayPeriodsSoFar == numberOfMaxIndividualContributions;
+      if (!inMBDPhase) {
+        // phase 2 relative index
+        const r2 = r - mbdPeriods;
+        const shouldMaxIndividualContributions =
+          r2 < numberOfMaxIndividualContributions;
+        const shouldDoSpecialIndividualContribution =
+          r2 === numberOfMaxIndividualContributions;
 
-      if (shouldMaxIndividualContributions) {
-        individualContributionFraction = this.maxContributionPercent / 100;
-        individualContributionAmount = maxPeriodContributionAmount;
-      }
-      if (shouldDoSpecialIndividualContribution) {
-        individualContributionFraction = singleContributionPercent / 100;
-        individualContributionAmount = singleContributionAmount;
+        if (shouldMaxIndividualContributions) {
+          individualContributionFraction = this.maxContributionPercent / 100;
+          individualContributionAmount = maxPeriodContributionAmount;
+        }
+        if (shouldDoSpecialIndividualContribution) {
+          individualContributionFraction = singleContributionPercent / 100;
+          individualContributionAmount = singleContributionAmount;
+        }
       }
 
       // if 401k auto caps, we're at the last row (or first row which is also last),
@@ -419,17 +457,59 @@ export class RetirementTable {
     const minContribAmount =
       (this.minIndividualContributionPercent / 100) * payPerPayPeriod;
 
-    const remainingPeriods =
+    // === MBD priority pre-computation ===
+    const prioritizeMBD =
+      this.prioritizeMegaBackdoor && this.maxAfterTaxAmount > 0;
+    const afterTaxPerPeriodMax = Math.max(
+      maxPeriodContributionAmount - minContribAmount,
+      0,
+    );
+    const remainingAfterTaxCapacity =
+      this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
+    const totalActivePeriods =
       this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar;
-    const remainingTarget =
-      this.max401kIndividualAmount - this.individualContributionAmountSoFar;
+    const mbdPeriods =
+      prioritizeMBD && afterTaxPerPeriodMax > 0 && remainingAfterTaxCapacity > 0
+        ? Math.min(
+            Math.ceil(remainingAfterTaxCapacity / afterTaxPerPeriodMax),
+            totalActivePeriods,
+          )
+        : 0;
 
-    // Equal amount per period, clamped to [min, max]
-    let equalAmount = remainingTarget / remainingPeriods;
+    const individualFromMBDPhase = minContribAmount * mbdPeriods;
+    const adjustedIndividualSoFar =
+      this.individualContributionAmountSoFar + individualFromMBDPhase;
+    const periodsForPhase2 = totalActivePeriods - mbdPeriods;
+
+    // Equal distribution over phase 2 periods only
+    const remainingTarget =
+      this.max401kIndividualAmount - adjustedIndividualSoFar;
+    let equalAmount =
+      periodsForPhase2 > 0 ? remainingTarget / periodsForPhase2 : 0;
     equalAmount = Math.min(
       Math.max(equalAmount, minContribAmount),
       maxPeriodContributionAmount,
     );
+
+    // Equal after-tax distribution across all active periods (non-MBD-priority path only)
+    const afterTaxSlotPerPeriod = maxPeriodContributionAmount - equalAmount;
+    const remainingAfterTaxTarget =
+      this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
+    let equalAfterTaxPercent = 0;
+    let equalAfterTaxAmount = 0;
+    if (
+      !prioritizeMBD &&
+      totalActivePeriods > 0 &&
+      this.maxAfterTaxAmount > 0
+    ) {
+      const rawEqualAfterTax = Math.min(
+        remainingAfterTaxTarget / totalActivePeriods,
+        afterTaxSlotPerPeriod,
+      );
+      equalAfterTaxPercent =
+        Math.floor((rawEqualAfterTax / payPerPayPeriod) * 100) / 100;
+      equalAfterTaxAmount = equalAfterTaxPercent * payPerPayPeriod;
+    }
 
     let individualContributionFraction = 0;
     let individualContributionAmount = 0;
@@ -472,26 +552,36 @@ export class RetirementTable {
         continue;
       }
 
-      // Default: equal contribution; last period uses remainder
-      individualContributionFraction = equalAmount / payPerPayPeriod;
-      individualContributionAmount = equalAmount;
+      const r = i - this.numberOfPayPeriodsSoFar;
+      const inMBDPhase = prioritizeMBD && r < mbdPeriods;
 
-      // Last period: contribute exactly what's needed to hit the max
-      if (i === this.numberOfPayPeriods - 1) {
-        const prevCumulative =
-          i === 0 ? 0 : tableRows[i - 1].cumulativeIndividualAmount;
-        let lastContribution = this.max401kIndividualAmount - prevCumulative;
-        if (lastContribution > maxPeriodContributionAmount) {
-          this.maxNotReached = true;
-          row.rowKey += this.maxNotReachedIcon;
-          lastContribution = maxPeriodContributionAmount;
-        }
-        individualContributionAmount = Math.max(
-          lastContribution,
-          minContribAmount,
-        );
+      if (inMBDPhase) {
+        // MBD priority phase: keep min individual, fill after-tax
         individualContributionFraction =
-          individualContributionAmount / payPerPayPeriod;
+          this.minIndividualContributionPercent / 100;
+        individualContributionAmount = minContribAmount;
+      } else {
+        // Phase 2: equal distribution of remaining individual budget
+        individualContributionFraction = equalAmount / payPerPayPeriod;
+        individualContributionAmount = equalAmount;
+
+        // Last period: contribute exactly what's needed to hit the max
+        if (i === this.numberOfPayPeriods - 1) {
+          const prevCumulative =
+            i === 0 ? 0 : tableRows[i - 1].cumulativeIndividualAmount;
+          let lastContribution = this.max401kIndividualAmount - prevCumulative;
+          if (lastContribution > maxPeriodContributionAmount) {
+            this.maxNotReached = true;
+            row.rowKey += this.maxNotReachedIcon;
+            lastContribution = maxPeriodContributionAmount;
+          }
+          individualContributionAmount = Math.max(
+            lastContribution,
+            minContribAmount,
+          );
+          individualContributionFraction =
+            individualContributionAmount / payPerPayPeriod;
+        }
       }
 
       // automaticallyCap401k: same last-period cap logic as frontload
@@ -599,13 +689,12 @@ export class RetirementTable {
         i == 0
           ? afterTaxCapacity
           : afterTaxCapacity - tableRows[i - 1].afterTaxAmount;
-      afterTaxAmount = Math.max(
-        Math.min(
-          maxPeriodContributionAmount - individualContributionAmount,
-          afterTaxCapacity,
-        ),
-        0,
-      );
+      // Non-MBD-priority equal strategy: spread after-tax evenly; last period takes any remainder
+      const afterTaxSlot =
+        !inMBDPhase && !prioritizeMBD
+          ? equalAfterTaxAmount
+          : maxPeriodContributionAmount - individualContributionAmount;
+      afterTaxAmount = Math.max(Math.min(afterTaxSlot, afterTaxCapacity), 0);
       const afterTaxPercent =
         Math.floor((afterTaxAmount / payPerPayPeriod) * 100) / 100;
       afterTaxAmount = afterTaxPercent * payPerPayPeriod;
@@ -644,40 +733,64 @@ export class RetirementTable {
     const contributionAmountForFullMatch =
       (this.minIndividualContributionPercent / 100) * payPerPayPeriod;
 
-    const remainingPeriods =
+    // === MBD priority pre-computation ===
+    const prioritizeMBD =
+      this.prioritizeMegaBackdoor && this.maxAfterTaxAmount > 0;
+    const afterTaxPerPeriodMax = Math.max(
+      maxPeriodContributionAmount - contributionAmountForFullMatch,
+      0,
+    );
+    const remainingAfterTaxCapacity =
+      this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
+    const totalActivePeriods =
       this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar;
+    const mbdPeriods =
+      prioritizeMBD && afterTaxPerPeriodMax > 0 && remainingAfterTaxCapacity > 0
+        ? Math.min(
+            Math.ceil(remainingAfterTaxCapacity / afterTaxPerPeriodMax),
+            totalActivePeriods,
+          )
+        : 0;
+
+    const individualFromMBDPhase = contributionAmountForFullMatch * mbdPeriods;
+    const adjustedIndividualSoFar =
+      this.individualContributionAmountSoFar + individualFromMBDPhase;
+    const periodsForPhase2 = totalActivePeriods - mbdPeriods;
 
     // Same math as frontload — totals are identical, placement is mirrored
-    const numberOfMaxIndividualContributions = Math.floor(
-      (this.individualContributionAmountSoFar -
-        this.max401kIndividualAmount +
-        contributionAmountForFullMatch *
-          (this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar)) /
-        (contributionAmountForFullMatch - maxPeriodContributionAmount),
-    );
+    const numberOfMaxIndividualContributions =
+      periodsForPhase2 <= 0
+        ? 0
+        : Math.floor(
+            (adjustedIndividualSoFar -
+              this.max401kIndividualAmount +
+              contributionAmountForFullMatch * periodsForPhase2) /
+              (contributionAmountForFullMatch - maxPeriodContributionAmount),
+          );
 
-    const singleContributionPercent = Math.floor(
-      ((this.max401kIndividualAmount -
-        (this.individualContributionAmountSoFar +
-          numberOfMaxIndividualContributions * maxPeriodContributionAmount +
-          (this.numberOfPayPeriods -
-            numberOfMaxIndividualContributions -
-            this.numberOfPayPeriodsSoFar -
-            1) *
-            contributionAmountForFullMatch)) /
-        this.salary) *
-        this.numberOfPayPeriods *
-        100,
-    );
+    const singleContributionPercent =
+      periodsForPhase2 <= 0
+        ? 0
+        : Math.floor(
+            ((this.max401kIndividualAmount -
+              (adjustedIndividualSoFar +
+                numberOfMaxIndividualContributions *
+                  maxPeriodContributionAmount +
+                (periodsForPhase2 - numberOfMaxIndividualContributions - 1) *
+                  contributionAmountForFullMatch)) /
+              this.salary) *
+              this.numberOfPayPeriods *
+              100,
+          );
     const singleContributionAmount =
       (singleContributionPercent / 100) * payPerPayPeriod;
 
-    // Relative index threshold for backload:
-    // r < remainingPeriods - numberOfMaxIndividualContributions - 1  → min
-    // r == remainingPeriods - numberOfMaxIndividualContributions - 1 → special single
-    // r > remainingPeriods - numberOfMaxIndividualContributions - 1  → max
+    // Relative index threshold for backload within phase 2:
+    // r2 < periodsForPhase2 - numberOfMaxIndividualContributions - 1  → min
+    // r2 == periodsForPhase2 - numberOfMaxIndividualContributions - 1 → special single
+    // r2 > periodsForPhase2 - numberOfMaxIndividualContributions - 1  → max
     const specialRelativeIndex =
-      remainingPeriods - numberOfMaxIndividualContributions - 1;
+      periodsForPhase2 - numberOfMaxIndividualContributions - 1;
 
     let individualContributionFraction = 0;
     let individualContributionAmount = 0;
@@ -725,15 +838,19 @@ export class RetirementTable {
         this.minIndividualContributionPercent / 100;
       individualContributionAmount = contributionAmountForFullMatch;
 
-      // Relative index within remaining periods
       const r = i - this.numberOfPayPeriodsSoFar;
+      const inMBDPhase = prioritizeMBD && r < mbdPeriods;
 
-      if (r === specialRelativeIndex) {
-        individualContributionFraction = singleContributionPercent / 100;
-        individualContributionAmount = singleContributionAmount;
-      } else if (r > specialRelativeIndex) {
-        individualContributionFraction = this.maxContributionPercent / 100;
-        individualContributionAmount = maxPeriodContributionAmount;
+      if (!inMBDPhase) {
+        // phase 2 relative index within backload portion
+        const r2 = r - mbdPeriods;
+        if (r2 === specialRelativeIndex) {
+          individualContributionFraction = singleContributionPercent / 100;
+          individualContributionAmount = singleContributionAmount;
+        } else if (r2 > specialRelativeIndex) {
+          individualContributionFraction = this.maxContributionPercent / 100;
+          individualContributionAmount = maxPeriodContributionAmount;
+        }
       }
 
       // automaticallyCap401k: same last-period cap logic as frontload

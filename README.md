@@ -2,17 +2,26 @@
 
 ## Summary
 
-This is a NextJS/React app that contains tools that will do random finance stuff such as:
+This is a NextJS/React app that contains tools to help with personal finance decisions:
 
-1. Paycheck Calculator
-2. 401k Equal Contribution Maximizing
-3. 401k Frontloading
+### Current Tools
 
-Planned features
+1. **Paycheck Calculator** — Estimate your take-home pay after federal/state taxes and deductions
+2. **401k Planner** — Choose a strategy to max out your 401k.
 
-1. 401k Roth vs Traditional (future value estimations + tax assumptions)
-2. Budgeting
-3. Why Invest? with charts
+### Planned Tools
+
+1. **401k Roth vs Traditional** — Compare Roth and Traditional 401k strategies with future value estimates and tax assumptions
+2. **Why Invest?** — Visual charts showing the power of compounding and long-term investing
+3. **Budgeting** — Track income and expenses with category breakdowns
+4. **Emergency Fund Calculator** — Estimate how much to keep in savings based on expenses and risk tolerance
+5. **Debt Payoff Planner** — Compare avalanche vs snowball strategies for paying down debt
+6. **Savings Goal Tracker** — Calculate how long it takes to reach a savings goal given a monthly contribution
+7. **Net Worth Tracker** — Estimate net worth by summing assets and liabilities
+8. **Tax Bracket Visualizer** — See how marginal vs effective tax rates work with interactive income sliders
+9. **HSA Optimizer** — Model the triple tax advantage of HSA contributions and long-term growth
+10. **Social Security Estimator** — Estimate Social Security benefits based on earnings and retirement age
+11. **Export to CSV/Google Sheet** - export charts
 
 ## Technology
 
@@ -20,16 +29,17 @@ This app uses:
 
 - NextJS React with Typescript
 - SASS for component level styling
+- Bootstrap 5.3 / React-Bootstrap for UI components and theming (dark mode support)
 
-Upon merge to `main` branch, github actions will autodeploy this site to <https://awingfu.github.io/web-finance-app>.
+Upon merge to `main` branch, GitHub Actions will autodeploy this site to <https://awingfu.github.io/web-finance-app>.
 
 ## How to Contribute
 
 `/pages` contains the React components in route form e.g. `pages/index.tsx` contains the home page and `pages/paycheck.tsx` contains the `<url>/paycheck` route.
 
-`/src/components` contains the resusable React components used throughout the app such as header, tooltip wrapper, footer, and navigation bar.
+`/src/components` contains the reusable React components used throughout the app such as header, tooltip wrapper, footer, and navigation bar.
 
-`/src/utls` contains the constants, helper functions, and other useful typescript functions for the app.
+`/src/utils` contains the constants, helper functions, and other useful TypeScript functions for the app.
 
 `/.github/workflows` contains the continuous integration scripts that automatically build and deploy the app on pull requests or merges to main.
 

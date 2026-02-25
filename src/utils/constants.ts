@@ -4,7 +4,7 @@
 export enum TAX_CLASSES {
   SINGLE = "Single",
   MARRIED_FILING_JOINTLY = "Married Filing Jointly",
-  MARRIED_FILING_SEPARATELY = "Married Filing Separatly",
+  MARRIED_FILING_SEPARATELY = "Married Filing Separately",
   HEAD_OF_HOUSEHOLD = "Head of Household",
 }
 
@@ -46,7 +46,7 @@ export const PAY_SCHEDULE_TO_ANNUM = {
 
 export const ALL_PAY_SCHEDULES = Object.keys(PAY_SCHEDULE);
 
-// Types of pay schedules
+// Month names
 export enum MONTH_NAMES {
   JANUARY = "January",
   FEBRUARY = "February",
@@ -66,12 +66,12 @@ export const ALL_MONTH_NAMES = Object.keys(MONTH_NAMES);
 
 // Only assuming traditional 401k (which is the same for 403b, tsp, etc.)
 // Source: https://www.irs.gov/retirement-plans/plan-participant-employee/retirement-topics-401k-and-profit-sharing-plan-contribution-limits
-// last updated: 2024
-export const _401k_maximum_contribution_individual = 23000;
-export const _401k_catchup = 7500;
+export const _401k_numbers_last_updated = 2026; // used for frontend display
+export const _401k_maximum_contribution_individual = 24500;
+export const _401k_catchup = 8000;
 export const _401k_maximum_contribution_individual_over50 =
   _401k_maximum_contribution_individual + _401k_catchup;
-export const _401k_maximum_contribution_total = 69000;
+export const _401k_maximum_contribution_total = 72000;
 
 // IRA
 // not used, last updated 2022
@@ -144,7 +144,7 @@ export const _IRA_roth_get_max_contribution = (
   const params = ROTH_PHASE_OUT[tax_class as TAX_CLASSES];
   if (!params) {
     console.log(
-      "Something wen't wrong in calculating max Roth IRA contribution. Invalid tax class",
+      "Something went wrong in calculating max Roth IRA contribution. Invalid tax class",
     );
     return 0;
   }
@@ -155,4 +155,7 @@ export const _IRA_roth_get_max_contribution = (
 };
 
 // HSA
-export const maximum_HSA_contribution = 4150; // 2024
+// last updated 2026
+export const maximum_HSA_contribution = 4400;
+export const maximum_HSA_contribution_family = 8750;
+export const HSA_catchup_contribution = 1000;

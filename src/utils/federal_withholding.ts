@@ -1,5 +1,4 @@
 /**
- * Latest updated year: 2024
  * Federal Withholding Source: https://www.irs.gov/publications/p15t Manual Payroll Systems W4 after 2020
  * Federal Withholding Source PDF: https://www.irs.gov/pub/irs-dft/p15t--dft.pdf
  * W4 Reference for math checks: https://www.irs.gov/pub/irs-pdf/fw4.pdf
@@ -14,103 +13,125 @@ interface Withholding {
   [key: string]: number[][];
 }
 
+export const PAYROLL_LAST_UPDATED = 2026; // used for frontend display
+
 // Withholding will be in the format [min wage, max wage, cumulative withholding from above rows, withholding rate]
 const BIWEEKLY_WITHHOLDING: Withholding = {
   [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
-    [0, 1123, 0, 0.0],
-    [1123, 2015, 0, 0.1],
-    [2015, 4750, 89.2, 0.12],
-    [4750, 8856, 417.4, 0.22],
-    [8856, 15888, 1320.72, 0.24],
-    [15888, 19871, 3008.4, 0.32],
-    [19871, 29246, 4282.96, 0.35],
-    [29246, Infinity, 7564.21, 0.37],
+    [0, 1238, 0, 0.0],
+    [1238, 2192, 0, 0.1],
+    [2192, 5115, 95.4, 0.12],
+    [5115, 9369, 446.16, 0.22],
+    [9369, 16760, 1382.04, 0.24],
+    [16760, 20948, 3155.88, 0.32],
+    [20948, 30804, 4496.04, 0.35],
+    [30804, Infinity, 7945.64, 0.37],
   ],
   [TAX_CLASSES.SINGLE]: [
-    [0, 562, 0, 0.0],
-    [562, 1008, 0, 0.1],
-    [1008, 2375, 44.6, 0.12],
-    [2375, 4428, 208.64, 0.22],
-    [4428, 7944, 660.3, 0.24],
-    [7944, 9936, 1504.14, 0.32],
-    [9936, 23998, 2141.58, 0.35],
-    [23998, Infinity, 7063.28, 0.37],
+    [0, 619, 0, 0.0],
+    [619, 1096, 0, 0.1],
+    [1096, 2558, 47.7, 0.12],
+    [2558, 4685, 223.14, 0.22],
+    [4685, 8380, 691.08, 0.24],
+    [8380, 10474, 1577.88, 0.32],
+    [10474, 25258, 2247.96, 0.35],
+    [25258, Infinity, 7422.36, 0.37],
   ],
 };
 
 const SEMIMONTHLY_WITHHOLDING: Withholding = {
   [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
-    [0, 1217, 0, 0.0],
-    [1217, 2183, 0, 0.1],
-    [2183, 5146, 96.6, 0.12],
-    [5146, 9594, 452.16, 0.22],
-    [9594, 17213, 1430.72, 0.24],
-    [17213, 21527, 3259.28, 0.32],
-    [21527, 31683, 4639.76, 0.35],
-    [31683, Infinity, 8194.36, 0.37],
+    [0, 1342, 0, 0.0],
+    [1342, 2375, 0, 0.1],
+    [2375, 5542, 103.3, 0.12],
+    [5542, 10150, 483.34, 0.22],
+    [10150, 18156, 1497.1, 0.24],
+    [18156, 22694, 3418.54, 0.32],
+    [22694, 33731, 4870.7, 0.35],
+    [33731, Infinity, 8607.65, 0.37],
   ],
   [TAX_CLASSES.SINGLE]: [
-    [0, 608, 0, 0.0],
-    [608, 1092, 0, 0.1],
-    [1092, 2573, 48.4, 0.12],
-    [2573, 4797, 226.12, 0.22],
-    [4797, 8606, 715.4, 0.24],
-    [8606, 10764, 1629.56, 0.32],
-    [10764, 25998, 2320.12, 0.35],
-    [25998, Infinity, 7652.02, 0.37],
+    [0, 671, 0, 0.0],
+    [671, 1188, 0, 0.1],
+    [1188, 2771, 51.7, 0.12],
+    [2771, 5075, 241.66, 0.22],
+    [5075, 9078, 748.54, 0.24],
+    [9078, 11347, 1709.26, 0.32],
+    [11347, 27363, 2435.34, 0.35],
+    [27363, Infinity, 8040.94, 0.37],
   ],
 };
 
 const MONTHLY_WITHHOLDING: Withholding = {
   [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
-    [0, 2433, 0, 0.0],
-    [2433, 4367, 0, 0.1],
-    [4367, 10292, 193.4, 0.12],
-    [10292, 19188, 904.4, 0.22],
-    [19188, 34425, 2861.52, 0.24],
-    [34425, 43054, 6518.4, 0.32],
-    [43054, 63367, 9279.68, 0.35],
-    [63367, Infinity, 16389.23, 0.37],
+    [0, 2683, 0, 0.0],
+    [2683, 4750, 0, 0.1],
+    [4750, 11083, 206.7, 0.12],
+    [11083, 20300, 966.66, 0.22],
+    [20300, 36313, 2994.4, 0.24],
+    [36313, 45388, 6837.52, 0.32],
+    [45388, 66742, 9741.52, 0.35],
+    [66742, Infinity, 17215.42, 0.37],
   ],
   [TAX_CLASSES.SINGLE]: [
-    [0, 1217, 0, 0.0],
-    [1217, 2183, 0, 0.1],
-    [2183, 5146, 96.6, 0.12],
-    [5146, 9594, 452.16, 0.22],
-    [9594, 17213, 1430.72, 0.24],
-    [17213, 21527, 3259.28, 0.32],
-    [21527, 51996, 4639.76, 0.35],
-    [51996, Infinity, 15303.91, 0.37],
+    [0, 1342, 0, 0.0],
+    [1342, 2375, 0, 0.1],
+    [2375, 5542, 103.3, 0.12],
+    [5542, 10150, 483.34, 0.22],
+    [10150, 18156, 1497.1, 0.24],
+    [18156, 22694, 3418.54, 0.32],
+    [22694, 54725, 4870.7, 0.35],
+    [54725, Infinity, 16081.55, 0.37],
   ],
 };
 
 // This is done individually so tax class doesn't matter.
 // Income over the threshold is no longer taxed, hence we see a 0 rate.
+const FICA_INCOME_CAP = 184500;
+const FICA_TAX_RATE = 0.062; // Technically employer also pays 6.2%, but we're only concerned with employee withholding here
 const FICA_WITHHOLDING: Withholding = {
   [TAX_CLASSES.SINGLE]: [
-    [0, 168600, 0, 0.062],
-    [168600, Infinity, 10453.2, 0.0],
+    [0, FICA_INCOME_CAP, 0, FICA_TAX_RATE],
+    [FICA_INCOME_CAP, Infinity, FICA_INCOME_CAP * FICA_TAX_RATE, 0.0],
   ],
 };
 
 // Married filing jointly is actually different here.
 // Income over the threshold is an additional 0.9% so 0.0145 + 0.009 = 0.0235 for the rate above threshold
+// ignoring head of household as it's the same as single and not used in any calculators
+const MEDICARE_INCOME_CAP_SINGLE = 200000;
+const MEDICARE_INCOME_CAP_MARRIED = 250000;
+const MEDICARE_INCOME_CAP_SEPARATE = 125000;
+const MEDICARE_TAX_RATE = 0.0145;
+const MEDICARE_ADDITIONAL_TAX_RATE = 0.009;
+const MEDICARE_TOP_RATE = MEDICARE_TAX_RATE + MEDICARE_ADDITIONAL_TAX_RATE;
 const MEDICARE_WITHHOLDING: Withholding = {
   [TAX_CLASSES.SINGLE]: [
-    [0, 200000, 0, 0.0145],
-    [200000, Infinity, 2900, 0.0235],
+    [0, MEDICARE_INCOME_CAP_SINGLE, 0, MEDICARE_TAX_RATE],
+    [
+      MEDICARE_INCOME_CAP_SINGLE,
+      Infinity,
+      MEDICARE_INCOME_CAP_SINGLE * MEDICARE_TAX_RATE,
+      MEDICARE_TOP_RATE,
+    ],
   ],
   [TAX_CLASSES.MARRIED_FILING_JOINTLY]: [
-    [0, 250000, 0, 0.0145],
-    [250000, Infinity, 3625, 0.0235],
+    [0, MEDICARE_INCOME_CAP_MARRIED, 0, MEDICARE_TAX_RATE],
+    [
+      MEDICARE_INCOME_CAP_MARRIED,
+      Infinity,
+      MEDICARE_INCOME_CAP_MARRIED * MEDICARE_TAX_RATE,
+      MEDICARE_TOP_RATE,
+    ],
   ],
   [TAX_CLASSES.MARRIED_FILING_SEPARATELY]: [
-    [0, 125000, 0, 0.0145],
-    [125000, Infinity, 1812.5, 0.0235],
-  ],
-  [TAX_CLASSES.HEAD_OF_HOUSEHOLD]: [
-    [0, 200000, 0, 0.0145],
-    [200000, Infinity, 2900, 0.0235],
+    [0, MEDICARE_INCOME_CAP_SEPARATE, 0, MEDICARE_TAX_RATE],
+    [
+      MEDICARE_INCOME_CAP_SEPARATE,
+      Infinity,
+      MEDICARE_INCOME_CAP_SEPARATE * MEDICARE_TAX_RATE,
+      MEDICARE_TOP_RATE,
+    ],
   ],
 };
 
@@ -125,7 +146,7 @@ const MEDICARE_WITHHOLDING: Withholding = {
 export const getFederalWithholding = (
   taxableWage: number,
   rawTaxClass: TAX_CLASSES,
-  payPeriod: PAY_SCHEDULE
+  payPeriod: PAY_SCHEDULE,
 ): number => {
   let taxClass = rawTaxClass;
   if (
@@ -146,7 +167,7 @@ export const getFederalWithholding = (
       break;
     default:
       console.log(
-        "Unsupported pay period used to call getFederalWithholding. Defaulting to biweekly."
+        "Unsupported pay period used to call getFederalWithholding. Defaulting to biweekly.",
       );
       break;
   }
@@ -160,11 +181,6 @@ export const getFederalWithholding = (
   ) {
     row += 1;
   }
-  // console.log(
-  //   "You're at the " +
-  //     withholdingBrackets[row][3] * 100 +
-  //     "% Federal withholding bracket."
-  // );
   return (
     withholdingBrackets[row][2] +
     (taxableWage - withholdingBrackets[row][0]) * withholdingBrackets[row][3]
@@ -183,7 +199,7 @@ export const getFICAWithholding = (annualIncome: number): number => {
 
 export const getMedicareWithholding = (
   annualIncome: number,
-  tax_class: TAX_CLASSES
+  tax_class: TAX_CLASSES,
 ): number => {
   const withholdingBrackets = MEDICARE_WITHHOLDING[tax_class];
   const threshold = withholdingBrackets[1][0];
@@ -193,5 +209,5 @@ export const getMedicareWithholding = (
       (annualIncome - threshold) * withholdingBrackets[1][3]
     );
   }
-  return annualIncome * withholdingBrackets[1][3];
+  return annualIncome * withholdingBrackets[0][3];
 };
