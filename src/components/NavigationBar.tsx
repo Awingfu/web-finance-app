@@ -129,6 +129,7 @@ const NavigationBar = () => {
               setShowDrawer(false);
             }}
             className="w-100"
+            style={{ borderColor: theme === "dark" ? "white" : "black" }}
           >
             {theme === "dark" ? "☀ Light Mode" : "☾ Dark Mode"}
           </Button>
