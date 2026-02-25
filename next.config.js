@@ -7,6 +7,7 @@ module.exports = {
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH,
   sassOptions: {
     includePaths: [path.join(__dirname, "styles")],
+    quietDeps: true,
   },
   reactStrictMode: true,
   images: {
