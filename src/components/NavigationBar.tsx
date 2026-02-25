@@ -9,6 +9,7 @@ import { useTheme } from "../utils/ThemeContext";
 const NAV_LINKS = [
   { href: "/paycheck", label: "Paycheck" },
   { href: "/retirement-savings", label: "401k Optimizer" },
+  { href: "/faq", label: "FAQ" },
 ];
 
 const PAGE_NAMES: Record<string, string> = {
@@ -16,6 +17,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/paycheck": "Paycheck",
   "/retirement-savings": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
+  "/faq": "FAQ",
 };
 
 /**
@@ -103,6 +105,7 @@ const NavigationBar = () => {
         onHide={() => setShowDrawer(false)}
         placement="end"
         data-bs-theme={theme}
+        style={{ width: "75%" }}
       >
         <Offcanvas.Header closeButton>
           <Offcanvas.Title>Menu</Offcanvas.Title>

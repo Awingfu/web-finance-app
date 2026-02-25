@@ -11,17 +11,18 @@ This is a NextJS/React app that contains tools to help with personal finance dec
 
 ### Planned Tools
 
-1. **401k Roth vs Traditional** — Compare Roth and Traditional 401k strategies with future value estimates and tax assumptions
-2. **Why Invest?** — Visual charts showing the power of compounding and long-term investing
+1. **401k Roth vs Traditional** (High Prio)— Compare Roth and Traditional 401k strategies with future value estimates and tax assumptions
+2. **Why Invest?** (High Prio)— Visual charts showing the power of compounding and long-term investing. Input savings rate, salary, savings account rate vs SPY rates. Maybe show starting late and how it hurts
 3. **Budgeting** — Track income and expenses with category breakdowns
 4. **Emergency Fund Calculator** — Estimate how much to keep in savings based on expenses and risk tolerance
 5. **Debt Payoff Planner** — Compare avalanche vs snowball strategies for paying down debt
 6. **Savings Goal Tracker** — Calculate how long it takes to reach a savings goal given a monthly contribution
 7. **Net Worth Tracker** — Estimate net worth by summing assets and liabilities
-8. **Tax Bracket Visualizer** — See how marginal vs effective tax rates work with interactive income sliders
+8. **Tax Bracket Visualizer** (High Prio) — See how marginal vs effective tax rates work with interactive income sliders. include capital gains and qualified dividends
 9. **HSA Optimizer** — Model the triple tax advantage of HSA contributions and long-term growth
-10. **Social Security Estimator** — Estimate Social Security benefits based on earnings and retirement age
-11. **Export to CSV/Google Sheet** - export charts
+10. **Social Security Estimator** (High Prio) — Estimate Social Security benefits based on earnings and retirement age
+11. **Export to CSV/Google Sheet** (High Prio) - export charts
+12. **Retirement Income Planning** (High Prio) - Using estimated SSN, RMDs, 401k balances, input assets, and make a plan for income target OR given expected withdrawals and gains, est taxes owed...
 
 ## Technology
 

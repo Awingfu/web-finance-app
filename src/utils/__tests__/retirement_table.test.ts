@@ -36,6 +36,7 @@ function makeOptions(
     update401kLimits: false,
     showEmployerMatch: false,
     showMegaBackdoor: false,
+    prioritizeMegaBackdoor: false,
     ...overrides,
   };
 }

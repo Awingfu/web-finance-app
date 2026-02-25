@@ -1,4 +1,4 @@
-import { useState, FormEvent, SetStateAction } from "react";
+import { useState, ChangeEvent, SetStateAction } from "react";
 import {
   Form,
   Table,
@@ -12,63 +12,24 @@ import { Header, Footer, TooltipOnHover } from "../src/components";
 import {
   TAX_CLASSES,
   FREQUENCIES,
-  FREQUENCY_TO_ANNUM,
   ALL_FREQUENCIES,
   PAY_SCHEDULE,
-  PAY_SCHEDULE_TO_ANNUM,
 } from "../src/utils/constants";
 import {
-  determineStateTaxesWithheld,
-  getFICAWithholding,
-  getFederalWithholding,
-  getMedicareWithholding,
   US_STATES_MAP,
-  instanceOfTaxUnknown,
   formatCurrency,
   formatStateValue,
-  maxFICAContribution,
-  getFICATaxRate,
+  LOCAL_TAXES,
 } from "../src/utils";
-import { PAYROLL_LAST_UPDATED } from "../src/utils/federal_withholding";
+import { PAYROLL_LAST_UPDATED } from "../src/utils/withholdings_federal";
+import { computePaycheck, formatTaxRate } from "../src/utils/paycheck_utils";
 
 /**
  * TODO:
  * 1. Create more advanced table
- *  - Company match
- *  - Other tax deductions, company match on HSA/FSA
  *  - multiple states
- *  - maximums on 401k, IRA, HSA
- * 2. perhaps split tool to do a month by month breakdown (e.g. to factor in maxing SStax)
- * 3. Split form and table to separate components
- * 4. save info to local storage + clear data button -> so we don't lose data on refresh
- * 5. city tax dropdown or custom %
+ * 2. save info to local storage + clear data button -> so we don't lose data on refresh
  */
-
-const calculateContributionFromPercentage = (
-  amount: number,
-  contributionPercentage: number,
-): number => {
-  return amount * (contributionPercentage / 100);
-};
-
-const convertAnnualAmountToPaySchedule = (
-  amount: number,
-  paySchedule: PAY_SCHEDULE,
-): number => {
-  return amount / PAY_SCHEDULE_TO_ANNUM[paySchedule];
-};
-
-const calculateAnnualFromAmountAndFrequency = (
-  contributionAmount: number,
-  frequency: FREQUENCIES = FREQUENCIES.ANNUM,
-  paySchedule: PAY_SCHEDULE = PAY_SCHEDULE.BIWEEKLY,
-): number => {
-  if (frequency === FREQUENCIES.PAYCHECK) {
-    return contributionAmount * PAY_SCHEDULE_TO_ANNUM[paySchedule];
-  } else {
-    return contributionAmount * FREQUENCY_TO_ANNUM[frequency];
-  }
-};
 
 function Paycheck() {
   // Form States
@@ -79,72 +40,23 @@ function Paycheck() {
   const [paySchedule, changePaySchedule] = useState(PAY_SCHEDULE.BIWEEKLY);
   const [taxClass, changeTaxClass] = useState(TAX_CLASSES.SINGLE);
   const [usState, changeUSState] = useState(US_STATES_MAP["None"].abbreviation);
-
-  // if bonus is elegible for contributions, add it to salary
-  let totalCompensation_annual = salary;
-  if (bonusEligible) {
-    totalCompensation_annual = salary + bonus;
-  }
+  const [localTaxes, setLocalTaxes] = useState<Record<string, boolean>>({});
 
   // Pre Tax
   const [t401kContribution, changeT401kContribution] = useState(0);
-  const t401k_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    t401kContribution,
-  );
-  const t401k_paycheck = convertAnnualAmountToPaySchedule(
-    t401k_annual,
-    paySchedule,
-  );
-
   const [tIRAContribution, changeTIRAContribution] = useState(0);
-  const tIRA_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    tIRAContribution,
-  );
-  const tIRA_paycheck = convertAnnualAmountToPaySchedule(
-    tIRA_annual,
-    paySchedule,
-  );
 
   const [medicalContribution, changeMedicalContribution] = useState(0);
   const [medicalContributionFrequency, changeMedicalContributionFrequency] =
     useState(FREQUENCIES.PAYCHECK);
-  const medical_annual = calculateAnnualFromAmountAndFrequency(
-    medicalContribution,
-    medicalContributionFrequency,
-    paySchedule,
-  );
-  const medical_paycheck = convertAnnualAmountToPaySchedule(
-    medical_annual,
-    paySchedule,
-  );
 
   const [commuterContribution, changeCommuterContribution] = useState(0);
   const [commuterContributionFrequency, changeCommuterContributionFrequency] =
     useState(FREQUENCIES.PAYCHECK);
-  const commuter_annual = calculateAnnualFromAmountAndFrequency(
-    commuterContribution,
-    commuterContributionFrequency,
-    paySchedule,
-  );
-  const commuter_paycheck = convertAnnualAmountToPaySchedule(
-    commuter_annual,
-    paySchedule,
-  );
 
   const [hsaContribution, changeHSAContribution] = useState(0);
   const [hsaContributionFrequency, changeHSAContributionFrequency] = useState(
     FREQUENCIES.PAYCHECK,
-  );
-  const hsa_annual = calculateAnnualFromAmountAndFrequency(
-    hsaContribution,
-    hsaContributionFrequency,
-    paySchedule,
-  );
-  const hsa_paycheck = convertAnnualAmountToPaySchedule(
-    hsa_annual,
-    paySchedule,
   );
 
   const [otherPreTaxContribution, changeOtherPreTaxContribution] = useState(0);
@@ -152,196 +64,12 @@ function Paycheck() {
     otherPreTaxContributionFrequency,
     changeOtherPreTaxContributionFrequency,
   ] = useState(FREQUENCIES.PAYCHECK);
-  const otherPreTax_annual = calculateAnnualFromAmountAndFrequency(
-    otherPreTaxContribution,
-    otherPreTaxContributionFrequency,
-    paySchedule,
-  );
-  const otherPreTax_paycheck = convertAnnualAmountToPaySchedule(
-    otherPreTax_annual,
-    paySchedule,
-  );
 
-  // used to remove pre tax rows in table with $0 contributions
-  const preTaxTableMap: { [key: string]: any } = {
-    "Traditional 401k": [t401k_annual, t401k_paycheck],
-    "Traditional IRA": [tIRA_annual, tIRA_paycheck],
-    "Medical Insurance": [medical_annual, medical_paycheck],
-    "Commuter Benefits": [commuter_annual, commuter_paycheck],
-    "HSA/FSA": [hsa_annual, hsa_paycheck],
-    "Other Pre-Tax": [otherPreTax_annual, otherPreTax_paycheck],
-  };
-
-  // if all Pre tax deductions are 0, dont render the section at all
-  const shouldRenderPreTaxDeductions = !!Object.keys(preTaxTableMap).filter(
-    (key) => preTaxTableMap[key][0] != 0,
-  ).length;
-
-  const sumOfPreTaxContributions_annual = Object.keys(preTaxTableMap).reduce(
-    (prev, curr) => prev + preTaxTableMap[curr][0],
-    0,
-  );
-  let taxableIncome_annual =
-    totalCompensation_annual - sumOfPreTaxContributions_annual;
-  // if bonus was not eligible for contributions, add it to taxable income
-  if (!bonusEligible) {
-    taxableIncome_annual =
-      totalCompensation_annual - sumOfPreTaxContributions_annual + bonus;
-  }
-  taxableIncome_annual = Math.max(0, taxableIncome_annual);
-  const taxableIncome_paycheck = convertAnnualAmountToPaySchedule(
-    taxableIncome_annual,
-    paySchedule,
-  );
-
-  // Taxes Withheld, should use taxableIncome_annual over salary
-  const federalWithholding_paycheck = getFederalWithholding(
-    taxableIncome_paycheck,
-    taxClass,
-    paySchedule,
-  );
-  const federalWithholding_annual =
-    federalWithholding_paycheck * PAY_SCHEDULE_TO_ANNUM[paySchedule];
-
-  const grossTaxableIncome_annual = salary + bonus;
-  const grossTaxableIncome_paycheck = convertAnnualAmountToPaySchedule(
-    grossTaxableIncome_annual,
-    paySchedule,
-  );
-  const socialSecurityWithholding_annual = getFICAWithholding(
-    grossTaxableIncome_annual,
-  );
-  let socialSecurityWithholding_paycheck = convertAnnualAmountToPaySchedule(
-    socialSecurityWithholding_annual,
-    paySchedule,
-  );
-  const socialSecurityMaxedIcon = "\u2020"; // dagger
-  const socialSecurityMaxedNote =
-    socialSecurityMaxedIcon +
-    " You will pay the maximum Social Security tax of " +
-    formatCurrency(maxFICAContribution) +
-    " this year. Once you have withheld the maximum, which is after withholding for " +
-    Math.ceil(
-      maxFICAContribution / (grossTaxableIncome_paycheck * getFICATaxRate),
-    ) +
-    " paychecks, you will then withhold $0 into this category for the rest of the calendar year.";
-  let socialSecurityMaxedAlertTableFooter = <></>;
-  let socialSecurity_key = "Social Security";
-  const isSocialSecurityMaxed =
-    socialSecurityWithholding_annual === maxFICAContribution;
-  if (isSocialSecurityMaxed) {
-    socialSecurityMaxedAlertTableFooter = (
-      <Alert className="mb-3" variant="secondary">
-        {socialSecurityMaxedNote}
-      </Alert>
-    );
-    socialSecurity_key = "Social Security" + socialSecurityMaxedIcon;
-    socialSecurityWithholding_paycheck = Math.min(
-      grossTaxableIncome_paycheck * getFICATaxRate,
-      maxFICAContribution,
-    );
-  }
-
-  const medicareWithholding_annual = getMedicareWithholding(
-    grossTaxableIncome_annual,
-    taxClass,
-  );
-  const medicareWithholding_paycheck = convertAnnualAmountToPaySchedule(
-    medicareWithholding_annual,
-    paySchedule,
-  );
-
-  let stateTaxInvalidAlert = <></>;
-  if (instanceOfTaxUnknown(US_STATES_MAP[usState])) {
-    stateTaxInvalidAlert = (
-      <Alert className="mb-3" variant="danger">
-        {US_STATES_MAP[usState].name} State Tax Withholding has not been
-        defined! Assuming $0.
-      </Alert>
-    );
-  }
-  const stateWithholding_annual = determineStateTaxesWithheld(
-    usState,
-    taxableIncome_annual,
-    taxClass,
-  );
-  const stateWithholding_paycheck = convertAnnualAmountToPaySchedule(
-    stateWithholding_annual,
-    paySchedule,
-  );
-  const stateWithholding_key =
-    US_STATES_MAP[usState].abbreviation + " State Withholding";
-
-  // used to remove tax rows in table with $0 contributions
-  const taxTableMap: { [key: string]: any } = {
-    "Federal Withholding": [
-      federalWithholding_annual,
-      federalWithholding_paycheck,
-    ],
-    [socialSecurity_key]: [
-      socialSecurityWithholding_annual,
-      socialSecurityWithholding_paycheck,
-    ],
-    Medicare: [medicareWithholding_annual, medicareWithholding_paycheck],
-    [stateWithholding_key]: [
-      stateWithholding_annual,
-      stateWithholding_paycheck,
-    ],
-  };
-
-  const netPay_annual =
-    taxableIncome_annual -
-    federalWithholding_annual -
-    socialSecurityWithholding_annual -
-    medicareWithholding_annual -
-    stateWithholding_annual;
-  const netPay_paycheck = convertAnnualAmountToPaySchedule(
-    netPay_annual,
-    paySchedule,
-  );
-
-  // Post Tax, uses totalCompensation_annual for calculations instead of taxableIncome_annual
+  // Post Tax
   const [r401kContribution, changeR401kContribution] = useState(0);
-  const r401k_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    r401kContribution,
-  );
-  const r401k_paycheck = convertAnnualAmountToPaySchedule(
-    r401k_annual,
-    paySchedule,
-  );
-
-  // After tax 401k
   const [at401kContribution, changeAT401kContribution] = useState(0);
-  const at401k_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    at401kContribution,
-  );
-  const at401k_paycheck = convertAnnualAmountToPaySchedule(
-    at401k_annual,
-    paySchedule,
-  );
-
   const [rIRAContribution, changeRIRAContribution] = useState(0);
-  const rIRA_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    rIRAContribution,
-  );
-  const rIRA_paycheck = convertAnnualAmountToPaySchedule(
-    rIRA_annual,
-    paySchedule,
-  );
-
-  // stock purchase plans which are usually percentages and after tax
   const [sppContribution, changeSPPContribution] = useState(0);
-  const stockPurchasePlan_annual = calculateContributionFromPercentage(
-    totalCompensation_annual,
-    sppContribution,
-  );
-  const stockPurchasePlan_paycheck = convertAnnualAmountToPaySchedule(
-    stockPurchasePlan_annual,
-    paySchedule,
-  );
 
   const [otherPostTaxContribution, changeOtherPostTaxContribution] =
     useState(0);
@@ -349,42 +77,59 @@ function Paycheck() {
     otherPostTaxContributionFrequency,
     changeOtherPostTaxContributionFrequency,
   ] = useState(FREQUENCIES.PAYCHECK);
-  const otherPostTax_annual = calculateAnnualFromAmountAndFrequency(
+
+  // Derived calculations
+  const results = computePaycheck({
+    salary,
+    bonus,
+    bonusEligible,
+    paySchedule,
+    taxClass,
+    usState,
+    localTaxes,
+    t401kContribution,
+    tIRAContribution,
+    medicalContribution,
+    medicalContributionFrequency,
+    commuterContribution,
+    commuterContributionFrequency,
+    hsaContribution,
+    hsaContributionFrequency,
+    otherPreTaxContribution,
+    otherPreTaxContributionFrequency,
+    r401kContribution,
+    at401kContribution,
+    rIRAContribution,
+    sppContribution,
     otherPostTaxContribution,
     otherPostTaxContributionFrequency,
-    paySchedule,
-  );
-  const otherPostTax_paycheck = convertAnnualAmountToPaySchedule(
-    otherPostTax_annual,
-    paySchedule,
-  );
+  });
 
-  // used to remove post tax rows in table with $0 contributions
-  const postTaxTableMap: { [key: string]: any } = {
-    "Roth 401k": [r401k_annual, r401k_paycheck],
-    "After Tax 401k": [at401k_annual, at401k_paycheck],
-    "Roth IRA": [rIRA_annual, rIRA_paycheck],
-    "Stock Purchase Plan": [
-      stockPurchasePlan_annual,
-      stockPurchasePlan_paycheck,
-    ],
-    "Other Post-Tax": [otherPostTax_annual, otherPostTax_paycheck],
-  };
-
-  // if all post tax deductions are 0, dont render the section at all
-  const shouldRenderPostTaxDeductions = !!Object.keys(postTaxTableMap).filter(
-    (key) => postTaxTableMap[key][0] != 0,
-  ).length;
-
-  const sumOfPostTaxContributions_annual = Object.keys(postTaxTableMap).reduce(
-    (prev, curr) => prev + postTaxTableMap[curr][0],
-    0,
+  // JSX alerts constructed from results data
+  const stateTaxInvalidAlert = results.stateIsUnknown ? (
+    <Alert className="mb-3" variant="danger">
+      {US_STATES_MAP[usState].name} State Tax Withholding has not been defined!
+      Assuming $0.
+    </Alert>
+  ) : (
+    <></>
   );
 
-  const takeHomePay_annual = netPay_annual - sumOfPostTaxContributions_annual;
-  const takeHomePay_paycheck = convertAnnualAmountToPaySchedule(
-    takeHomePay_annual,
-    paySchedule,
+  const stateEstimateTableFooter = results.stateIsEstimate ? (
+    <Alert className="mb-3" variant="secondary">
+      {results.stateEstimateIcon} State withholding may be estimated using
+      income tax brackets and standard deduction. See the FAQ for details.
+    </Alert>
+  ) : (
+    <></>
+  );
+
+  const socialSecurityMaxedAlertTableFooter = results.isSocialSecurityMaxed ? (
+    <Alert className="mb-3" variant="secondary">
+      {results.socialSecurityMaxedNote}
+    </Alert>
+  ) : (
+    <></>
   );
 
   // helper map for form fields with custom frequencies
@@ -422,14 +167,14 @@ function Paycheck() {
   };
 
   const update = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     changeFunction((e.target as HTMLInputElement).value);
   };
 
   const updateAmount = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
@@ -442,7 +187,7 @@ function Paycheck() {
   };
 
   const updateContribution = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
@@ -585,20 +330,62 @@ function Paycheck() {
             />
           </Form.Group>
 
-          <Form.Label>US State Withholding Tax</Form.Label>
-          <DropdownButton
-            className="mb-3"
-            id="us-state-dropdown-button"
-            title={US_STATES_MAP[usState].name}
-            variant="secondary"
-            onSelect={(e) => updateWithEventKey(e, changeUSState)}
-          >
-            {Object.keys(US_STATES_MAP).map((key) => (
-              <Dropdown.Item eventKey={key} key={key}>
-                {key}
-              </Dropdown.Item>
-            ))}
-          </DropdownButton>
+          <Form.Group className="mb-3">
+            <div
+              className={styles.inlineGroup}
+              style={{ alignItems: "flex-start" }}
+            >
+              <div className={styles.inlineChildren}>
+                <Form.Label>US State Withholding</Form.Label>
+                <DropdownButton
+                  id="us-state-dropdown-button"
+                  title={US_STATES_MAP[usState].name}
+                  variant="secondary"
+                  onSelect={(e) => {
+                    updateWithEventKey(e, changeUSState);
+                    setLocalTaxes({});
+                  }}
+                >
+                  {Object.keys(US_STATES_MAP).map((key) => (
+                    <Dropdown.Item eventKey={key} key={key}>
+                      {key}
+                    </Dropdown.Item>
+                  ))}
+                </DropdownButton>
+              </div>
+              {results.localTaxKeys.length > 0 && (
+                <div className={styles.inlineChildren}>
+                  <Form.Label>Local Tax</Form.Label>
+                  {results.localTaxKeys.map((key) => {
+                    const tax = LOCAL_TAXES[key];
+                    const checkbox = (
+                      <Form.Check
+                        key={key}
+                        type="checkbox"
+                        label={tax.name}
+                        checked={!!localTaxes[key]}
+                        onChange={() =>
+                          setLocalTaxes((prev) => ({
+                            ...prev,
+                            [key]: !prev[key],
+                          }))
+                        }
+                      />
+                    );
+                    return tax.tooltip ? (
+                      <TooltipOnHover
+                        key={key}
+                        text={tax.tooltip}
+                        nest={checkbox}
+                      />
+                    ) : (
+                      checkbox
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </Form.Group>
           {stateTaxInvalidAlert}
 
           <Form.Group className="mb-3">
@@ -770,91 +557,104 @@ function Paycheck() {
             <tbody>
               <tr>
                 <td className={styles.thicc}>Gross Income</td>
-                <td>{formatCurrency(totalCompensation_annual)}</td>
-                <td>
-                  {formatCurrency(
-                    convertAnnualAmountToPaySchedule(
-                      totalCompensation_annual,
-                      paySchedule,
-                    ),
-                  )}
-                </td>
+                <td>{formatCurrency(results.totalCompensation_annual)}</td>
+                <td>{formatCurrency(results.totalCompensation_paycheck)}</td>
               </tr>
-              {shouldRenderPreTaxDeductions && (
+              {results.shouldRenderPreTaxDeductions && (
                 <>
                   <tr>
                     <td colSpan={4} className={styles.thicc}>
                       Pre-Tax Deductions
                     </td>
                   </tr>
-                  {Object.keys(preTaxTableMap)
-                    .filter((key) => preTaxTableMap[key][0] != 0)
+                  {Object.keys(results.preTaxTableMap)
+                    .filter((key) => results.preTaxTableMap[key][0] != 0)
                     .map((key) => (
                       <tr key={key}>
                         <td>{key}</td>
-                        <td>{formatCurrency(-preTaxTableMap[key][0])}</td>
-                        <td>{formatCurrency(-preTaxTableMap[key][1])}</td>
+                        <td>
+                          {formatCurrency(-results.preTaxTableMap[key][0])}
+                        </td>
+                        <td>
+                          {formatCurrency(-results.preTaxTableMap[key][1])}
+                        </td>
                       </tr>
                     ))}
                 </>
               )}
               <tr>
                 <td>Taxable Pay</td>
-                <td>{formatCurrency(taxableIncome_annual)}</td>
-                <td>{formatCurrency(taxableIncome_paycheck)}</td>
+                <td>{formatCurrency(results.taxableIncome_annual)}</td>
+                <td>{formatCurrency(results.taxableIncome_paycheck)}</td>
               </tr>
               <tr>
                 <td colSpan={4} className={styles.thicc}>
                   Tax Withholdings
                 </td>
               </tr>
-              {Object.keys(taxTableMap)
-                .filter((key) => taxTableMap[key][0] != 0)
-                .map((key) => (
-                  <tr key={key}>
-                    <td>{key}</td>
-                    <td>{formatCurrency(-taxTableMap[key][0])}</td>
-                    <td>{formatCurrency(-taxTableMap[key][1])}</td>
-                  </tr>
-                ))}
+              {Object.keys(results.taxTableMap)
+                .filter((key) => results.taxTableMap[key][0] != 0)
+                .map((key) => {
+                  const rates = results.taxTableMap[key][2];
+                  return (
+                    <tr key={key}>
+                      <td>
+                        {key}
+                        {rates && (
+                          <small className="text-muted d-block">
+                            Marginal: {formatTaxRate(rates.marginal)} &middot;{" "}
+                            Effective: {formatTaxRate(rates.effective)}
+                          </small>
+                        )}
+                      </td>
+                      <td>{formatCurrency(-results.taxTableMap[key][0])}</td>
+                      <td>{formatCurrency(-results.taxTableMap[key][1])}</td>
+                    </tr>
+                  );
+                })}
               <tr>
                 <td>Net Pay</td>
-                <td>{formatCurrency(netPay_annual)}</td>
-                <td>{formatCurrency(netPay_paycheck)}</td>
+                <td>{formatCurrency(results.netPay_annual)}</td>
+                <td>{formatCurrency(results.netPay_paycheck)}</td>
               </tr>
-              {shouldRenderPostTaxDeductions && (
+              {results.shouldRenderPostTaxDeductions && (
                 <>
                   <tr>
                     <td colSpan={4} className={styles.thicc}>
                       Post-Tax Deductions
                     </td>
                   </tr>
-                  {Object.keys(postTaxTableMap)
-                    .filter((key) => postTaxTableMap[key][0] != 0)
+                  {Object.keys(results.postTaxTableMap)
+                    .filter((key) => results.postTaxTableMap[key][0] != 0)
                     .map((key) => (
                       <tr key={key}>
                         <td>{key}</td>
-                        <td>{formatCurrency(-postTaxTableMap[key][0])}</td>
-                        <td>{formatCurrency(-postTaxTableMap[key][1])}</td>
+                        <td>
+                          {formatCurrency(-results.postTaxTableMap[key][0])}
+                        </td>
+                        <td>
+                          {formatCurrency(-results.postTaxTableMap[key][1])}
+                        </td>
                       </tr>
                     ))}
                 </>
               )}
               <tr>
                 <td className={styles.thicc}>Take Home Pay</td>
-                <td>{formatCurrency(takeHomePay_annual)}</td>
-                <td>{formatCurrency(takeHomePay_paycheck)}</td>
+                <td>{formatCurrency(results.takeHomePay_annual)}</td>
+                <td>{formatCurrency(results.takeHomePay_paycheck)}</td>
               </tr>
-              {isSocialSecurityMaxed && (
+              {results.isSocialSecurityMaxed && (
                 <tr>
                   <td>
                     Take Home Pay after maxing Social Security
-                    {socialSecurityMaxedIcon}
+                    {results.socialSecurityMaxedIcon}
                   </td>
                   <td></td>
                   <td>
                     {formatCurrency(
-                      takeHomePay_paycheck + socialSecurityWithholding_paycheck,
+                      results.takeHomePay_paycheck +
+                        results.socialSecurityWithholding_paycheck,
                     )}
                   </td>
                 </tr>
@@ -862,6 +662,12 @@ function Paycheck() {
             </tbody>
           </Table>
           {socialSecurityMaxedAlertTableFooter}
+          {stateEstimateTableFooter}
+          {results.contributionLimitAlerts.map((msg, i) => (
+            <Alert key={i} className="mb-3" variant="secondary">
+              {msg}
+            </Alert>
+          ))}
         </div>
       </div>
       <Footer />
