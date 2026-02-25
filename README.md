@@ -7,8 +7,7 @@ This is a NextJS/React app that contains tools to help with personal finance dec
 ### Current Tools
 
 1. **Paycheck Calculator** — Estimate your take-home pay after federal/state taxes and deductions
-2. **401k Equal Contribution** — Maximize your 401k by spreading contributions evenly across paychecks
-3. **401k Frontloading** — Maximize your 401k as early as possible in the year
+2. **401k Planner** — Choose a strategy to max out your 401k.
 
 ### Planned Tools
 
@@ -22,6 +21,7 @@ This is a NextJS/React app that contains tools to help with personal finance dec
 8. **Tax Bracket Visualizer** — See how marginal vs effective tax rates work with interactive income sliders
 9. **HSA Optimizer** — Model the triple tax advantage of HSA contributions and long-term growth
 10. **Social Security Estimator** — Estimate Social Security benefits based on earnings and retirement age
+11. **Export to CSV/Google Sheet** - export charts
 
 ## Technology
 

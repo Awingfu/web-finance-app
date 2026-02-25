@@ -25,9 +25,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "vitest run",
-    "pre-commit": "next lint && lint-staged"
+    "pre-commit": "eslint . && lint-staged"
   },
   "pre-commit": [
     "pre-commit"
