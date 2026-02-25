@@ -1,4 +1,4 @@
-import { useState, FormEvent, SetStateAction } from "react";
+import { useState, ChangeEvent, SetStateAction } from "react";
 import {
   Form,
   Table,
@@ -525,14 +525,14 @@ function Paycheck() {
   };
 
   const update = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     changeFunction((e.target as HTMLInputElement).value);
   };
 
   const updateAmount = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseFloat((e.target as HTMLInputElement).value);
@@ -545,7 +545,7 @@ function Paycheck() {
   };
 
   const updateContribution = (
-    e: FormEvent<HTMLElement>,
+    e: ChangeEvent<HTMLElement>,
     changeFunction: { (value: SetStateAction<any>): void },
   ) => {
     let value = parseInt((e.target as HTMLInputElement).value);
