@@ -105,3 +105,6 @@ dist
 
 # Next export
 out/
+
+# VS Code directories
+*.DS_Store
