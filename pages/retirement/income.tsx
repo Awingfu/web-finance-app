@@ -66,13 +66,13 @@ const DEFAULT_INPUTS: RetirementIncomeInputs = {
   lifeExpectancyAge: 90,
   ssnMonthlyBenefit: 2000,
   ssnStartAge: 67,
-  balance401k: 500000,
+  balance401k: 0,
   balanceBrokerage: 0,
   brokerageCostBasisPercent: 50,
   balanceRoth: 0,
-  balanceCash: 0,
+  balanceCash: 50000,
   cashInterestRate: 0.01,
-  strategy: "maintain_wealth",
+  strategy: "set_withdrawal_rate",
   desiredAnnualIncome: 80000,
   annualGrowthRate: 0.07,
   inflationRate: 0.03,
@@ -83,9 +83,10 @@ function RetirementIncome() {
   const [inputs, setInputs] = useState<RetirementIncomeInputs>(DEFAULT_INPUTS);
 
   // Optional account section visibility
+  const [show401k, setShow401k] = useState(false);
   const [showBrokerage, setShowBrokerage] = useState(false);
   const [showRoth, setShowRoth] = useState(false);
-  const [showCash, setShowCash] = useState(false);
+  const [showCash, setShowCash] = useState(true);
 
   const [chartView, setChartView] = useState<ChartView>("income");
   const [showTable, setShowTable] = useState(false);
@@ -107,6 +108,10 @@ function RetirementIncome() {
     setField(key, v as RetirementIncomeInputs[typeof key]);
   };
 
+  const close401k = () => {
+    setField("balance401k", 0);
+    setShow401k(false);
+  };
   const closeBrokerage = () => {
     setField("balanceBrokerage", 0);
     setField("brokerageCostBasisPercent", 50);
@@ -204,52 +209,58 @@ function RetirementIncome() {
               }
             >
               <option value="maintain_wealth">Maintain Wealth</option>
+              <option value="set_withdrawal_rate">Set Withdrawal Rate</option>
               <option value="spend_down">
                 Spend Down by Life Expectancy Age
               </option>
             </Form.Select>
           </InputGroup>
 
-          {/* Ages */}
-          <Form.Label>Current Age</Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <Form.Control
-              type="number"
-              onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(inputs.currentAge)}
-              onChange={(e) => updateNumber(e, "currentAge", 0, 100)}
-            />
-          </InputGroup>
-
-          <Form.Label>
-            {inputs.strategy === "spend_down"
-              ? "Spend-Down Target Age"
-              : "Life Expectancy Age"}
-          </Form.Label>
-          <TooltipOnHover
-            text={
-              inputs.strategy === "spend_down"
-                ? "All accounts will be depleted by this age."
-                : "How many years to simulate."
-            }
-            nest={
-              <InputGroup className="mb-3 w-100">
+          {/* Ages — same row */}
+          <div className={incomeStyles.ageRow}>
+            <div className={incomeStyles.ageField}>
+              <Form.Label>Current Age</Form.Label>
+              <InputGroup>
                 <Form.Control
                   type="number"
                   onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.lifeExpectancyAge)}
-                  onChange={(e) =>
-                    updateNumber(
-                      e,
-                      "lifeExpectancyAge",
-                      inputs.currentAge + 1,
-                      120,
-                    )
-                  }
+                  value={formatStateValue(inputs.currentAge)}
+                  onChange={(e) => updateNumber(e, "currentAge", 0, 100)}
                 />
               </InputGroup>
-            }
-          />
+            </div>
+            <div className={incomeStyles.ageField}>
+              <Form.Label>
+                {inputs.strategy === "spend_down"
+                  ? "Spend-Down Age"
+                  : "Life Expectancy Age"}
+              </Form.Label>
+              <TooltipOnHover
+                text={
+                  inputs.strategy === "spend_down"
+                    ? "All accounts will be depleted by this age."
+                    : "How far to run the simulation."
+                }
+                nest={
+                  <InputGroup>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.lifeExpectancyAge)}
+                      onChange={(e) =>
+                        updateNumber(
+                          e,
+                          "lifeExpectancyAge",
+                          inputs.currentAge + 1,
+                          120,
+                        )
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+          </div>
 
           {/* Filing status */}
           <Form.Label>Filing Status</Form.Label>
@@ -265,28 +276,101 @@ function RetirementIncome() {
             </Form.Select>
           </InputGroup>
 
-          {/* ── 401k / Traditional IRA (always shown) ── */}
-          <div className={incomeStyles.accountSection}>
-            <div className={incomeStyles.accountSectionHeader}>
-              <span>401k / Traditional IRA</span>
+          {/* ── Income / rate settings ── */}
+          {inputs.strategy === "maintain_wealth" ? (
+            <Alert variant="secondary" className="mb-3">
+              <small>
+                <strong>Maintain Wealth:</strong> Each year&apos;s income equals
+                your portfolio&apos;s gains plus Social Security. Principal is
+                preserved at its starting value — you never draw down the
+                portfolio itself.
+              </small>
+            </Alert>
+          ) : (
+            <div className={incomeStyles.ageRow}>
+              <div className={incomeStyles.ageField}>
+                <Form.Label>
+                  {inputs.strategy === "spend_down"
+                    ? "Annual Income (calculated)"
+                    : "Desired Annual Income"}
+                </Form.Label>
+                <TooltipOnHover
+                  text={
+                    inputs.strategy === "spend_down"
+                      ? "Calculated automatically to deplete all accounts by the spend-down age."
+                      : "Target gross income in year-0 dollars. The amount grows with inflation each year."
+                  }
+                  nest={
+                    <InputGroup className="mb-3 w-100">
+                      <InputGroup.Text>$</InputGroup.Text>
+                      <Form.Control
+                        type="number"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        value={formatStateValue(inputs.desiredAnnualIncome)}
+                        onChange={(e) => updateNumber(e, "desiredAnnualIncome")}
+                        disabled={inputs.strategy === "spend_down"}
+                      />
+                      <InputGroup.Text>/ yr</InputGroup.Text>
+                    </InputGroup>
+                  }
+                />
+              </div>
+              <div className={incomeStyles.ageField}>
+                <Form.Label>Income Inflation Rate</Form.Label>
+                <TooltipOnHover
+                  text="Annual rate at which your desired income grows. Accounts for rising cost of living."
+                  nest={
+                    <InputGroup className="mb-3 w-100">
+                      <Form.Control
+                        type="number"
+                        onWheel={(e) => e.currentTarget.blur()}
+                        value={formatStateValue(
+                          Math.round(inputs.inflationRate * 10000) / 100,
+                        )}
+                        onChange={(e) => {
+                          let v = parseFloat(
+                            (e.target as HTMLInputElement).value,
+                          );
+                          if (isNaN(v) || v < 0) v = 0;
+                          if (v > 20) v = 20;
+                          setField("inflationRate", v / 100);
+                        }}
+                      />
+                      <InputGroup.Text>%</InputGroup.Text>
+                    </InputGroup>
+                  }
+                />
+              </div>
             </div>
-            <TooltipOnHover
-              text="Pre-tax balance. Withdrawals are taxed as ordinary income. RMDs start at age 73."
-              nest={
-                <InputGroup className="mb-2 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    value={formatStateValue(inputs.balance401k)}
-                    onChange={(e) => updateNumber(e, "balance401k")}
-                  />
-                </InputGroup>
-              }
-            />
-          </div>
+          )}
 
-          {/* ── Social Security (always shown) ── */}
+          <Form.Label>Annual Investment Growth Rate</Form.Label>
+          <TooltipOnHover
+            text="Expected annual return on invested accounts (401k, brokerage, Roth). S&P 500 historical average is ~10% nominal, ~7% real."
+            nest={
+              <InputGroup className="mb-3 w-100">
+                <Form.Control
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(
+                    Math.round(inputs.annualGrowthRate * 10000) / 100,
+                  )}
+                  onChange={(e) => {
+                    let v = parseFloat((e.target as HTMLInputElement).value);
+                    if (isNaN(v) || v < 0) v = 0;
+                    if (v > 30) v = 30;
+                    setField("annualGrowthRate", v / 100);
+                  }}
+                />
+                <InputGroup.Text>%</InputGroup.Text>
+              </InputGroup>
+            }
+          />
+
+          {/* ── Assets ── */}
+          <p className={incomeStyles.sectionLabel}>Assets</p>
+
+          {/* Social Security (always shown) */}
           <div className={incomeStyles.accountSection}>
             <div className={incomeStyles.accountSectionHeader}>
               <span>Social Security</span>
@@ -329,9 +413,21 @@ function RetirementIncome() {
             />
           </div>
 
-          {/* ── Optional accounts ── */}
-          <p className={incomeStyles.addAccountLabel}>Optional Accounts</p>
+          {/* Add account tiles */}
           <div className={incomeStyles.addAccountButtons}>
+            {!show401k && (
+              <button
+                type="button"
+                className={incomeStyles.addAccountTile}
+                style={{
+                  borderColor: CHART_COLORS.k401,
+                  color: CHART_COLORS.k401,
+                }}
+                onClick={() => setShow401k(true)}
+              >
+                + 401k / Trad IRA
+              </button>
+            )}
             {!showBrokerage && (
               <button
                 type="button"
@@ -372,6 +468,41 @@ function RetirementIncome() {
               </button>
             )}
           </div>
+
+          {show401k && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.k401 }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.k401 }}>
+                  401k / Traditional IRA
+                </span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={close401k}
+                  aria-label="Remove 401k account"
+                >
+                  ×
+                </button>
+              </div>
+              <TooltipOnHover
+                text="Pre-tax balance. Withdrawals are taxed as ordinary income. RMDs start at age 73."
+                nest={
+                  <InputGroup className="mb-2 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.balance401k)}
+                      onChange={(e) => updateNumber(e, "balance401k")}
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+          )}
 
           {showBrokerage && (
             <div
@@ -482,122 +613,57 @@ function RetirementIncome() {
                   ×
                 </button>
               </div>
-              <Form.Label className="mb-1">
-                <small>Balance</small>
-              </Form.Label>
-              <TooltipOnHover
-                text="Liquid cash. Withdrawn first since it typically earns the least."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.balanceCash)}
-                      onChange={(e) => updateNumber(e, "balanceCash")}
-                    />
-                  </InputGroup>
-                }
-              />
-              <Form.Label className="mb-1">
-                <small>Annual Interest Rate</small>
-              </Form.Label>
-              <TooltipOnHover
-                text="Annual return on cash / savings (e.g. HYSA rate). Cash is not invested in the market."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(
-                        Math.round(inputs.cashInterestRate * 10000) / 100,
-                      )}
-                      onChange={(e) => {
-                        let v = parseFloat(
-                          (e.target as HTMLInputElement).value,
-                        );
-                        if (isNaN(v) || v < 0) v = 0;
-                        if (v > 20) v = 20;
-                        setField("cashInterestRate", v / 100);
-                      }}
-                    />
-                    <InputGroup.Text>%</InputGroup.Text>
-                  </InputGroup>
-                }
-              />
+              <div className={incomeStyles.ageRow}>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Balance</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Liquid cash. Withdrawn first since it typically earns the least."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.balanceCash)}
+                          onChange={(e) => updateNumber(e, "balanceCash")}
+                        />
+                      </InputGroup>
+                    }
+                  />
+                </div>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Interest Rate</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Annual return on cash / savings (e.g. HYSA rate). Cash is not invested in the market."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(
+                            Math.round(inputs.cashInterestRate * 10000) / 100,
+                          )}
+                          onChange={(e) => {
+                            let v = parseFloat(
+                              (e.target as HTMLInputElement).value,
+                            );
+                            if (isNaN(v) || v < 0) v = 0;
+                            if (v > 20) v = 20;
+                            setField("cashInterestRate", v / 100);
+                          }}
+                        />
+                        <InputGroup.Text>%</InputGroup.Text>
+                      </InputGroup>
+                    }
+                  />
+                </div>
+              </div>
             </div>
           )}
-
-          {/* Income target + inflation */}
-          {inputs.strategy === "maintain_wealth" && (
-            <>
-              <Form.Label>
-                Desired Annual Income (Today&apos;s Dollars)
-              </Form.Label>
-              <TooltipOnHover
-                text="Target gross income in year-0 dollars. The amount grows with inflation each year."
-                nest={
-                  <InputGroup className="mb-3 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.desiredAnnualIncome)}
-                      onChange={(e) => updateNumber(e, "desiredAnnualIncome")}
-                    />
-                    <InputGroup.Text>/ yr</InputGroup.Text>
-                  </InputGroup>
-                }
-              />
-            </>
-          )}
-
-          <Form.Label>Income Inflation Rate</Form.Label>
-          <TooltipOnHover
-            text="Annual rate at which your desired income grows. Accounts for rising cost of living."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(
-                    Math.round(inputs.inflationRate * 10000) / 100,
-                  )}
-                  onChange={(e) => {
-                    let v = parseFloat((e.target as HTMLInputElement).value);
-                    if (isNaN(v) || v < 0) v = 0;
-                    if (v > 20) v = 20;
-                    setField("inflationRate", v / 100);
-                  }}
-                />
-                <InputGroup.Text>%</InputGroup.Text>
-              </InputGroup>
-            }
-          />
-
-          {/* Portfolio growth rate */}
-          <Form.Label>Annual Investment Growth Rate</Form.Label>
-          <TooltipOnHover
-            text="Expected annual return on invested accounts (401k, brokerage, Roth). S&P 500 historical average is ~10% nominal, ~7% real."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(
-                    Math.round(inputs.annualGrowthRate * 10000) / 100,
-                  )}
-                  onChange={(e) => {
-                    let v = parseFloat((e.target as HTMLInputElement).value);
-                    if (isNaN(v) || v < 0) v = 0;
-                    if (v > 30) v = 30;
-                    setField("annualGrowthRate", v / 100);
-                  }}
-                />
-                <InputGroup.Text>%</InputGroup.Text>
-              </InputGroup>
-            }
-          />
 
           {/* Tax note */}
           <Alert variant="info" className="mt-2">
@@ -668,10 +734,10 @@ function RetirementIncome() {
           {inputs.strategy === "spend_down" && rows.length > 0 && (
             <Alert variant="secondary" className="mb-3">
               <small>
-                Spend-down: target income starts at{" "}
-                <strong>{formatCurrency(inputs.desiredAnnualIncome)}</strong>{" "}
-                (year 0) and grows at {(inputs.inflationRate * 100).toFixed(1)}%
-                /yr, depleting all accounts by age {inputs.lifeExpectancyAge}.
+                Spend-down: income starts at{" "}
+                <strong>{formatCurrency(rows[0].totalGrossIncome)}</strong> and
+                grows at {(inputs.inflationRate * 100).toFixed(1)}%/yr,
+                depleting all accounts by age {inputs.lifeExpectancyAge}.
               </small>
             </Alert>
           )}
@@ -722,7 +788,7 @@ function RetirementIncome() {
                   <YAxis tickFormatter={formatChartDollar} width={60} />
                   <Tooltip formatter={tooltipFormatter} />
                   <Legend verticalAlign="top" />
-                  {inputs.strategy === "maintain_wealth" && (
+                  {inputs.strategy === "set_withdrawal_rate" && (
                     <ReferenceLine
                       y={inputs.desiredAnnualIncome}
                       stroke="#e74c3c"

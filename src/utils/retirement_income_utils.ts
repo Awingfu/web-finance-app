@@ -108,7 +108,10 @@ export const EARLY_WITHDRAWAL_PENALTY_RATE = 0.1;
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type FilingStatus = "single" | "mfj";
-export type WithdrawalStrategy = "maintain_wealth" | "spend_down";
+export type WithdrawalStrategy =
+  | "maintain_wealth"
+  | "set_withdrawal_rate"
+  | "spend_down";
 
 export interface RetirementIncomeInputs {
   currentAge: number;
@@ -289,21 +292,40 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
   for (let age = currentAge; age <= lifeExpectancyAge; age++) {
     const yearIdx = age - currentAge;
 
-    // 1. Grow accounts at start of year (before withdrawals)
+    // 1. Record pre-growth balances (needed for maintain_wealth gains calculation)
+    const pre401k = balance401k;
+    const preBrokerage = balanceBrokerage;
+    const preRoth = balanceRoth;
+    const preCash = balanceCash;
+
+    // 2. Grow accounts at start of year (before withdrawals)
     balance401k *= 1 + annualGrowthRate;
     balanceBrokerage *= 1 + annualGrowthRate;
     balanceRoth *= 1 + annualGrowthRate;
     balanceCash *= 1 + cashInterestRate;
 
-    // 2. Social Security income
+    // 3. Social Security income
     const ssIncome = age >= ssnStartAge ? ssnMonthlyBenefit * 12 : 0;
 
-    // 3. RMD from 401k (mandatory)
+    // 4. RMD from 401k (mandatory)
     const rmdAmount = Math.min(getRmd(age, balance401k), balance401k);
 
-    // 4. Inflation-adjusted target income for this year
-    const targetIncome =
-      inputs.desiredAnnualIncome * Math.pow(1 + inflationRate, yearIdx);
+    // 5. Determine target income based on strategy
+    let targetIncome: number;
+    if (inputs.strategy === "maintain_wealth") {
+      // Withdraw only what the portfolio earned — portfolio returns to pre-growth level
+      const totalGains =
+        balance401k -
+        pre401k +
+        (balanceBrokerage - preBrokerage) +
+        (balanceRoth - preRoth) +
+        (balanceCash - preCash);
+      targetIncome = ssIncome + totalGains;
+    } else {
+      // set_withdrawal_rate and spend_down: use inflation-adjusted desired income
+      targetIncome =
+        inputs.desiredAnnualIncome * Math.pow(1 + inflationRate, yearIdx);
+    }
 
     // 5. How much more do we need beyond SS and RMD?
     let remainingNeeded = Math.max(0, targetIncome - ssIncome - rmdAmount);
@@ -432,6 +454,7 @@ export function simulateRetirementIncome(
     const solved = calcSpendDownWithdrawal(inputs);
     return runSimulation({ ...inputs, desiredAnnualIncome: solved });
   }
+  // maintain_wealth and set_withdrawal_rate run directly
   return runSimulation(inputs);
 }
 

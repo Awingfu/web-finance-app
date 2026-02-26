@@ -112,6 +112,24 @@ $medium: 1080px;
   }
 }
 
+.sectionLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.ageRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.ageField {
+  flex: 1;
+}
+
 .addAccountLabel {
   font-size: 0.8rem;
   text-transform: uppercase;
