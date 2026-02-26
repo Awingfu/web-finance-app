@@ -45,7 +45,13 @@ export const downloadCSV = (
 ): void => {
   const csvContent = rows
     .map((row) =>
-      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","),
+      row
+        .map((cell) => {
+          const value =
+            typeof cell === "number" ? Math.round(cell * 100) / 100 : cell;
+          return `"${String(value).replace(/"/g, '""')}"`;
+        })
+        .join(","),
     )
     .join("\n");
   const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
