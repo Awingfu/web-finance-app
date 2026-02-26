@@ -1,0 +1,80 @@
+$small: 720px;
+$medium: 1080px;
+
+.results {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4rem;
+
+  @media screen and (min-width: $medium) {
+    width: 55%;
+    margin: 0 2% 2% 2%;
+  }
+
+  @media screen and (min-width: $small) and (max-width: $medium) {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+
+  @media screen and (max-width: $small) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+.summaryCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  flex: 1 1 140px;
+  background: var(--bs-secondary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 130px;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.chartToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.chartWrap {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.chartNote {
+  font-size: 0.78rem;
+  opacity: 0.65;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.tableActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}

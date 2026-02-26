@@ -8,6 +8,7 @@
     "react-bootstrap": "^2.10.10",
     "react-dom": "^19.0.0",
     "react-social-icons": "^6.0.0",
+    "recharts": "^3.7.0",
     "sass": "^1.97.3"
   },
   "devDependencies": {
