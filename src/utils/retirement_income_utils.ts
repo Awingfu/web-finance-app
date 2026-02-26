@@ -1,7 +1,7 @@
 /**
  * Retirement Income Planning utilities
  * Simulates year-by-year withdrawals across account types, accounting for
- * taxes, RMDs, Social Security, and growth.
+ * taxes, RMDs, Social Security, early withdrawal penalties, and growth.
  */
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -100,6 +100,11 @@ const RMD_TABLE: Record<number, number> = {
   120: 2.0,
 };
 
+// Early withdrawal penalty applies to tax-deferred and Roth withdrawals before age 60
+// (IRS rule is 59½; we round to 60 for simplicity)
+export const EARLY_WITHDRAWAL_PENALTY_AGE = 60;
+export const EARLY_WITHDRAWAL_PENALTY_RATE = 0.1;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type FilingStatus = "single" | "mfj";
@@ -115,9 +120,11 @@ export interface RetirementIncomeInputs {
   brokerageCostBasisPercent: number; // 0–100: what % of brokerage is cost basis (rest = gains)
   balanceRoth: number;
   balanceCash: number;
+  cashInterestRate: number; // annual interest rate on cash (e.g. 0.01 for 1%)
   strategy: WithdrawalStrategy;
-  desiredAnnualIncome: number;
+  desiredAnnualIncome: number; // base (year-0) annual income target
   annualGrowthRate: number; // e.g. 0.07
+  inflationRate: number; // annual income target growth rate (e.g. 0.03)
   filingStatus: FilingStatus;
 }
 
@@ -131,6 +138,8 @@ export interface YearlyRow {
   withdrawalRoth: number;
   withdrawalCash: number;
   totalGrossIncome: number;
+  // Costs
+  earlyWithdrawalPenalty: number; // 10% penalty on tax-deferred/Roth before age 60
   federalTax: number;
   netIncome: number;
   // End-of-year balances
@@ -180,7 +189,6 @@ function calcLtcgTax(
     filingStatus === "mfj" ? LTCG_BRACKETS_MFJ : LTCG_BRACKETS_SINGLE;
   let tax = 0;
   let remainingGains = gains;
-  // LTCG brackets stack on top of ordinary income
   const stackedBase = ordinaryIncome;
 
   for (const [min, max, rate] of brackets) {
@@ -195,8 +203,9 @@ function calcLtcgTax(
 }
 
 /**
- * Compute total federal tax for a given year.
+ * Compute total federal income tax for a given year.
  * Accounts for: 401k withdrawals, SS taxation (up to 85%), and brokerage gains (LTCG).
+ * Note: early withdrawal penalty is separate (calcEarlyWithdrawalPenalty).
  */
 function calcAnnualTax(
   withdrawal401k: number,
@@ -219,13 +228,28 @@ function calcAnnualTax(
     ssTaxable = Math.min(ssIncome * 0.5, (provisionalIncome - 32000) * 0.5);
   }
 
-  // Ordinary income = 401k + SS taxable portion
+  // Ordinary income = 401k withdrawals + taxable SS portion, less standard deduction
   const ordinaryIncome = Math.max(0, withdrawal401k + ssTaxable - deduction);
 
   const ordinaryTax = calcOrdinaryTax(ordinaryIncome, filingStatus);
   const ltcgTax = calcLtcgTax(brokerageGains, ordinaryIncome, filingStatus);
 
   return ordinaryTax + ltcgTax;
+}
+
+/**
+ * 10% early withdrawal penalty on tax-deferred (401k) and Roth withdrawals
+ * before age 60 (IRS rule is 59½, rounded here for simplicity).
+ * Roth contributions can be withdrawn penalty-free, but gains cannot;
+ * we conservatively apply the penalty to the full Roth withdrawal.
+ */
+function calcEarlyWithdrawalPenalty(
+  age: number,
+  withdrawal401k: number,
+  withdrawalRoth: number,
+): number {
+  if (age >= EARLY_WITHDRAWAL_PENALTY_AGE) return 0;
+  return (withdrawal401k + withdrawalRoth) * EARLY_WITHDRAWAL_PENALTY_RATE;
 }
 
 // ─── RMD helper ───────────────────────────────────────────────────────────────
@@ -240,60 +264,17 @@ function getRmd(age: number, balance401k: number): number {
 // ─── Main simulation ──────────────────────────────────────────────────────────
 
 /**
- * Determine annual withdrawal needed to deplete all accounts by lifeExpectancyAge,
- * given a constant growth rate. Uses a binary search approach year-by-year.
- * Returns the constant annual withdrawal amount (before SS and RMDs).
- */
-function calcSpendDownWithdrawal(inputs: RetirementIncomeInputs): number {
-  const {
-    currentAge,
-    lifeExpectancyAge,
-    ssnMonthlyBenefit,
-    ssnStartAge,
-    annualGrowthRate,
-  } = inputs;
-
-  const years = lifeExpectancyAge - currentAge;
-  if (years <= 0) return 0;
-
-  // Binary search for the right annual "extra" withdrawal (on top of SS + RMDs)
-  let lo = 0;
-  let hi = 10_000_000;
-
-  for (let iter = 0; iter < 60; iter++) {
-    const mid = (lo + hi) / 2;
-    // Simulate with this target income
-    const testInputs = { ...inputs, desiredAnnualIncome: mid };
-    const rows = runSimulation(testInputs, true);
-    const lastRow = rows[rows.length - 1];
-    const finalBalance = lastRow.totalBalance;
-
-    if (finalBalance > 1000) {
-      lo = mid; // not depleted enough, withdraw more
-    } else {
-      hi = mid;
-    }
-    if (hi - lo < 10) break;
-  }
-
-  // Also account for SS + RMDs so return the full target income number
-  return (lo + hi) / 2;
-}
-
-/**
  * Core simulation: runs year by year from currentAge to lifeExpectancyAge.
- * skipSolve=true means we use desiredAnnualIncome directly without solving for spend_down.
  */
-function runSimulation(
-  inputs: RetirementIncomeInputs,
-  skipSolve: boolean = false,
-): YearlyRow[] {
+function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
   const {
     currentAge,
     lifeExpectancyAge,
     ssnMonthlyBenefit,
     ssnStartAge,
     annualGrowthRate,
+    cashInterestRate,
+    inflationRate,
     brokerageCostBasisPercent,
     filingStatus,
   } = inputs;
@@ -306,11 +287,13 @@ function runSimulation(
   const rows: YearlyRow[] = [];
 
   for (let age = currentAge; age <= lifeExpectancyAge; age++) {
+    const yearIdx = age - currentAge;
+
     // 1. Grow accounts at start of year (before withdrawals)
     balance401k *= 1 + annualGrowthRate;
     balanceBrokerage *= 1 + annualGrowthRate;
     balanceRoth *= 1 + annualGrowthRate;
-    // Cash earns minimal return (conservative — no growth on cash)
+    balanceCash *= 1 + cashInterestRate;
 
     // 2. Social Security income
     const ssIncome = age >= ssnStartAge ? ssnMonthlyBenefit * 12 : 0;
@@ -318,8 +301,9 @@ function runSimulation(
     // 3. RMD from 401k (mandatory)
     const rmdAmount = Math.min(getRmd(age, balance401k), balance401k);
 
-    // 4. Determine target gross income
-    const targetIncome = inputs.desiredAnnualIncome;
+    // 4. Inflation-adjusted target income for this year
+    const targetIncome =
+      inputs.desiredAnnualIncome * Math.pow(1 + inflationRate, yearIdx);
 
     // 5. How much more do we need beyond SS and RMD?
     let remainingNeeded = Math.max(0, targetIncome - ssIncome - rmdAmount);
@@ -330,40 +314,35 @@ function runSimulation(
     let withdrawal401k = rmdAmount;
     let withdrawalRoth = 0;
 
-    // Pull from cash first
     const cashPull = Math.min(remainingNeeded, balanceCash);
     withdrawalCash = cashPull;
     remainingNeeded -= cashPull;
 
-    // Pull from brokerage next
     if (remainingNeeded > 0) {
       const brokeragePull = Math.min(remainingNeeded, balanceBrokerage);
       withdrawalBrokerage = brokeragePull;
       remainingNeeded -= brokeragePull;
     }
 
-    // Pull from 401k (beyond RMD)
     if (remainingNeeded > 0) {
       const pull401k = Math.min(remainingNeeded, balance401k - rmdAmount);
       withdrawal401k += pull401k;
       remainingNeeded -= pull401k;
     }
 
-    // Pull from Roth last
     if (remainingNeeded > 0) {
       const rothPull = Math.min(remainingNeeded, balanceRoth);
       withdrawalRoth = rothPull;
-      remainingNeeded -= rothPull;
     }
 
-    // 7. Calculate brokerage gains portion of withdrawal
+    // 7. Brokerage gains portion of withdrawal
     const gainFraction = Math.max(
       0,
       Math.min(1, 1 - brokerageCostBasisPercent / 100),
     );
     const brokerageGains = withdrawalBrokerage * gainFraction;
 
-    // 8. Calculate taxes
+    // 8. Federal income tax
     const federalTax = calcAnnualTax(
       withdrawal401k,
       ssIncome,
@@ -371,26 +350,27 @@ function runSimulation(
       filingStatus,
     );
 
-    // 9. Net income
+    // 9. Early withdrawal penalty (before age 60)
+    const earlyWithdrawalPenalty = calcEarlyWithdrawalPenalty(
+      age,
+      withdrawal401k,
+      withdrawalRoth,
+    );
+
+    // 10. Totals
     const totalGrossIncome =
       ssIncome +
       withdrawal401k +
       withdrawalBrokerage +
       withdrawalRoth +
       withdrawalCash;
-    const netIncome = totalGrossIncome - federalTax;
+    const netIncome = totalGrossIncome - federalTax - earlyWithdrawalPenalty;
 
-    // 10. Update balances (deduct withdrawals)
-    balance401k -= withdrawal401k;
-    balanceBrokerage -= withdrawalBrokerage;
-    balanceRoth -= withdrawalRoth;
-    balanceCash -= withdrawalCash;
-
-    // Clamp to zero (no negative balances)
-    balance401k = Math.max(0, balance401k);
-    balanceBrokerage = Math.max(0, balanceBrokerage);
-    balanceRoth = Math.max(0, balanceRoth);
-    balanceCash = Math.max(0, balanceCash);
+    // 11. Update balances
+    balance401k = Math.max(0, balance401k - withdrawal401k);
+    balanceBrokerage = Math.max(0, balanceBrokerage - withdrawalBrokerage);
+    balanceRoth = Math.max(0, balanceRoth - withdrawalRoth);
+    balanceCash = Math.max(0, balanceCash - withdrawalCash);
 
     rows.push({
       age,
@@ -401,6 +381,7 @@ function runSimulation(
       withdrawalRoth,
       withdrawalCash,
       totalGrossIncome,
+      earlyWithdrawalPenalty,
       federalTax,
       netIncome,
       balance401k,
@@ -415,17 +396,42 @@ function runSimulation(
 }
 
 /**
+ * Binary-search for the base year-0 income that depletes all accounts
+ * exactly at lifeExpectancyAge, given inflation adjustments per year.
+ */
+function calcSpendDownWithdrawal(inputs: RetirementIncomeInputs): number {
+  const years = inputs.lifeExpectancyAge - inputs.currentAge;
+  if (years <= 0) return 0;
+
+  let lo = 0;
+  let hi = 10_000_000;
+
+  for (let iter = 0; iter < 60; iter++) {
+    const mid = (lo + hi) / 2;
+    const rows = runSimulation({ ...inputs, desiredAnnualIncome: mid });
+    const finalBalance = rows[rows.length - 1].totalBalance;
+
+    if (finalBalance > 1000) {
+      lo = mid;
+    } else {
+      hi = mid;
+    }
+    if (hi - lo < 10) break;
+  }
+
+  return (lo + hi) / 2;
+}
+
+/**
  * Public entry point. Resolves strategy, then runs simulation.
  */
 export function simulateRetirementIncome(
   inputs: RetirementIncomeInputs,
 ): YearlyRow[] {
   if (inputs.strategy === "spend_down") {
-    // Solve for the annual income target that depletes balances at lifeExpectancyAge
     const solved = calcSpendDownWithdrawal(inputs);
     return runSimulation({ ...inputs, desiredAnnualIncome: solved });
   }
-  // maintain_wealth: use desiredAnnualIncome directly
   return runSimulation(inputs);
 }
 
@@ -434,6 +440,7 @@ export function simulateRetirementIncome(
  */
 export interface SimulationSummary {
   totalTaxesPaid: number;
+  totalPenaltiesPaid: number;
   totalGrossIncome: number;
   totalNetIncome: number;
   ageAccountsDepleted: number | null; // null if never depleted
@@ -441,12 +448,14 @@ export interface SimulationSummary {
 
 export function summarizeSimulation(rows: YearlyRow[]): SimulationSummary {
   let totalTaxesPaid = 0;
+  let totalPenaltiesPaid = 0;
   let totalGrossIncome = 0;
   let totalNetIncome = 0;
   let ageAccountsDepleted: number | null = null;
 
   for (const row of rows) {
     totalTaxesPaid += row.federalTax;
+    totalPenaltiesPaid += row.earlyWithdrawalPenalty;
     totalGrossIncome += row.totalGrossIncome;
     totalNetIncome += row.netIncome;
     if (ageAccountsDepleted === null && row.totalBalance < 100) {
@@ -456,6 +465,7 @@ export function summarizeSimulation(rows: YearlyRow[]): SimulationSummary {
 
   return {
     totalTaxesPaid,
+    totalPenaltiesPaid,
     totalGrossIncome,
     totalNetIncome,
     ageAccountsDepleted,
