@@ -70,11 +70,11 @@ const DEFAULT_INPUTS: RetirementIncomeInputs = {
   balanceBrokerage: 0,
   brokerageCostBasisPercent: 50,
   balanceRoth: 0,
-  balanceCash: 50000,
+  balanceCash: 100000,
   cashInterestRate: 0.01,
   strategy: "set_withdrawal_rate",
-  desiredAnnualIncome: 80000,
-  annualGrowthRate: 0.07,
+  desiredAnnualIncome: 40000,
+  annualGrowthRate: 0.1,
   inflationRate: 0.03,
   filingStatus: "single",
 };
@@ -83,6 +83,7 @@ function RetirementIncome() {
   const [inputs, setInputs] = useState<RetirementIncomeInputs>(DEFAULT_INPUTS);
 
   // Optional account section visibility
+  const [showSS, setShowSS] = useState(true);
   const [show401k, setShow401k] = useState(false);
   const [showBrokerage, setShowBrokerage] = useState(false);
   const [showRoth, setShowRoth] = useState(false);
@@ -108,6 +109,11 @@ function RetirementIncome() {
     setField(key, v as RetirementIncomeInputs[typeof key]);
   };
 
+  const closeSS = () => {
+    setField("ssnMonthlyBenefit", 0);
+    setField("ssnStartAge", 67);
+    setShowSS(false);
+  };
   const close401k = () => {
     setField("balance401k", 0);
     setShow401k(false);
@@ -370,62 +376,32 @@ function RetirementIncome() {
           {/* ── Assets ── */}
           <p className={incomeStyles.sectionLabel}>Assets</p>
 
-          {/* Social Security (always shown) */}
-          <div className={incomeStyles.accountSection}>
-            <div className={incomeStyles.accountSectionHeader}>
-              <span>Social Security</span>
-            </div>
-            <Form.Label className="mb-1">
-              <small>Monthly Benefit</small>
-            </Form.Label>
-            <TooltipOnHover
-              text="Find your estimate at ssa.gov/myaccount. Enter $0 if not applicable."
-              nest={
-                <InputGroup className="mb-2 w-100">
-                  <InputGroup.Text>$</InputGroup.Text>
-                  <Form.Control
-                    type="number"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    value={formatStateValue(inputs.ssnMonthlyBenefit)}
-                    onChange={(e) =>
-                      updateNumber(e, "ssnMonthlyBenefit", 0, 10000)
-                    }
-                  />
-                  <InputGroup.Text>/ mo</InputGroup.Text>
-                </InputGroup>
-              }
-            />
-            <Form.Label className="mb-1">
-              <small>Age to Start Claiming</small>
-            </Form.Label>
-            <TooltipOnHover
-              text="Claim as early as 62 (reduced ~30%) or delay to 70 (increased 8%/yr past full retirement age of 67)."
-              nest={
-                <InputGroup className="mb-2 w-100">
-                  <Form.Control
-                    type="number"
-                    onWheel={(e) => e.currentTarget.blur()}
-                    value={formatStateValue(inputs.ssnStartAge)}
-                    onChange={(e) => updateNumber(e, "ssnStartAge", 62, 70)}
-                  />
-                </InputGroup>
-              }
-            />
-          </div>
-
           {/* Add account tiles */}
           <div className={incomeStyles.addAccountButtons}>
-            {!show401k && (
+            {!showCash && (
               <button
                 type="button"
                 className={incomeStyles.addAccountTile}
                 style={{
-                  borderColor: CHART_COLORS.k401,
-                  color: CHART_COLORS.k401,
+                  borderColor: CHART_COLORS.cash,
+                  color: CHART_COLORS.cash,
                 }}
-                onClick={() => setShow401k(true)}
+                onClick={() => setShowCash(true)}
               >
-                + 401k / Trad IRA
+                + Cash / Savings
+              </button>
+            )}
+            {!showSS && (
+              <button
+                type="button"
+                className={incomeStyles.addAccountTile}
+                style={{
+                  borderColor: CHART_COLORS.ss,
+                  color: CHART_COLORS.ss,
+                }}
+                onClick={() => setShowSS(true)}
+              >
+                + Social Security
               </button>
             )}
             {!showBrokerage && (
@@ -441,6 +417,19 @@ function RetirementIncome() {
                 + Taxable Brokerage
               </button>
             )}
+            {!show401k && (
+              <button
+                type="button"
+                className={incomeStyles.addAccountTile}
+                style={{
+                  borderColor: CHART_COLORS.k401,
+                  color: CHART_COLORS.k401,
+                }}
+                onClick={() => setShow401k(true)}
+              >
+                + Traditional Retirement Accounts (401k, IRA)
+              </button>
+            )}
             {!showRoth && (
               <button
                 type="button"
@@ -454,148 +443,7 @@ function RetirementIncome() {
                 + Roth Accounts
               </button>
             )}
-            {!showCash && (
-              <button
-                type="button"
-                className={incomeStyles.addAccountTile}
-                style={{
-                  borderColor: CHART_COLORS.cash,
-                  color: CHART_COLORS.cash,
-                }}
-                onClick={() => setShowCash(true)}
-              >
-                + Cash / Savings
-              </button>
-            )}
           </div>
-
-          {show401k && (
-            <div
-              className={incomeStyles.accountSection}
-              style={{ borderColor: CHART_COLORS.k401 }}
-            >
-              <div className={incomeStyles.accountSectionHeader}>
-                <span style={{ color: CHART_COLORS.k401 }}>
-                  401k / Traditional IRA
-                </span>
-                <button
-                  type="button"
-                  className={incomeStyles.closeBtn}
-                  onClick={close401k}
-                  aria-label="Remove 401k account"
-                >
-                  ×
-                </button>
-              </div>
-              <TooltipOnHover
-                text="Pre-tax balance. Withdrawals are taxed as ordinary income. RMDs start at age 73."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.balance401k)}
-                      onChange={(e) => updateNumber(e, "balance401k")}
-                    />
-                  </InputGroup>
-                }
-              />
-            </div>
-          )}
-
-          {showBrokerage && (
-            <div
-              className={incomeStyles.accountSection}
-              style={{ borderColor: CHART_COLORS.brokerage }}
-            >
-              <div className={incomeStyles.accountSectionHeader}>
-                <span style={{ color: CHART_COLORS.brokerage }}>
-                  Taxable Brokerage
-                </span>
-                <button
-                  type="button"
-                  className={incomeStyles.closeBtn}
-                  onClick={closeBrokerage}
-                  aria-label="Remove brokerage account"
-                >
-                  ×
-                </button>
-              </div>
-              <Form.Label className="mb-1">
-                <small>Balance</small>
-              </Form.Label>
-              <TooltipOnHover
-                text="Only gains are taxed at LTCG rates when withdrawn."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.balanceBrokerage)}
-                      onChange={(e) => updateNumber(e, "balanceBrokerage")}
-                    />
-                  </InputGroup>
-                }
-              />
-              <Form.Label className="mb-1">
-                <small>Cost Basis</small>
-              </Form.Label>
-              <TooltipOnHover
-                text="What % of your balance is original investment? The remainder is gains taxed at LTCG rates."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.brokerageCostBasisPercent)}
-                      onChange={(e) =>
-                        updateNumber(e, "brokerageCostBasisPercent", 0, 100)
-                      }
-                    />
-                    <InputGroup.Text>% cost basis</InputGroup.Text>
-                  </InputGroup>
-                }
-              />
-            </div>
-          )}
-
-          {showRoth && (
-            <div
-              className={incomeStyles.accountSection}
-              style={{ borderColor: CHART_COLORS.roth }}
-            >
-              <div className={incomeStyles.accountSectionHeader}>
-                <span style={{ color: CHART_COLORS.roth }}>Roth Accounts</span>
-                <button
-                  type="button"
-                  className={incomeStyles.closeBtn}
-                  onClick={closeRoth}
-                  aria-label="Remove Roth account"
-                >
-                  ×
-                </button>
-              </div>
-              <Form.Label className="mb-1">
-                <small>Balance</small>
-              </Form.Label>
-              <TooltipOnHover
-                text="Includes Roth IRA, Roth 401k, and after-tax 401k. Tax-free withdrawals. Used last to maximize tax-free growth. Roth IRAs have no RMDs during your lifetime."
-                nest={
-                  <InputGroup className="mb-2 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.balanceRoth)}
-                      onChange={(e) => updateNumber(e, "balanceRoth")}
-                    />
-                  </InputGroup>
-                }
-              />
-            </div>
-          )}
 
           {showCash && (
             <div
@@ -662,6 +510,205 @@ function RetirementIncome() {
                   />
                 </div>
               </div>
+            </div>
+          )}
+
+          {showSS && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.ss }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.ss }}>Social Security</span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={closeSS}
+                  aria-label="Remove Social Security"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={incomeStyles.ageRow}>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Monthly Benefit</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Find your estimate at ssa.gov/myaccount."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.ssnMonthlyBenefit)}
+                          onChange={(e) =>
+                            updateNumber(e, "ssnMonthlyBenefit", 0, 10000)
+                          }
+                        />
+                        <InputGroup.Text>/ mo</InputGroup.Text>
+                      </InputGroup>
+                    }
+                  />
+                </div>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Age to Start Claiming</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Claim as early as 62 (reduced ~30%) or delay to 70 (increased 8%/yr past full retirement age of 67)."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.ssnStartAge)}
+                          onChange={(e) =>
+                            updateNumber(e, "ssnStartAge", 62, 70)
+                          }
+                        />
+                      </InputGroup>
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showBrokerage && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.brokerage }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.brokerage }}>
+                  Taxable Brokerage
+                </span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={closeBrokerage}
+                  aria-label="Remove brokerage account"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={incomeStyles.ageRow}>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Balance</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Only gains are taxed at LTCG rates when withdrawn."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.balanceBrokerage)}
+                          onChange={(e) => updateNumber(e, "balanceBrokerage")}
+                        />
+                      </InputGroup>
+                    }
+                  />
+                </div>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Cost Basis</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="What % of your balance is original investment? The remainder is gains taxed at LTCG rates."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(
+                            inputs.brokerageCostBasisPercent,
+                          )}
+                          onChange={(e) =>
+                            updateNumber(e, "brokerageCostBasisPercent", 0, 100)
+                          }
+                        />
+                        <InputGroup.Text>% cost basis</InputGroup.Text>
+                      </InputGroup>
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {show401k && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.k401 }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.k401 }}>
+                  Traditional Retirement Accounts (401k, IRA)
+                </span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={close401k}
+                  aria-label="Remove 401k account"
+                >
+                  ×
+                </button>
+              </div>
+              <TooltipOnHover
+                text="Pre-tax balance. Withdrawals are taxed as ordinary income. RMDs start at age 73."
+                nest={
+                  <InputGroup className="mb-2 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.balance401k)}
+                      onChange={(e) => updateNumber(e, "balance401k")}
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+          )}
+
+          {showRoth && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.roth }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.roth }}>Roth Accounts</span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={closeRoth}
+                  aria-label="Remove Roth account"
+                >
+                  ×
+                </button>
+              </div>
+              <Form.Label className="mb-1">
+                <small>Balance</small>
+              </Form.Label>
+              <TooltipOnHover
+                text="Includes Roth IRA, Roth 401k, and after-tax 401k. Tax-free withdrawals. Used last to maximize tax-free growth. Roth IRAs have no RMDs during your lifetime."
+                nest={
+                  <InputGroup className="mb-2 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.balanceRoth)}
+                      onChange={(e) => updateNumber(e, "balanceRoth")}
+                    />
+                  </InputGroup>
+                }
+              />
             </div>
           )}
 
@@ -809,6 +856,12 @@ function RetirementIncome() {
                       fill={CHART_COLORS.cash}
                     />
                   )}
+                  <Bar
+                    dataKey="ssIncome"
+                    name="Social Security"
+                    stackId="a"
+                    fill={CHART_COLORS.ss}
+                  />
                   {hasBrokerageData && (
                     <Bar
                       dataKey="withdrawalBrokerage"
@@ -831,12 +884,6 @@ function RetirementIncome() {
                       fill={CHART_COLORS.roth}
                     />
                   )}
-                  <Bar
-                    dataKey="ssIncome"
-                    name="Social Security"
-                    stackId="a"
-                    fill={CHART_COLORS.ss}
-                  />
                   <Bar
                     dataKey="federalTax"
                     name="Federal Tax"
