@@ -302,7 +302,7 @@ export class RetirementTable {
 
       // if 401k auto caps, we're at the last row (or first row which is also last),
       // amount contributed so far is less than max amount,
-      // contribution would not equal max, and new contribution won't exceed max allowed
+      // contribution would not equal max, and remaining amount is within max% limit
       // set contribution to max out
       if (
         this.automaticallyCap401k &&
@@ -312,17 +312,14 @@ export class RetirementTable {
           individualContributionAmount !=
             this.max401kIndividualAmount -
               tableRows[i - 1].cumulativeIndividualAmount &&
-          ((this.max401kIndividualAmount -
-            tableRows[i - 1].cumulativeIndividualAmount) /
-            payPerPayPeriod) *
-            100 <=
+          this.max401kIndividualAmount -
+            tableRows[i - 1].cumulativeIndividualAmount <=
             maxPeriodContributionAmount) ||
           (i == 0 &&
             i == this.numberOfPayPeriods - 1 &&
             cumulativeIndividualAmount < this.max401kIndividualAmount &&
             individualContributionAmount != this.max401kIndividualAmount &&
-            (this.max401kIndividualAmount / payPerPayPeriod) * 100 <=
-              maxPeriodContributionAmount))
+            this.max401kIndividualAmount <= maxPeriodContributionAmount))
       ) {
         individualContributionAmount =
           i == 0
@@ -481,18 +478,45 @@ export class RetirementTable {
       this.individualContributionAmountSoFar + individualFromMBDPhase;
     const periodsForPhase2 = totalActivePeriods - mbdPeriods;
 
-    // Equal distribution over phase 2 periods only
+    // Whole-number percentage equal distribution over phase 2 periods.
+    // 401k plans only accept integer percentages, so we find the two adjacent
+    // integer percents that bracket the ideal per-period contribution, then use
+    // numUpper periods at upperPct and the rest at lowerPct.
     const remainingTarget =
       this.max401kIndividualAmount - adjustedIndividualSoFar;
-    let equalAmount =
-      periodsForPhase2 > 0 ? remainingTarget / periodsForPhase2 : 0;
-    equalAmount = Math.min(
-      Math.max(equalAmount, minContribAmount),
-      maxPeriodContributionAmount,
-    );
 
-    // Equal after-tax distribution across all active periods (non-MBD-priority path only)
-    const afterTaxSlotPerPeriod = maxPeriodContributionAmount - equalAmount;
+    let lowerPct = this.minIndividualContributionPercent;
+    let upperPct = this.minIndividualContributionPercent;
+    let lowerAmt = minContribAmount;
+    let upperAmt = minContribAmount;
+    let numUpper = 0;
+
+    if (periodsForPhase2 > 0) {
+      const targetPct =
+        (remainingTarget / periodsForPhase2 / payPerPayPeriod) * 100;
+      lowerPct = Math.max(
+        Math.floor(targetPct),
+        this.minIndividualContributionPercent,
+      );
+      upperPct = Math.min(lowerPct + 1, this.maxContributionPercent);
+      lowerAmt = (lowerPct / 100) * payPerPayPeriod;
+      upperAmt = (upperPct / 100) * payPerPayPeriod;
+      if (upperAmt > lowerAmt) {
+        numUpper = Math.max(
+          0,
+          Math.min(
+            Math.floor(
+              (remainingTarget - periodsForPhase2 * lowerAmt) /
+                (upperAmt - lowerAmt),
+            ),
+            periodsForPhase2,
+          ),
+        );
+      }
+    }
+
+    // Equal after-tax slot based on upper% periods (most constrained)
+    const afterTaxSlotPerPeriod = maxPeriodContributionAmount - upperAmt;
     const remainingAfterTaxTarget =
       this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
     let equalAfterTaxPercent = 0;
@@ -561,26 +585,14 @@ export class RetirementTable {
           this.minIndividualContributionPercent / 100;
         individualContributionAmount = minContribAmount;
       } else {
-        // Phase 2: equal distribution of remaining individual budget
-        individualContributionFraction = equalAmount / payPerPayPeriod;
-        individualContributionAmount = equalAmount;
-
-        // Last period: contribute exactly what's needed to hit the max
-        if (i === this.numberOfPayPeriods - 1) {
-          const prevCumulative =
-            i === 0 ? 0 : tableRows[i - 1].cumulativeIndividualAmount;
-          let lastContribution = this.max401kIndividualAmount - prevCumulative;
-          if (lastContribution > maxPeriodContributionAmount) {
-            this.maxNotReached = true;
-            row.rowKey += this.maxNotReachedIcon;
-            lastContribution = maxPeriodContributionAmount;
-          }
-          individualContributionAmount = Math.max(
-            lastContribution,
-            minContribAmount,
-          );
-          individualContributionFraction =
-            individualContributionAmount / payPerPayPeriod;
+        // Phase 2: upper% for the first numUpper periods, lower% for the rest
+        const r2 = r - mbdPeriods;
+        if (r2 < numUpper) {
+          individualContributionFraction = upperPct / 100;
+          individualContributionAmount = upperAmt;
+        } else {
+          individualContributionFraction = lowerPct / 100;
+          individualContributionAmount = lowerAmt;
         }
       }
 
@@ -593,17 +605,14 @@ export class RetirementTable {
           individualContributionAmount !=
             this.max401kIndividualAmount -
               tableRows[i - 1].cumulativeIndividualAmount &&
-          ((this.max401kIndividualAmount -
-            tableRows[i - 1].cumulativeIndividualAmount) /
-            payPerPayPeriod) *
-            100 <=
+          this.max401kIndividualAmount -
+            tableRows[i - 1].cumulativeIndividualAmount <=
             maxPeriodContributionAmount) ||
           (i == 0 &&
             i == this.numberOfPayPeriods - 1 &&
             cumulativeIndividualAmount < this.max401kIndividualAmount &&
             individualContributionAmount != this.max401kIndividualAmount &&
-            (this.max401kIndividualAmount / payPerPayPeriod) * 100 <=
-              maxPeriodContributionAmount))
+            this.max401kIndividualAmount <= maxPeriodContributionAmount))
       ) {
         individualContributionAmount =
           i == 0
@@ -733,7 +742,6 @@ export class RetirementTable {
     const contributionAmountForFullMatch =
       (this.minIndividualContributionPercent / 100) * payPerPayPeriod;
 
-    // === MBD priority pre-computation ===
     const prioritizeMBD =
       this.prioritizeMegaBackdoor && this.maxAfterTaxAmount > 0;
     const afterTaxPerPeriodMax = Math.max(
@@ -744,39 +752,112 @@ export class RetirementTable {
       this.maxAfterTaxAmount - this.individualContributionAfterTaxAmountSoFar;
     const totalActivePeriods =
       this.numberOfPayPeriods - this.numberOfPayPeriodsSoFar;
-    const mbdPeriods =
-      prioritizeMBD && afterTaxPerPeriodMax > 0 && remainingAfterTaxCapacity > 0
+
+    // afterTaxPeriods: how many active periods needed to fill the remaining after-tax capacity.
+    // Computed unconditionally — used to place the after-tax block regardless of prioritizeMBD.
+    const afterTaxPeriods =
+      afterTaxPerPeriodMax > 0 && remainingAfterTaxCapacity > 0
         ? Math.min(
             Math.ceil(remainingAfterTaxCapacity / afterTaxPerPeriodMax),
             totalActivePeriods,
           )
         : 0;
 
-    const individualFromMBDPhase = contributionAmountForFullMatch * mbdPeriods;
-    const adjustedIndividualSoFar =
-      this.individualContributionAmountSoFar + individualFromMBDPhase;
-    const periodsForPhase2 = totalActivePeriods - mbdPeriods;
+    // === After-tax window placement (in r-space, relative to numberOfPayPeriodsSoFar) ===
+    //
+    // For backload, both individual ramp and after-tax are placed as late as possible.
+    // The question is which one comes LAST:
+    //
+    //   prioritizeMBD = false (default):
+    //     Individual ramp is placed at the very end (most backloaded).
+    //     After-tax fills the window just before and including the special transition period.
+    //     Window: r in [specialRelIdx + 1 - afterTaxPeriods, specialRelIdx + 1)
+    //     This includes the special period so its reduced individual slot can be used for after-tax.
+    //
+    //   prioritizeMBD = true:
+    //     After-tax is placed at the very end (most backloaded).
+    //     Individual ramp is compressed into the window just before the after-tax block.
+    //     After-tax window: r in [totalActivePeriods - afterTaxPeriods, totalActivePeriods)
+    //     Individual ramp window: r in [0, totalActivePeriods - afterTaxPeriods)
+    //     During the after-tax window, individual stays at min%.
 
-    // Same math as frontload — totals are identical, placement is mirrored
+    // === Individual ramp parameters ===
+    //
+    // prioritizeMBD = false:
+    //   Individual ramp spans all totalActivePeriods. No adjustment needed.
+    //   The after-tax window overlaps the end of the ramp (including the special period).
+    //
+    // prioritizeMBD = true:
+    //   After-tax occupies the last `afterTaxPeriods` periods.
+    //   The first period of the after-tax window is a TRANSITION period where both individual
+    //   and after-tax are contributed, filling up to the 90% cap:
+    //     afterTaxFirstAmount = floor(remainder / payPerPayPeriod * 100) / 100 * payPerPayPeriod
+    //     indAtTransition     = maxPeriodContributionAmount - afterTaxFirstAmount
+    //   The remaining (afterTaxPeriods - 1) after-tax periods contribute min individual.
+    //   So the ramp [0, afterTaxPhaseStart) must target:
+    //     rampTarget = max401kIndividualAmount - indAtTransition - (afterTaxPeriods-1)*min
+
+    // For prio: pre-compute the after-tax first-period remainder so we can derive indAtTransition.
+    // (Non-prio computes firstPeriodAfterTaxAmount the same way but doesn't affect individual.)
+    let firstPeriodAfterTaxAmount = 0;
+    if (afterTaxPeriods > 0) {
+      // Sum full after-tax slots for all periods in window EXCEPT the first.
+      // Non-prio: special period (last in window) has a reduced slot; others have afterTaxPerPeriodMax.
+      // Prio: all periods after the first are simple min-individual periods with full slot.
+      // We don't know singleContributionAmount yet for non-prio, but we DO know specialRelativeIndex
+      // will equal afterTaxPhaseEnd - 1 for non-prio. Temporarily compute for prio only here;
+      // non-prio version is recomputed below after ramp params are finalized.
+      if (prioritizeMBD) {
+        const sumOfFullSlots = (afterTaxPeriods - 1) * afterTaxPerPeriodMax;
+        const firstPeriodRaw = Math.max(
+          remainingAfterTaxCapacity - sumOfFullSlots,
+          0,
+        );
+        const firstPeriodPct =
+          Math.floor((firstPeriodRaw / payPerPayPeriod) * 100) / 100;
+        firstPeriodAfterTaxAmount = firstPeriodPct * payPerPayPeriod;
+      }
+    }
+
+    // Individual contribution at the transition period (first of after-tax window) for prio:
+    // fills the 90% cap gap left by after-tax.
+    const indAtTransition = prioritizeMBD
+      ? maxPeriodContributionAmount - firstPeriodAfterTaxAmount
+      : 0; // not used for non-prio
+
+    const periodsForIndividualRamp = prioritizeMBD
+      ? totalActivePeriods - afterTaxPeriods // ramp fits in [0, afterTaxPhaseStart)
+      : totalActivePeriods;
+
+    // For prio: account for indAtTransition + (afterTaxPeriods-1)*min during the AT window.
+    // For non-prio: individual adjustedSoFar is just what's been contributed so far.
+    const adjustedIndividualSoFar = prioritizeMBD
+      ? this.individualContributionAmountSoFar +
+        indAtTransition +
+        (afterTaxPeriods - 1) * contributionAmountForFullMatch
+      : this.individualContributionAmountSoFar;
+
     const numberOfMaxIndividualContributions =
-      periodsForPhase2 <= 0
+      periodsForIndividualRamp <= 0
         ? 0
         : Math.floor(
             (adjustedIndividualSoFar -
               this.max401kIndividualAmount +
-              contributionAmountForFullMatch * periodsForPhase2) /
+              contributionAmountForFullMatch * periodsForIndividualRamp) /
               (contributionAmountForFullMatch - maxPeriodContributionAmount),
           );
 
     const singleContributionPercent =
-      periodsForPhase2 <= 0
+      periodsForIndividualRamp <= 0
         ? 0
         : Math.floor(
             ((this.max401kIndividualAmount -
               (adjustedIndividualSoFar +
                 numberOfMaxIndividualContributions *
                   maxPeriodContributionAmount +
-                (periodsForPhase2 - numberOfMaxIndividualContributions - 1) *
+                (periodsForIndividualRamp -
+                  numberOfMaxIndividualContributions -
+                  1) *
                   contributionAmountForFullMatch)) /
               this.salary) *
               this.numberOfPayPeriods *
@@ -785,12 +866,51 @@ export class RetirementTable {
     const singleContributionAmount =
       (singleContributionPercent / 100) * payPerPayPeriod;
 
-    // Relative index threshold for backload within phase 2:
-    // r2 < periodsForPhase2 - numberOfMaxIndividualContributions - 1  → min
-    // r2 == periodsForPhase2 - numberOfMaxIndividualContributions - 1 → special single
-    // r2 > periodsForPhase2 - numberOfMaxIndividualContributions - 1  → max
+    // Relative index (in r-space) of the special transition period within the ramp window:
+    //   r < specialRelativeIndex  → min
+    //   r == specialRelativeIndex → special single
+    //   r > specialRelativeIndex  → max
     const specialRelativeIndex =
-      periodsForPhase2 - numberOfMaxIndividualContributions - 1;
+      periodsForIndividualRamp - numberOfMaxIndividualContributions - 1;
+
+    // === After-tax phase boundaries in r-space ===
+    //
+    //   prioritizeMBD = false:
+    //     Individual ramp is placed at the very end (most backloaded).
+    //     After-tax fills the window just before and including the special transition period.
+    //     afterTaxPhaseEnd   = specialRelativeIndex + 1  (exclusive, includes special)
+    //     afterTaxPhaseStart = max(0, afterTaxPhaseEnd - afterTaxPeriods)
+    //
+    //   prioritizeMBD = true:
+    //     After-tax is placed at the very end (most backloaded).
+    //     afterTaxPhaseStart = totalActivePeriods - afterTaxPeriods
+    //     afterTaxPhaseEnd   = totalActivePeriods
+    const afterTaxPhaseStart = prioritizeMBD
+      ? totalActivePeriods - afterTaxPeriods
+      : Math.max(0, specialRelativeIndex + 1 - afterTaxPeriods);
+    const afterTaxPhaseEnd = prioritizeMBD
+      ? totalActivePeriods
+      : specialRelativeIndex + 1;
+
+    // For non-prio: now that we have singleContributionAmount, finalize firstPeriodAfterTaxAmount.
+    // (Prio already computed it above.)
+    if (!prioritizeMBD && afterTaxPeriods > 0) {
+      let sumOfFullSlots = 0;
+      for (let r = afterTaxPhaseStart + 1; r < afterTaxPhaseEnd; r++) {
+        const isSpecial = r === specialRelativeIndex;
+        const slot = isSpecial
+          ? maxPeriodContributionAmount - singleContributionAmount
+          : afterTaxPerPeriodMax;
+        sumOfFullSlots += slot;
+      }
+      const firstPeriodRaw = Math.max(
+        remainingAfterTaxCapacity - sumOfFullSlots,
+        0,
+      );
+      const firstPeriodPct =
+        Math.floor((firstPeriodRaw / payPerPayPeriod) * 100) / 100;
+      firstPeriodAfterTaxAmount = firstPeriodPct * payPerPayPeriod;
+    }
 
     let individualContributionFraction = 0;
     let individualContributionAmount = 0;
@@ -833,21 +953,51 @@ export class RetirementTable {
         continue;
       }
 
+      // r: index within active periods
+      const r = i - this.numberOfPayPeriodsSoFar;
+
+      const inAfterTaxPhase =
+        afterTaxPeriods > 0 && r >= afterTaxPhaseStart && r < afterTaxPhaseEnd;
+
       // Default: min contribution
       individualContributionFraction =
         this.minIndividualContributionPercent / 100;
       individualContributionAmount = contributionAmountForFullMatch;
 
-      const r = i - this.numberOfPayPeriodsSoFar;
-      const inMBDPhase = prioritizeMBD && r < mbdPeriods;
-
-      if (!inMBDPhase) {
-        // phase 2 relative index within backload portion
-        const r2 = r - mbdPeriods;
-        if (r2 === specialRelativeIndex) {
+      // Individual ramp logic:
+      //
+      // Non-prio: ramp spans all 24 periods; special/max logic applies even inside the
+      //   after-tax window (the special period is the last period of that window).
+      //
+      // Prio: ramp is confined to [0, afterTaxPhaseStart). Inside the after-tax window:
+      //   - First period (transition): individual = indAtTransition (fills the 90% gap).
+      //   - All other periods: individual stays at min.
+      if (prioritizeMBD) {
+        if (inAfterTaxPhase) {
+          if (r === afterTaxPhaseStart) {
+            // Transition period: individual fills whatever the 90% cap allows after after-tax.
+            const indPct =
+              Math.floor((indAtTransition / payPerPayPeriod) * 100) / 100;
+            individualContributionFraction = indPct;
+            individualContributionAmount = indPct * payPerPayPeriod;
+          }
+          // else: individual stays at min (default set above)
+        } else {
+          // Ramp phase: standard backload individual logic.
+          if (r === specialRelativeIndex) {
+            individualContributionFraction = singleContributionPercent / 100;
+            individualContributionAmount = singleContributionAmount;
+          } else if (r > specialRelativeIndex) {
+            individualContributionFraction = this.maxContributionPercent / 100;
+            individualContributionAmount = maxPeriodContributionAmount;
+          }
+        }
+      } else {
+        // Non-prio: ramp logic applies regardless of after-tax phase.
+        if (r === specialRelativeIndex) {
           individualContributionFraction = singleContributionPercent / 100;
           individualContributionAmount = singleContributionAmount;
-        } else if (r2 > specialRelativeIndex) {
+        } else if (r > specialRelativeIndex) {
           individualContributionFraction = this.maxContributionPercent / 100;
           individualContributionAmount = maxPeriodContributionAmount;
         }
@@ -862,17 +1012,14 @@ export class RetirementTable {
           individualContributionAmount !=
             this.max401kIndividualAmount -
               tableRows[i - 1].cumulativeIndividualAmount &&
-          ((this.max401kIndividualAmount -
-            tableRows[i - 1].cumulativeIndividualAmount) /
-            payPerPayPeriod) *
-            100 <=
+          this.max401kIndividualAmount -
+            tableRows[i - 1].cumulativeIndividualAmount <=
             maxPeriodContributionAmount) ||
           (i == 0 &&
             i == this.numberOfPayPeriods - 1 &&
             cumulativeIndividualAmount < this.max401kIndividualAmount &&
             individualContributionAmount != this.max401kIndividualAmount &&
-            (this.max401kIndividualAmount / payPerPayPeriod) * 100 <=
-              maxPeriodContributionAmount))
+            this.max401kIndividualAmount <= maxPeriodContributionAmount))
       ) {
         individualContributionAmount =
           i == 0
@@ -953,18 +1100,28 @@ export class RetirementTable {
           ? employerAmount
           : tableRows[i - 1].cumulativeEmployerAmount + employerAmount;
 
-      // after tax
+      // after tax — fill from the end of the window (backload within window).
+      // The first period of the window gets the pre-computed remainder;
+      // all subsequent periods get their full available slot.
+      // For prio: the transition period's after-tax was pre-computed as firstPeriodAfterTaxAmount.
+      // For non-prio: same logic, but the individual at the special period (last in window)
+      //   is higher, so its slot is naturally smaller.
       afterTaxCapacity =
         i == 0
           ? afterTaxCapacity
           : afterTaxCapacity - tableRows[i - 1].afterTaxAmount;
-      afterTaxAmount = Math.max(
-        Math.min(
-          maxPeriodContributionAmount - individualContributionAmount,
-          afterTaxCapacity,
-        ),
-        0,
-      );
+      if (inAfterTaxPhase) {
+        const isFirstInWindow = r === afterTaxPhaseStart;
+        if (isFirstInWindow) {
+          afterTaxAmount = firstPeriodAfterTaxAmount;
+        } else {
+          const slot =
+            maxPeriodContributionAmount - individualContributionAmount;
+          afterTaxAmount = Math.max(Math.min(slot, afterTaxCapacity), 0);
+        }
+      } else {
+        afterTaxAmount = 0;
+      }
       const afterTaxPercent =
         Math.floor((afterTaxAmount / payPerPayPeriod) * 100) / 100;
       afterTaxAmount = afterTaxPercent * payPerPayPeriod;
