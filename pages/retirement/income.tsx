@@ -1,3 +1,8 @@
+// TODO (Retirement Income Planner)
+// 1. Better tax bracket awareness per withdrawal type — show effective rate per source
+// 2. Allow users to customize withdrawal order priorities
+// 3. Allow user to opt into early withdrawal penalties for pre-60 withdrawals (checkbox)
+
 import { useState, useMemo, FormEvent } from "react";
 import {
   Alert,
@@ -182,10 +187,12 @@ function RetirementIncome() {
   };
 
   // Chart bars: only render series that have non-zero data
+  const has401kData = rows.some((r) => r.withdrawal401k > 0);
   const hasBrokerageData = rows.some((r) => r.withdrawalBrokerage > 0);
   const hasRothData = rows.some((r) => r.withdrawalRoth > 0);
   const hasCashData = rows.some((r) => r.withdrawalCash > 0);
   const hasPenaltyData = rows.some((r) => r.earlyWithdrawalPenalty > 0);
+  const has401kBalance = rows.some((r) => r.balance401k > 0);
   const hasBrokerageBalance = rows.some((r) => r.balanceBrokerage > 0);
   const hasRothBalance = rows.some((r) => r.balanceRoth > 0);
   const hasCashBalance = rows.some((r) => r.balanceCash > 0);
@@ -789,6 +796,26 @@ function RetirementIncome() {
             </Alert>
           )}
 
+          {inputs.strategy === "set_withdrawal_rate" &&
+            summary.ageAccountsDepleted !== null &&
+            summary.ageAccountsDepleted < inputs.lifeExpectancyAge && (
+              <Alert variant="danger" className="mb-3">
+                <small>
+                  <strong>
+                    Accounts depleted at age {summary.ageAccountsDepleted}
+                  </strong>{" "}
+                  — {inputs.lifeExpectancyAge - summary.ageAccountsDepleted}{" "}
+                  year
+                  {inputs.lifeExpectancyAge - summary.ageAccountsDepleted !== 1
+                    ? "s"
+                    : ""}{" "}
+                  before your life expectancy age of {inputs.lifeExpectancyAge}.
+                  Consider reducing your target income, adding more savings, or
+                  switching to the Spend Down strategy to optimize withdrawals.
+                </small>
+              </Alert>
+            )}
+
           {/* Chart toggle */}
           <div className={incomeStyles.chartToggle}>
             <ToggleButtonGroup
@@ -842,7 +869,7 @@ function RetirementIncome() {
                       strokeDasharray="6 3"
                       label={{
                         value: "Target",
-                        position: "right",
+                        position: "insideTopRight",
                         fill: "#e74c3c",
                         fontSize: 12,
                       }}
@@ -870,12 +897,14 @@ function RetirementIncome() {
                       fill={CHART_COLORS.brokerage}
                     />
                   )}
-                  <Bar
-                    dataKey="withdrawal401k"
-                    name="401k / Trad IRA"
-                    stackId="a"
-                    fill={CHART_COLORS.k401}
-                  />
+                  {has401kData && (
+                    <Bar
+                      dataKey="withdrawal401k"
+                      name="Traditional (401k/IRA)"
+                      stackId="a"
+                      fill={CHART_COLORS.k401}
+                    />
+                  )}
                   {hasRothData && (
                     <Bar
                       dataKey="withdrawalRoth"
@@ -952,15 +981,17 @@ function RetirementIncome() {
                       fillOpacity={0.7}
                     />
                   )}
-                  <Area
-                    type="monotone"
-                    dataKey="balance401k"
-                    name="401k / Trad IRA"
-                    stackId="1"
-                    stroke={CHART_COLORS.k401}
-                    fill={CHART_COLORS.k401}
-                    fillOpacity={0.7}
-                  />
+                  {has401kBalance && (
+                    <Area
+                      type="monotone"
+                      dataKey="balance401k"
+                      name="Traditional (401k/IRA)"
+                      stackId="1"
+                      stroke={CHART_COLORS.k401}
+                      fill={CHART_COLORS.k401}
+                      fillOpacity={0.7}
+                    />
+                  )}
                   {hasRothBalance && (
                     <Area
                       type="monotone"
@@ -998,7 +1029,7 @@ function RetirementIncome() {
                   <tr>
                     <th>Age</th>
                     <th>SS ($)</th>
-                    <th>401k ($)</th>
+                    {has401kData && <th>401k ($)</th>}
                     {hasBrokerageData && <th>Brokerage ($)</th>}
                     {hasRothData && <th>Roth ($)</th>}
                     {hasCashData && <th>Cash ($)</th>}
@@ -1014,7 +1045,9 @@ function RetirementIncome() {
                     <tr key={row.age}>
                       <td>{row.age}</td>
                       <td>{formatCurrency(row.ssIncome)}</td>
-                      <td>{formatCurrency(row.withdrawal401k)}</td>
+                      {has401kData && (
+                        <td>{formatCurrency(row.withdrawal401k)}</td>
+                      )}
                       {hasBrokerageData && (
                         <td>{formatCurrency(row.withdrawalBrokerage)}</td>
                       )}
