@@ -1,7 +1,15 @@
 import { useState, useMemo, FormEvent, Fragment, JSX } from "react";
-import { Alert, Form, FormGroup, InputGroup, Table } from "react-bootstrap";
+import {
+  Alert,
+  Button,
+  Form,
+  FormGroup,
+  InputGroup,
+  Table,
+} from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../src/components";
 import {
+  downloadCSV,
   formatCurrency,
   formatPercent,
   formatStateValue,
@@ -26,7 +34,7 @@ const _401kMaxNotReachedNote =
   " If your employer limits your 401k contribution, bump the last contribution up in order to max your 401k.";
 const _401kMaxReachedWithAutoCapNote =
   maxNotReachedIcon +
-  " Since your employer limits your 401k contribution, this last contribution should max your contributions.";
+  " Since your employer limits your 401k contribution, set your contribution to the percentage shown — your plan will cap it, and the actual contribution will be the percentage shown in parentheses.";
 const maxReachedEarlyIcon = "\u2021"; // double dagger
 const _401kMaxReachedEarlyNote =
   maxReachedEarlyIcon +
@@ -149,11 +157,26 @@ function RetirementSavings() {
     _401kMaxReachedWithAutoCap: table.maxReachedWithAutomaticCap,
   };
 
+  const lastTableRow = table.getTable()[retirement.numberOfPayPeriods - 1];
+  const autoCapDisplayedPct = Math.round(
+    lastTableRow.contributionFraction * 100,
+  );
+  const autoCapRealPct =
+    lastTableRow.payPerPayPeriod > 0
+      ? (
+          (lastTableRow.contributionAmount / lastTableRow.payPerPayPeriod) *
+          100
+        ).toFixed(2)
+      : null;
+  const autoCapNote = autoCapRealPct
+    ? `${maxNotReachedIcon} Since your employer limits your 401k contribution, set your contribution to ${autoCapDisplayedPct}% — your plan will cap it, and the actual contribution will be ${autoCapRealPct}%.`
+    : _401kMaxReachedWithAutoCapNote;
+
   const alertMessages: { [key: string]: string } = {
     payPeriodAlreadyPassed: payPeriodAlreadyPassedText,
     _401kMaxReachedEarly: _401kMaxReachedEarlyNote,
     _401kMaxNotReached: _401kMaxNotReachedNote,
-    _401kMaxReachedWithAutoCap: _401kMaxReachedWithAutoCapNote,
+    _401kMaxReachedWithAutoCap: autoCapNote,
   };
 
   const generatedAlerts = Object.keys(alerts).reduce(
@@ -174,6 +197,54 @@ function RetirementSavings() {
     setRetirementValue("individualContributionAmountSoFar", 0);
     setRetirementValue("employerContributionAmountSoFar", 0);
     setRetirementValue("individualContributionAfterTaxAmountSoFar", 0);
+  };
+
+  const download401kCSV = () => {
+    const headers: string[] = [
+      "Pay Period",
+      "Gross Pay ($)",
+      "Contribution (%)",
+      "Contribution ($)",
+    ];
+    if (preferences.showEmployerMatch)
+      headers.push("Employer Contribution ($)");
+    if (preferences.showMegaBackdoor) {
+      headers.push("After-Tax Contribution (%)", "After-Tax Contribution ($)");
+    }
+    headers.push("Cumulative ($)");
+
+    const rows: (string | number)[][] = [headers];
+    table.getTable().forEach((row: RetirementTableRow) => {
+      const dataRow: (string | number)[] = [
+        row.rowKey,
+        row.payPerPayPeriod,
+        Math.round(row.contributionFraction * 100),
+        row.contributionAmount,
+      ];
+      if (preferences.showEmployerMatch) dataRow.push(row.employerAmount);
+      if (preferences.showMegaBackdoor) {
+        dataRow.push(Math.round(row.afterTaxPercent * 100), row.afterTaxAmount);
+      }
+      dataRow.push(row.cumulativeAmountTotal);
+      rows.push(dataRow);
+    });
+
+    const lastRow = table.getTable()[retirement.numberOfPayPeriods - 1];
+    const totalsRow: (string | number)[] = [
+      "Total",
+      table.salaryRemaining,
+      "",
+      lastRow.cumulativeIndividualAmount,
+    ];
+    if (preferences.showEmployerMatch)
+      totalsRow.push(lastRow.cumulativeEmployerAmount);
+    if (preferences.showMegaBackdoor) {
+      totalsRow.push("", lastRow.cumulativeAfterTaxAmount);
+    }
+    totalsRow.push(lastRow.cumulativeAmountTotal);
+    rows.push(totalsRow);
+
+    downloadCSV("401k-optimizer.csv", rows);
   };
 
   const set401kLimitsToDefault = () => {
@@ -616,6 +687,14 @@ function RetirementSavings() {
         </Form>
 
         <div className={styles.table}>
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            className="mb-2"
+            onClick={download401kCSV}
+          >
+            Download CSV
+          </Button>
           <Table hover responsive size="sm" className="mb-3">
             <thead>
               <tr>
@@ -640,7 +719,33 @@ function RetirementSavings() {
                 <tr key={row.rowKey}>
                   <td className={styles.thicc}>{row.rowKey}</td>
                   <td>{formatCurrency(row.payPerPayPeriod)}</td>
-                  <td>{formatPercent(row.contributionFraction)}</td>
+                  <td>
+                    {(() => {
+                      if (row.payPerPayPeriod <= 0)
+                        return formatPercent(row.contributionFraction);
+
+                      const impliedAmount =
+                        row.contributionFraction * row.payPerPayPeriod;
+                      const realPct =
+                        (row.contributionAmount / row.payPerPayPeriod) * 100;
+
+                      if (impliedAmount - row.contributionAmount >= 0.005) {
+                        // ceiling case (auto-cap): show the set% and actual% in parens
+                        return (
+                          <>
+                            {formatPercent(row.contributionFraction)} (
+                            {realPct.toFixed(2)}%)
+                          </>
+                        );
+                      }
+
+                      // show integer % when it implies the same dollar amount, else 2 decimal places
+                      const intPct = Math.round(realPct);
+                      return Math.abs(realPct - intPct) < 0.005
+                        ? `${intPct}%`
+                        : `${realPct.toFixed(2)}%`;
+                    })()}
+                  </td>
                   <td>{formatCurrency(row.contributionAmount)}</td>
                   {preferences.showEmployerMatch && (
                     <td>{formatCurrency(row.employerAmount)}</td>
