@@ -26,6 +26,11 @@ const Home: NextPage = () => {
             <h2>401k Optimizer &rarr;</h2>
             <p>Plan your 401k strategy</p>
           </Link>
+
+          <Link href="/retirement/income" className={styles.card} passHref>
+            <h2>Retirement Income &rarr;</h2>
+            <p>Plan withdrawals across accounts with taxes and RMDs</p>
+          </Link>
         </div>
       </main>
 

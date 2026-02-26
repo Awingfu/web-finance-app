@@ -15,6 +15,11 @@ import {
   maximum_HSA_contribution_family,
   HSA_catchup_contribution,
 } from "../src/utils/constants";
+import {
+  INCOME_LAST_UPDATED,
+  STANDARD_DEDUCTION_SINGLE,
+  STANDARD_DEDUCTION_MFJ,
+} from "../src/utils/retirement_income_utils";
 import { formatCurrency } from "../src/utils";
 
 interface FaqItem {
@@ -357,6 +362,249 @@ const FAQ_SECTIONS: FaqSection[] = [
               For the most accurate state withholding, consult your state&apos;s
               department of revenue withholding tables or your employer&apos;s
               payroll provider.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    page: "Retirement Income Planner",
+    href: "/retirement/income",
+    items: [
+      {
+        id: "ss-basics",
+        question: "How does Social Security work in retirement?",
+        answer: (
+          <>
+            <p>
+              Social Security pays you a monthly benefit in retirement based on
+              your highest 35 years of indexed earnings. The amount is called
+              your <strong>Primary Insurance Amount (PIA)</strong> and is
+              calculated by Social Security — you can find your personalized
+              estimate at <strong>ssa.gov/myaccount</strong>.
+            </p>
+            <p>
+              <strong>When you claim matters a lot:</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>Full Retirement Age (FRA)</strong> is 67 for anyone born
+                in 1960 or later. Claiming at FRA gives you 100% of your PIA.
+              </li>
+              <li>
+                <strong>Claim early (age 62):</strong> benefit is reduced by up
+                to ~30%. You collect for more years, but each check is smaller
+                permanently.
+              </li>
+              <li>
+                <strong>Delay past FRA (up to age 70):</strong> benefit grows by
+                8% per year. Waiting from 67 to 70 increases your monthly check
+                by 24%.
+              </li>
+            </ul>
+            <p>
+              The break-even age for delaying is roughly your mid-to-late 70s —
+              if you expect to live longer than that, delaying usually pays off.
+              If health or cash-flow is a concern, claiming earlier may make
+              more sense.
+            </p>
+            <p>
+              <strong>Is Social Security taxable?</strong> Possibly. Up to 85%
+              of your benefit may be subject to federal income tax depending on
+              your combined income (AGI + tax-exempt interest + half your SS
+              benefit):
+            </p>
+            <ul>
+              <li>
+                Single: 50% taxable above $25,000; 85% taxable above $34,000
+              </li>
+              <li>
+                Married filing jointly: 50% taxable above $32,000; 85% taxable
+                above $44,000
+              </li>
+            </ul>
+            <p>
+              These thresholds are <strong>not inflation-adjusted</strong>, so
+              most retirees with other income end up paying tax on 85% of their
+              benefit.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "rmds",
+        question:
+          "What are Required Minimum Distributions (RMDs) from a 401k or Traditional IRA?",
+        answer: (
+          <>
+            <p>
+              The IRS requires you to start withdrawing from tax-deferred
+              accounts (traditional 401k, traditional IRA, 403b, etc.) starting
+              at <strong>age 73</strong> (per the SECURE 2.0 Act). These
+              mandatory withdrawals are called{" "}
+              <strong>Required Minimum Distributions (RMDs)</strong>.
+            </p>
+            <p>
+              <strong>How the amount is calculated:</strong>
+            </p>
+            <p>
+              Each year, your RMD = account balance ÷ distribution period from
+              the IRS Uniform Lifetime Table. The distribution period shrinks
+              each year (e.g., 26.5 at age 73, 20.2 at age 80), so the
+              percentage you must withdraw increases as you age.
+            </p>
+            <p>
+              <strong>Key facts:</strong>
+            </p>
+            <ul>
+              <li>
+                RMDs are taxed as <strong>ordinary income</strong> — the same
+                rate as wages.
+              </li>
+              <li>
+                Missing an RMD triggers a penalty of{" "}
+                <strong>25% of the amount not withdrawn</strong> (reduced to 10%
+                if corrected promptly).
+              </li>
+              <li>
+                <strong>Roth IRAs are exempt</strong> from RMDs during the
+                owner&apos;s lifetime — one reason they&apos;re valuable to
+                preserve.
+              </li>
+              <li>
+                If you&apos;re still working at 73, you may be able to delay
+                RMDs from your current employer&apos;s 401k (but not from IRAs
+                or old 401ks).
+              </li>
+              <li>
+                Large RMDs can push you into a higher tax bracket, increase the
+                taxable portion of your Social Security, and trigger Medicare
+                IRMAA surcharges.
+              </li>
+            </ul>
+            <p>
+              The retirement income planner on this site automatically
+              calculates RMDs each year using the IRS table and takes them from
+              the 401k balance first.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "ltcg-rates",
+        question:
+          "What are the tax rates on long-term capital gains and qualified dividends?",
+        answer: (
+          <>
+            <p>
+              <strong>Long-term capital gains (LTCG)</strong> apply to assets
+              held more than one year before selling.{" "}
+              <strong>Qualified dividends</strong> (most dividends from U.S.
+              stocks held long enough) are taxed at the same preferential rates.
+              Both are taxed separately from — and lower than — ordinary income.
+            </p>
+            <p>
+              <strong>
+                {INCOME_LAST_UPDATED} LTCG / Qualified Dividend rates:
+              </strong>
+            </p>
+            <p>Single filers:</p>
+            <ul>
+              <li>
+                <strong>0%</strong> — taxable income up to $48,350
+              </li>
+              <li>
+                <strong>15%</strong> — taxable income $48,351 – $533,400
+              </li>
+              <li>
+                <strong>20%</strong> — taxable income above $533,400
+              </li>
+            </ul>
+            <p>Married filing jointly:</p>
+            <ul>
+              <li>
+                <strong>0%</strong> — taxable income up to $96,700
+              </li>
+              <li>
+                <strong>15%</strong> — taxable income $96,701 – $600,050
+              </li>
+              <li>
+                <strong>20%</strong> — taxable income above $600,050
+              </li>
+            </ul>
+            <p>
+              Taxable income here means your AGI minus the standard deduction ($
+              {STANDARD_DEDUCTION_SINGLE.toLocaleString()} for single, $
+              {STANDARD_DEDUCTION_MFJ.toLocaleString()} for MFJ in{" "}
+              {INCOME_LAST_UPDATED}). LTCG brackets stack on top of your
+              ordinary income — so ordinary income fills the bottom of the
+              bracket, and gains are taxed at whatever rate applies above that.
+            </p>
+            <p>
+              <strong>Short-term capital gains</strong> (assets held one year or
+              less) are taxed as ordinary income at your regular bracket rate —
+              no preferential treatment.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "zero-ltcg",
+        question:
+          "How can I strategically pay 0% tax on long-term capital gains?",
+        answer: (
+          <>
+            <p>
+              Since LTCG stack on top of ordinary income, you pay 0% on gains as
+              long as your <em>total taxable income</em> stays below the
+              threshold ($48,350 single / $96,700 MFJ in {INCOME_LAST_UPDATED}).
+              In retirement, several windows make this achievable:
+            </p>
+            <p>
+              <strong>The gap years:</strong> The period between when you retire
+              and when Social Security + RMDs kick in is often your
+              lowest-income window. With little ordinary income, you may have a
+              large amount of &quot;room&quot; in the 0% LTCG bracket.
+            </p>
+            <p>
+              <strong>Practical strategies:</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>Harvest gains at 0%:</strong> Sell appreciated brokerage
+                positions to realize gains tax-free, then immediately buy them
+                back. This resets your cost basis higher so future gains are
+                smaller. Unlike tax-loss harvesting, there&apos;s no wash-sale
+                rule for gains.
+              </li>
+              <li>
+                <strong>Roth conversions in low-income years:</strong> Convert
+                traditional 401k / IRA money to Roth while your ordinary income
+                is low. You pay ordinary income tax on the conversion now, but
+                future growth and withdrawals are tax-free — and you shrink the
+                account that will force RMDs later.
+              </li>
+              <li>
+                <strong>Sequence withdrawals tax-efficiently:</strong> In years
+                before SS and RMDs, pull from brokerage (LTCG rate) and cash
+                first. Keep ordinary income (401k withdrawals) low to preserve
+                room in the 0% LTCG bracket.
+              </li>
+              <li>
+                <strong>Watch the SS taxation cliff:</strong> Every extra dollar
+                of ordinary income can make up to $0.85 of SS benefits taxable
+                too — effectively raising your marginal rate. Staying below the
+                SS provisional income thresholds ($34,000 single / $44,000 MFJ)
+                protects both sides.
+              </li>
+            </ul>
+            <p>
+              Example: a single retiree with $30,000 in ordinary income (401k
+              withdrawals) has taxable income of about $15,000 after the
+              standard deduction — leaving ~$33,000 of room in the 0% LTCG
+              bracket. They can realize up to $33,000 in gains completely
+              tax-free that year.
             </p>
           </>
         ),
