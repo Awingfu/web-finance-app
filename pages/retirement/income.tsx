@@ -297,28 +297,12 @@ function RetirementIncome() {
           </InputGroup>
 
           {/* ── Income / rate settings ── */}
-          {inputs.strategy === "maintain_wealth" ? (
-            <Alert variant="secondary" className="mb-3">
-              <small>
-                <strong>Maintain Wealth:</strong> Each year&apos;s income equals
-                your portfolio&apos;s gains plus Social Security. Principal is
-                preserved at its starting value — you never draw down the
-                portfolio itself.
-              </small>
-            </Alert>
-          ) : (
+          {inputs.strategy !== "maintain_wealth" &&
+          inputs.strategy !== "spend_down" ? (
             <>
-              <Form.Label>
-                {inputs.strategy === "spend_down"
-                  ? "Annual Income (calculated)"
-                  : "Desired Annual Income"}
-              </Form.Label>
+              <Form.Label>Desired Annual Income</Form.Label>
               <TooltipOnHover
-                text={
-                  inputs.strategy === "spend_down"
-                    ? "Calculated automatically to deplete all accounts by the spend-down age."
-                    : "Target gross income, held constant each year. The investment growth rate is assumed to account for inflation."
-                }
+                text="Target gross income, held constant each year. The investment growth rate is assumed to account for inflation."
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -327,14 +311,13 @@ function RetirementIncome() {
                       onWheel={(e) => e.currentTarget.blur()}
                       value={formatStateValue(inputs.desiredAnnualIncome)}
                       onChange={(e) => updateNumber(e, "desiredAnnualIncome")}
-                      disabled={inputs.strategy === "spend_down"}
                     />
                     <InputGroup.Text>/ yr</InputGroup.Text>
                   </InputGroup>
                 }
               />
             </>
-          )}
+          ) : null}
 
           <Form.Label>Annual Investment Growth Rate</Form.Label>
           <TooltipOnHover
@@ -776,6 +759,19 @@ function RetirementIncome() {
                 Spend-down: constant income of{" "}
                 <strong>{formatCurrency(rows[0].totalGrossIncome)}</strong>/yr,
                 depleting all accounts by age {inputs.lifeExpectancyAge}.
+              </small>
+            </Alert>
+          )}
+
+          {inputs.strategy === "maintain_wealth" && (
+            <Alert variant="secondary" className="mb-3">
+              <small>
+                <strong>Maintain Wealth:</strong> Each year&apos;s income equals
+                your portfolio&apos;s gains plus Social Security. Principal is
+                preserved at its starting value — you never draw down the
+                portfolio itself. Cash is withdrawn first each year and is not
+                preserved; once depleted, gains from invested accounts fund
+                income.
               </small>
             </Alert>
           )}
