@@ -233,14 +233,22 @@ function RetirementIncome() {
           <div className={incomeStyles.ageRow}>
             <div className={incomeStyles.ageField}>
               <Form.Label>Current Age</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.currentAge)}
-                  onChange={(e) => updateNumber(e, "currentAge", 0, 100)}
-                />
-              </InputGroup>
+              <Form.Select
+                value={inputs.currentAge}
+                onChange={(e) => {
+                  const age = parseInt(e.target.value);
+                  setField("currentAge", age);
+                  if (inputs.lifeExpectancyAge <= age) {
+                    setField("lifeExpectancyAge", age + 1);
+                  }
+                }}
+              >
+                {Array.from({ length: 81 }, (_, i) => i + 20).map((age) => (
+                  <option key={age} value={age}>
+                    {age}
+                  </option>
+                ))}
+              </Form.Select>
             </div>
             <div className={incomeStyles.ageField}>
               <Form.Label>
@@ -255,21 +263,21 @@ function RetirementIncome() {
                     : "How far to run the simulation."
                 }
                 nest={
-                  <InputGroup>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.lifeExpectancyAge)}
-                      onChange={(e) =>
-                        updateNumber(
-                          e,
-                          "lifeExpectancyAge",
-                          inputs.currentAge + 1,
-                          120,
-                        )
-                      }
-                    />
-                  </InputGroup>
+                  <Form.Select
+                    value={inputs.lifeExpectancyAge}
+                    onChange={(e) =>
+                      setField("lifeExpectancyAge", parseInt(e.target.value))
+                    }
+                  >
+                    {Array.from(
+                      { length: 119 - inputs.currentAge },
+                      (_, i) => inputs.currentAge + 1 + i,
+                    ).map((age) => (
+                      <option key={age} value={age}>
+                        {age}
+                      </option>
+                    ))}
+                  </Form.Select>
                 }
               />
             </div>

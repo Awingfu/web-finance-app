@@ -2,14 +2,33 @@ import { useLayoutEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/router";
-import { Button, Container, Nav, Navbar, Offcanvas } from "react-bootstrap";
+import {
+  Button,
+  Container,
+  Nav,
+  NavDropdown,
+  Navbar,
+  Offcanvas,
+} from "react-bootstrap";
 import { prefix } from "../utils";
 import { useTheme } from "../utils/ThemeContext";
 
-const NAV_LINKS = [
+type NavLink = { href: string; label: string };
+type NavGroup = { group: string; links: NavLink[] };
+type NavEntry = NavLink | NavGroup;
+
+const isGroup = (entry: NavEntry): entry is NavGroup => "group" in entry;
+
+const NAV_ENTRIES: NavEntry[] = [
   { href: "/paycheck", label: "Paycheck" },
-  { href: "/retirement-savings", label: "401k Optimizer" },
-  { href: "/retirement/income", label: "Retirement Income" },
+  {
+    group: "Retirement",
+    links: [
+      { href: "/retirement-savings", label: "401k Optimizer" },
+      { href: "/retirement/income", label: "Retirement Income" },
+      { href: "/retirement/roth-vs-traditional", label: "Roth vs Traditional" },
+    ],
+  },
   { href: "/faq", label: "FAQ" },
 ];
 
@@ -19,6 +38,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/retirement-savings": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
+  "/retirement/roth-vs-traditional": "Roth vs Traditional",
   "/faq": "FAQ",
 };
 
@@ -83,11 +103,37 @@ const NavigationBar = () => {
         ) : (
           <>
             <Nav className="me-auto">
-              {NAV_LINKS.map(({ href, label }) => (
-                <Link key={href} href={href} className="nav-link" passHref>
-                  {label}
-                </Link>
-              ))}
+              {NAV_ENTRIES.map((entry) =>
+                isGroup(entry) ? (
+                  <NavDropdown
+                    key={entry.group}
+                    title={entry.group}
+                    id={`nav-dropdown-${entry.group.toLowerCase()}`}
+                    active={entry.links.some((l) => router.pathname === l.href)}
+                    data-bs-theme={theme}
+                  >
+                    {entry.links.map(({ href, label }) => (
+                      <NavDropdown.Item
+                        key={href}
+                        as={Link}
+                        href={href}
+                        active={router.pathname === href}
+                      >
+                        {label}
+                      </NavDropdown.Item>
+                    ))}
+                  </NavDropdown>
+                ) : (
+                  <Link
+                    key={entry.href}
+                    href={entry.href}
+                    className={`nav-link${router.pathname === entry.href ? " active" : ""}`}
+                    passHref
+                  >
+                    {entry.label}
+                  </Link>
+                ),
+              )}
             </Nav>
             <Button
               variant="link"
@@ -114,17 +160,39 @@ const NavigationBar = () => {
         </Offcanvas.Header>
         <Offcanvas.Body>
           <Nav className="flex-column mb-3">
-            {NAV_LINKS.map(({ href, label }) => (
-              <Link
-                key={href}
-                href={href}
-                className="nav-link text-body"
-                passHref
-                onClick={() => setShowDrawer(false)}
-              >
-                {label}
-              </Link>
-            ))}
+            {NAV_ENTRIES.map((entry) =>
+              isGroup(entry) ? (
+                <div key={entry.group}>
+                  <p
+                    className="text-muted small text-uppercase mb-1 mt-2"
+                    style={{ letterSpacing: "0.06em", fontWeight: 600 }}
+                  >
+                    {entry.group}
+                  </p>
+                  {entry.links.map(({ href, label }) => (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="nav-link text-body ps-4"
+                      passHref
+                      onClick={() => setShowDrawer(false)}
+                    >
+                      {label}
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <Link
+                  key={entry.href}
+                  href={entry.href}
+                  className="nav-link text-body"
+                  passHref
+                  onClick={() => setShowDrawer(false)}
+                >
+                  {entry.label}
+                </Link>
+              ),
+            )}
           </Nav>
           <hr />
           <Button

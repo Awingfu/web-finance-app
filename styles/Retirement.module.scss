@@ -19,6 +19,16 @@ $wide: 2160px;
   align-items: center;
   text-align: center;
   margin: 0 2%;
+
+  @media screen and (min-width: $small) and (max-width: $medium) {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+
+  @media screen and (max-width: $small) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
 }
 
 .checkbox {
