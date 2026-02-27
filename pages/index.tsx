@@ -27,7 +27,11 @@ const Home: NextPage = () => {
             <p>See the power of compounding and the cost of waiting</p>
           </Link>
 
-          <Link href="/retirement-savings" className={styles.card} passHref>
+          <Link
+            href="/retirement/savings-optimizer"
+            className={styles.card}
+            passHref
+          >
             <h2>401k Optimizer &rarr;</h2>
             <p>Plan your 401k strategy</p>
           </Link>
