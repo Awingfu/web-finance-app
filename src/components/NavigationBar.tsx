@@ -25,7 +25,7 @@ const NAV_ENTRIES: NavEntry[] = [
   {
     group: "Retirement",
     links: [
-      { href: "/retirement-savings", label: "401k Optimizer" },
+      { href: "/retirement/savings-optimizer", label: "401k Optimizer" },
       { href: "/retirement/income", label: "Retirement Income" },
       { href: "/retirement/roth-vs-traditional", label: "Roth vs Traditional" },
       {
@@ -41,7 +41,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/": "Home",
   "/paycheck": "Paycheck",
   "/why-invest": "Why Invest?",
-  "/retirement-savings": "401k Optimizer",
+  "/retirement/savings-optimizer": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
   "/retirement/roth-vs-traditional": "Roth vs Traditional",
