@@ -22,7 +22,7 @@ import {
   _401k_maximum_contribution_total,
   _401k_numbers_last_updated,
 } from "../../src/utils/constants";
-import styles from "../styles/Retirement.module.scss";
+import styles from "../../styles/Retirement.module.scss";
 import { RetirementState, PreferencesState } from "../../src/utils/types";
 
 const payPeriodAlreadyPassedIcon = "\u203E"; // overline
