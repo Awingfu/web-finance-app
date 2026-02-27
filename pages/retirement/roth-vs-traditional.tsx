@@ -756,7 +756,16 @@ export default function RothVsTraditional() {
                 {formatCurrency(result.afterTaxTraditional)}
               </div>
               <div className={styles.cardSub}>
-                After-tax withdrawal + reinvested savings
+                Simplified: after-tax withdrawal [Gross × (1−r)] + reinvested
+                savings
+                <br />
+                {formatChartDollar(result.grossBalanceAtRetirement)} × (1−
+                {Math.round(result.estimatedRetirementRate * 100)}%) +{" "}
+                {formatChartDollar(
+                  result.afterTaxTraditional -
+                    result.grossBalanceAtRetirement *
+                      (1 - result.estimatedRetirementRate),
+                )}
               </div>
             </div>
             <div
