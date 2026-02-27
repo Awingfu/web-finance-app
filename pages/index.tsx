@@ -45,6 +45,17 @@ const Home: NextPage = () => {
             <h2>Roth vs Traditional &rarr;</h2>
             <p>Compare after-tax retirement wealth across contribution types</p>
           </Link>
+
+          <Link
+            href="/retirement/roth-conversion-ladder"
+            className={styles.card}
+            passHref
+          >
+            <h2>Roth Conversion Ladder &rarr;</h2>
+            <p>
+              Optimize year-by-year Roth conversions to minimize lifetime taxes
+            </p>
+          </Link>
         </div>
       </main>
 

@@ -125,9 +125,8 @@ export interface RetirementIncomeInputs {
   balanceCash: number;
   cashInterestRate: number; // annual interest rate on cash (e.g. 0.01 for 1%)
   strategy: WithdrawalStrategy;
-  desiredAnnualIncome: number; // base (year-0) annual income target
+  desiredAnnualIncome: number; // fixed annual income target
   annualGrowthRate: number; // e.g. 0.07
-  inflationRate: number; // annual income target growth rate (e.g. 0.03)
   filingStatus: FilingStatus;
 }
 
@@ -277,7 +276,6 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
     ssnStartAge,
     annualGrowthRate,
     cashInterestRate,
-    inflationRate,
     brokerageCostBasisPercent,
     filingStatus,
   } = inputs;
@@ -322,9 +320,8 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
         (balanceCash - preCash);
       targetIncome = ssIncome + totalGains;
     } else {
-      // set_withdrawal_rate and spend_down: use inflation-adjusted desired income
-      targetIncome =
-        inputs.desiredAnnualIncome * Math.pow(1 + inflationRate, yearIdx);
+      // set_withdrawal_rate and spend_down: fixed annual income target
+      targetIncome = inputs.desiredAnnualIncome;
     }
 
     // 5. How much more do we need beyond SS and RMD?

@@ -71,16 +71,15 @@ const DEFAULT_INPUTS: RetirementIncomeInputs = {
   lifeExpectancyAge: 90,
   ssnMonthlyBenefit: 2000,
   ssnStartAge: 67,
-  balance401k: 0,
+  balance401k: 250000,
   balanceBrokerage: 0,
   brokerageCostBasisPercent: 50,
   balanceRoth: 0,
   balanceCash: 100000,
   cashInterestRate: 0.01,
   strategy: "set_withdrawal_rate",
-  desiredAnnualIncome: 40000,
-  annualGrowthRate: 0.1,
-  inflationRate: 0.03,
+  desiredAnnualIncome: 39000,
+  annualGrowthRate: 0.07,
   filingStatus: "single",
 };
 
@@ -89,7 +88,7 @@ function RetirementIncome() {
 
   // Optional account section visibility
   const [showSS, setShowSS] = useState(true);
-  const [show401k, setShow401k] = useState(false);
+  const [show401k, setShow401k] = useState(true);
   const [showBrokerage, setShowBrokerage] = useState(false);
   const [showRoth, setShowRoth] = useState(false);
   const [showCash, setShowCash] = useState(true);
@@ -298,72 +297,27 @@ function RetirementIncome() {
           </InputGroup>
 
           {/* ── Income / rate settings ── */}
-          {inputs.strategy === "maintain_wealth" ? (
-            <Alert variant="secondary" className="mb-3">
-              <small>
-                <strong>Maintain Wealth:</strong> Each year&apos;s income equals
-                your portfolio&apos;s gains plus Social Security. Principal is
-                preserved at its starting value — you never draw down the
-                portfolio itself.
-              </small>
-            </Alert>
-          ) : (
-            <div className={incomeStyles.ageRow}>
-              <div className={incomeStyles.ageField}>
-                <Form.Label>
-                  {inputs.strategy === "spend_down"
-                    ? "Annual Income (calculated)"
-                    : "Desired Annual Income"}
-                </Form.Label>
-                <TooltipOnHover
-                  text={
-                    inputs.strategy === "spend_down"
-                      ? "Calculated automatically to deplete all accounts by the spend-down age."
-                      : "Target gross income in year-0 dollars. The amount grows with inflation each year."
-                  }
-                  nest={
-                    <InputGroup className="mb-3 w-100">
-                      <InputGroup.Text>$</InputGroup.Text>
-                      <Form.Control
-                        type="number"
-                        onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(inputs.desiredAnnualIncome)}
-                        onChange={(e) => updateNumber(e, "desiredAnnualIncome")}
-                        disabled={inputs.strategy === "spend_down"}
-                      />
-                      <InputGroup.Text>/ yr</InputGroup.Text>
-                    </InputGroup>
-                  }
-                />
-              </div>
-              <div className={incomeStyles.ageField}>
-                <Form.Label>Income Inflation Rate</Form.Label>
-                <TooltipOnHover
-                  text="Annual rate at which your desired income grows. Accounts for rising cost of living."
-                  nest={
-                    <InputGroup className="mb-3 w-100">
-                      <Form.Control
-                        type="number"
-                        onWheel={(e) => e.currentTarget.blur()}
-                        value={formatStateValue(
-                          Math.round(inputs.inflationRate * 10000) / 100,
-                        )}
-                        onChange={(e) => {
-                          let v = parseFloat(
-                            (e.target as HTMLInputElement).value,
-                          );
-                          if (isNaN(v) || v < 0) v = 0;
-                          if (v > 20) v = 20;
-                          setField("inflationRate", v / 100);
-                        }}
-                      />
-                      <InputGroup.Text>%</InputGroup.Text>
-                    </InputGroup>
-                  }
-                />
-              </div>
-            </div>
-          )}
+          {inputs.strategy !== "maintain_wealth" &&
+          inputs.strategy !== "spend_down" ? (
+            <>
+              <Form.Label>Desired Annual Income</Form.Label>
+              <TooltipOnHover
+                text="Target gross income, held constant each year. The investment growth rate is assumed to account for inflation."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.desiredAnnualIncome)}
+                      onChange={(e) => updateNumber(e, "desiredAnnualIncome")}
+                    />
+                    <InputGroup.Text>/ yr</InputGroup.Text>
+                  </InputGroup>
+                }
+              />
+            </>
+          ) : null}
 
           <Form.Label>Annual Investment Growth Rate</Form.Label>
           <TooltipOnHover
@@ -662,9 +616,15 @@ function RetirementIncome() {
               style={{ borderColor: CHART_COLORS.k401 }}
             >
               <div className={incomeStyles.accountSectionHeader}>
-                <span style={{ color: CHART_COLORS.k401 }}>
-                  Traditional Retirement Accounts (401k, IRA)
-                </span>
+                <div>
+                  <span style={{ color: CHART_COLORS.k401 }}>
+                    Traditional Retirement Accounts (401k, IRA)
+                  </span>
+                  <div className={incomeStyles.accountSectionSubtitle}>
+                    RMDs (required minimum distributions) are enforced starting
+                    at age 73
+                  </div>
+                </div>
                 <button
                   type="button"
                   className={incomeStyles.closeBtn}
@@ -796,10 +756,22 @@ function RetirementIncome() {
           {inputs.strategy === "spend_down" && rows.length > 0 && (
             <Alert variant="secondary" className="mb-3">
               <small>
-                Spend-down: income starts at{" "}
-                <strong>{formatCurrency(rows[0].totalGrossIncome)}</strong> and
-                grows at {(inputs.inflationRate * 100).toFixed(1)}%/yr,
+                Spend-down: constant income of{" "}
+                <strong>{formatCurrency(rows[0].totalGrossIncome)}</strong>/yr,
                 depleting all accounts by age {inputs.lifeExpectancyAge}.
+              </small>
+            </Alert>
+          )}
+
+          {inputs.strategy === "maintain_wealth" && (
+            <Alert variant="secondary" className="mb-3">
+              <small>
+                <strong>Maintain Wealth:</strong> Each year&apos;s income equals
+                your portfolio&apos;s gains plus Social Security. Principal is
+                preserved at its starting value — you never draw down the
+                portfolio itself. Cash is withdrawn first each year and is not
+                preserved; once depleted, gains from invested accounts fund
+                income.
               </small>
             </Alert>
           )}

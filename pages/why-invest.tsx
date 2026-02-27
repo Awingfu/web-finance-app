@@ -53,7 +53,7 @@ const DEFAULT_INPUTS: WhyInvestInputs = {
   savingsRatePercent: 15,
   startingBalance: 0,
   marketReturnRate: 0.1,
-  savingsAccountRate: 0.045,
+  savingsAccountRate: 0.04,
   inflationEnabled: false,
   inflationRate: 0.03,
 };
@@ -413,13 +413,6 @@ export default function WhyInvest() {
               >
                 Cost of Waiting
               </ToggleButton>
-              <ToggleButton
-                id="view-breakdown"
-                value="breakdown"
-                variant="outline-primary"
-              >
-                Contributions vs. Gains
-              </ToggleButton>
             </ToggleButtonGroup>
           </div>
 
@@ -486,8 +479,8 @@ export default function WhyInvest() {
                 </LineChart>
               </ResponsiveContainer>
               <p className={styles.chartNote}>
-                The gap between the green line and the dashed gray line is your
-                investment gains from compounding.
+                The gap between the colored lines and the dashed gray line are
+                gains from compounding.
                 {inputs.inflationEnabled &&
                   " All values adjusted for inflation."}
               </p>
@@ -523,7 +516,11 @@ export default function WhyInvest() {
                     labelFormatter={(age) => `Start age: ${age}`}
                   />
                   <Legend verticalAlign="top" />
-                  <Bar dataKey="market" name="Market Portfolio">
+                  <Bar
+                    dataKey="market"
+                    name="Market Portfolio"
+                    fill={MARKET_COLOR}
+                  >
                     {result.delayData.map((entry, index) => (
                       <Cell
                         key={`cell-market-${index}`}
@@ -534,7 +531,11 @@ export default function WhyInvest() {
                       />
                     ))}
                   </Bar>
-                  <Bar dataKey="savings" name="Savings Account">
+                  <Bar
+                    dataKey="savings"
+                    name="Savings Account"
+                    fill={SAVINGS_COLOR}
+                  >
                     {result.delayData.map((entry, index) => (
                       <Cell
                         key={`cell-savings-${index}`}
@@ -546,82 +547,12 @@ export default function WhyInvest() {
                 </BarChart>
               </ResponsiveContainer>
               <p className={styles.chartNote}>
-                All bars assume starting from $0 to isolate the impact of time.
+                {inputs.startingBalance > 0
+                  ? `Current portfolio (${formatCurrency(inputs.startingBalance)}) compounds to retirement in all scenarios.`
+                  : "All scenarios start from $0."}{" "}
                 Solid bars = your current age ({inputs.currentAge}). Each
                 scenario invests {formatCurrency(annualContrib)}/yr until age{" "}
                 {inputs.retirementAge}.
-              </p>
-            </div>
-          )}
-
-          {/* Chart 3 — Contributions vs. Gains */}
-          {chartView === "breakdown" && (
-            <div className={styles.chartWrap}>
-              <h5 className="text-center mb-3">
-                Contributions vs. Investment Gains
-                {inputs.inflationEnabled && (
-                  <span className="text-muted fs-6">
-                    {" "}
-                    (in today&apos;s dollars)
-                  </span>
-                )}
-              </h5>
-              <ResponsiveContainer width="100%" height={380}>
-                <ComposedChart
-                  data={result.yearlyData}
-                  margin={{ top: 10, right: 20, left: 10, bottom: 24 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis
-                    dataKey="age"
-                    label={{
-                      value: "Age",
-                      position: "insideBottom",
-                      offset: -12,
-                    }}
-                  />
-                  <YAxis tickFormatter={formatChartDollar} width={65} />
-                  <Tooltip
-                    formatter={(
-                      value: number | undefined,
-                      name: string | undefined,
-                    ) => [formatCurrency(value ?? 0), name ?? ""]}
-                    labelFormatter={(age) => `Age ${age}`}
-                  />
-                  <Legend verticalAlign="top" />
-                  <Area
-                    type="monotone"
-                    dataKey="contributions"
-                    name="Contributions"
-                    stackId="stack"
-                    stroke={CONTRIB_COLOR}
-                    fill={CONTRIB_COLOR}
-                    fillOpacity={0.55}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="marketGains"
-                    name="Market Gains"
-                    stackId="stack"
-                    stroke={MARKET_COLOR}
-                    fill={MARKET_COLOR}
-                    fillOpacity={0.65}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="savings"
-                    name="Savings Account"
-                    stroke={SAVINGS_COLOR}
-                    strokeWidth={2}
-                    strokeDasharray="5 3"
-                    dot={false}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-              <p className={styles.chartNote}>
-                Stacked area = total market portfolio (gray contributions +
-                green gains). Dashed blue line = savings account. Watch the
-                green gains grow to dwarf your contributions over time.
               </p>
             </div>
           )}

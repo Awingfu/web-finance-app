@@ -28,6 +28,10 @@ const NAV_ENTRIES: NavEntry[] = [
       { href: "/retirement-savings", label: "401k Optimizer" },
       { href: "/retirement/income", label: "Retirement Income" },
       { href: "/retirement/roth-vs-traditional", label: "Roth vs Traditional" },
+      {
+        href: "/retirement/roth-conversion-ladder",
+        label: "Roth Conversion Ladder",
+      },
     ],
   },
   { href: "/faq", label: "FAQ" },
@@ -41,6 +45,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
   "/retirement/roth-vs-traditional": "Roth vs Traditional",
+  "/retirement/roth-conversion-ladder": "Roth Conversion Ladder",
   "/faq": "FAQ",
 };
 

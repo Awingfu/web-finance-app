@@ -77,10 +77,10 @@ export function getPresetTable(
     };
   }
 
-  // federal_2026_plus10: each bracket rate + 10pp, capped at 50%
+  // federal_2026_plus10: each bracket rate + 10%, capped at 50%
   return {
     id: `federal_2026_plus10_${filing}`,
-    name: `2026 Federal +10pp (${filingLabel})`,
+    name: `2026 Federal +10% (${filingLabel})`,
     description:
       "2026 federal brackets with each rate raised by 10 percentage points. " +
       "Represents a hypothetical future where Congress raises tax rates.",

@@ -31,6 +31,63 @@ import {
 
 export const ROTH_TRAD_LAST_UPDATED = 2026;
 
+// ─── LTCG brackets (2026) ────────────────────────────────────────────────────
+// Applied to total taxable income: ordinary taxable income + LTCG gains stacked on top.
+// Thresholds: [min, max, rate]
+
+const LTCG_BRACKETS_SINGLE: [number, number, number][] = [
+  [0, 48350, 0.0],
+  [48350, 533400, 0.15],
+  [533400, Infinity, 0.2],
+];
+const LTCG_BRACKETS_MFJ: [number, number, number][] = [
+  [0, 96700, 0.0],
+  [96700, 600050, 0.15],
+  [600050, Infinity, 0.2],
+];
+
+/** Compute LTCG tax on `gains` stacked on top of `taxableOrdinary` income. */
+function calcLtcgTax(
+  gains: number,
+  taxableOrdinary: number,
+  filing: FilingStatus,
+): number {
+  if (gains <= 0) return 0;
+  const brackets = filing === "mfj" ? LTCG_BRACKETS_MFJ : LTCG_BRACKETS_SINGLE;
+  let tax = 0;
+  let remaining = gains;
+  for (const [min, max, rate] of brackets) {
+    if (taxableOrdinary >= max) continue;
+    const room = max - Math.max(min, taxableOrdinary);
+    const inBracket = Math.min(remaining, room);
+    tax += inBracket * rate;
+    remaining -= inBracket;
+    if (remaining <= 0) break;
+  }
+  return tax;
+}
+
+/**
+ * Binary-search for the gross savings withdrawal that yields `targetNet`
+ * after LTCG tax stacked on top of `taxableOrdinary`.
+ */
+function calcSavingsGrossForNet(
+  targetNet: number,
+  taxableOrdinary: number,
+  filing: FilingStatus,
+): number {
+  if (targetNet <= 0) return 0;
+  let lo = targetNet;
+  let hi = targetNet / 0.8 + 1; // worst-case 20% LTCG → upper bound
+  for (let i = 0; i < 50; i++) {
+    const mid = (lo + hi) / 2;
+    const net = mid - calcLtcgTax(mid, taxableOrdinary, filing);
+    if (net < targetNet) lo = mid;
+    else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+
 // ─── Helpers based on current-year (2026) brackets ───────────────────────────
 
 export function getStdDeduction(filing: FilingStatus): number {
@@ -102,7 +159,7 @@ export interface BurndownPoint {
   tradTotal: number; // tradBalance + tradSavings (total Traditional assets)
   annualTaxesPaid: number; // total taxes paid this year (ordinary + LTCG)
   annualTradNet: number; // net from 401k withdrawal only (after ordinary income tax)
-  tradSavingsNet: number; // net from savings withdrawal (after 15% LTCG) — shown separately
+  tradSavingsNet: number; // net from savings withdrawal (after dynamic LTCG tax) — shown separately
   annualRothNet: number; // net spendable from Roth withdrawal (tax-free)
   cumTaxesPaid: number; // cumulative taxes paid in retirement so far
 }
@@ -212,9 +269,9 @@ export function calcRothVsTraditional(
 
   // Burndown: simulate annual withdrawals from retirement to life expectancy.
   // Traditional draws from 401k first (ordinary income tax), then from reinvested
-  // savings when 401k is depleted (LTCG tax on savings withdrawals). Roth is
-  // fully independent — draws from its own balance, no taxes.
-  const SAVINGS_LTCG_RATE = 0.15; // flat LTCG rate on reinvested savings withdrawals
+  // savings when 401k is depleted. Savings withdrawals are taxed at dynamic LTCG
+  // rates (2026 brackets, stacked on top of ordinary income), and the gross
+  // withdrawal is sized to match the same net income as the 401k phase.
   const annualTaxOnWithdrawal =
     estimatedRetirementRate * retirement401kWithdrawal;
   const annualTradNetIncome = retirement401kWithdrawal - annualTaxOnWithdrawal;
@@ -243,10 +300,8 @@ export function calcRothVsTraditional(
     // Roth: withdrawal capped by available Roth balance (independent of Traditional)
     const actualRothWithdrawal = Math.min(bRoth, retirement401kWithdrawal);
 
-    // Traditional: draw from 401k first, cover any shortfall from savings.
+    // Traditional: draw from 401k first, then top up from savings.
     const actualTradWithdrawal = Math.min(bTrad, retirement401kWithdrawal);
-    const tradShortfall = retirement401kWithdrawal - actualTradWithdrawal;
-    const savingsWithdrawal = Math.min(bSavings, tradShortfall);
 
     // Ordinary income tax on the 401k portion
     const actualTradTax =
@@ -258,8 +313,32 @@ export function calcRothVsTraditional(
           ) * actualTradWithdrawal
         : 0;
 
-    // LTCG tax on savings withdrawal (gains approximated as full withdrawal)
-    const savingsTax = savingsWithdrawal * SAVINGS_LTCG_RATE;
+    // Net needed from savings = target steady-state net minus what 401k provided.
+    const netFrom401k = actualTradWithdrawal - actualTradTax;
+    const netNeededFromSavings = Math.max(0, annualTradNetIncome - netFrom401k);
+
+    // Taxable ordinary income this year (for LTCG bracket stacking).
+    const taxableOrdinary = Math.max(
+      0,
+      retirementOtherIncome +
+        actualTradWithdrawal -
+        retirementTaxTable.standardDeduction,
+    );
+
+    // Gross up savings withdrawal so after-LTCG net matches the 401k-phase net.
+    const savingsGrossTarget = calcSavingsGrossForNet(
+      netNeededFromSavings,
+      taxableOrdinary,
+      filingStatus,
+    );
+    const savingsWithdrawal = Math.min(bSavings, savingsGrossTarget);
+
+    // Dynamic LTCG tax on the actual (possibly capped) savings withdrawal.
+    const savingsTax = calcLtcgTax(
+      savingsWithdrawal,
+      taxableOrdinary,
+      filingStatus,
+    );
 
     cumTax += actualTradTax + savingsTax;
 

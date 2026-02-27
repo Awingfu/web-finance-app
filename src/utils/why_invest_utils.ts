@@ -125,10 +125,15 @@ export function calcWhyInvest(inputs: WhyInvestInputs): WhyInvestResult {
 
   const delayData: DelayDataPoint[] = startAges.map((startAge) => {
     const n = retirementAge - startAge;
-    // Delay comparison uses $0 starting balance to isolate time-horizon effect
-    const mktFinal = annuityFV(annualContribution, marketRate, n);
-    const savFinal = annuityFV(annualContribution, savingsRate, n);
-    const contribs = annualContribution * n;
+    // Both the starting balance and contributions compound from startAge,
+    // so earlier start ages give the balance more years to grow.
+    const mktFinal =
+      startingBalance * Math.pow(1 + marketRate, n) +
+      annuityFV(annualContribution, marketRate, n);
+    const savFinal =
+      startingBalance * Math.pow(1 + savingsRate, n) +
+      annuityFV(annualContribution, savingsRate, n);
+    const contribs = startingBalance + annualContribution * n;
 
     return {
       startAge,

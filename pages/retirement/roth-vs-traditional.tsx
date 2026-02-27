@@ -553,7 +553,7 @@ export default function RothVsTraditional() {
             >
               <option value="federal_2026">2026 Federal Brackets</option>
               <option value="federal_2026_plus10">
-                Higher Taxes — 2026 brackets + 10pp on each rate
+                Higher Taxes — 2026 brackets + 10% on each rate
               </option>
               <option value="custom">Custom — define your own brackets</option>
             </Form.Select>
@@ -1155,8 +1155,8 @@ export default function RothVsTraditional() {
               <p className={styles.chartNote}>
                 Green = ordinary income (SS + wages, same for both). Orange =
                 Traditional net 401k take-home (ordinary income tax). Gold =
-                Traditional reinvested savings net (15% LTCG, kicks in once 401k
-                depletes). Blue = Roth take-home (tax-free).{" "}
+                Traditional reinvested savings net (0–20% LTCG, kicks in once
+                401k depletes). Blue = Roth take-home (tax-free).{" "}
                 {equalNetMode
                   ? `Equal after-tax income mode: Roth withdraws ${formatCurrency(result.annualTradNetIncome)}/yr to match Traditional's net — blue bars are shorter but the Roth balance lasts longer.`
                   : `Equal gross withdrawal mode: Roth draws the full ${formatCurrency(inputs.retirement401kWithdrawal)}/yr — blue bars are taller (no taxes) but the balance depletes faster.`}
