@@ -77,6 +77,7 @@ export interface RothTraditionalInputs {
   // Retirement income inputs (used to compute effective rate via tax table)
   retirementOtherIncome: number; // SS + ordinary wages — NOT dividends/LTCG
   retirement401kWithdrawal: number; // expected annual 401k/IRA withdrawal
+  lifeExpectancyAge: number; // age to project retirement burndown through
   retirementTaxTable: RetirementTaxTable; // selected or custom table
 }
 
@@ -91,6 +92,19 @@ export interface YearlyDataPoint {
   age: number;
   accountBalance: number; // year-end 401k balance (same for both Trad and Roth)
   taxSavingsBalance: number; // cumulative reinvested tax savings (Traditional only)
+}
+
+export interface BurndownPoint {
+  age: number;
+  rothBalance: number; // Roth account balance remaining
+  tradBalance: number; // Traditional 401k balance remaining
+  tradSavings: number; // Reinvested tax savings account (Traditional bonus)
+  tradTotal: number; // tradBalance + tradSavings (total Traditional assets)
+  annualTaxesPaid: number; // total taxes paid this year (ordinary + LTCG)
+  annualTradNet: number; // net from 401k withdrawal only (after ordinary income tax)
+  tradSavingsNet: number; // net from savings withdrawal (after 15% LTCG) — shown separately
+  annualRothNet: number; // net spendable from Roth withdrawal (tax-free)
+  cumTaxesPaid: number; // cumulative taxes paid in retirement so far
 }
 
 export interface RothTraditionalResult {
@@ -117,6 +131,10 @@ export interface RothTraditionalResult {
 
   sensitivityData: SensitivityPoint[];
   yearlyData: YearlyDataPoint[];
+  burndownData: BurndownPoint[];
+  annualTaxesPaidEachYear: number; // taxes on the fixed annual 401k withdrawal
+  annualTradNetIncome: number; // Traditional net 401k take-home per year (after taxes)
+  annualRothNetIncome: number; // Roth net take-home per year (full withdrawal, no taxes)
 }
 
 // ─── Main calculation ─────────────────────────────────────────────────────────
@@ -192,6 +210,77 @@ export function calcRothVsTraditional(
     });
   }
 
+  // Burndown: simulate annual withdrawals from retirement to life expectancy.
+  // Traditional draws from 401k first (ordinary income tax), then from reinvested
+  // savings when 401k is depleted (LTCG tax on savings withdrawals). Roth is
+  // fully independent — draws from its own balance, no taxes.
+  const SAVINGS_LTCG_RATE = 0.15; // flat LTCG rate on reinvested savings withdrawals
+  const annualTaxOnWithdrawal =
+    estimatedRetirementRate * retirement401kWithdrawal;
+  const annualTradNetIncome = retirement401kWithdrawal - annualTaxOnWithdrawal;
+  const annualRothNetIncome = retirement401kWithdrawal;
+  const retirementYears = Math.max(0, inputs.lifeExpectancyAge - retirementAge);
+
+  const burndownData: BurndownPoint[] = [
+    {
+      age: retirementAge,
+      rothBalance: grossBalance,
+      tradBalance: grossBalance,
+      tradSavings: fvTaxSavings,
+      tradTotal: grossBalance + fvTaxSavings,
+      annualTaxesPaid: 0,
+      annualTradNet: 0,
+      tradSavingsNet: 0,
+      annualRothNet: 0,
+      cumTaxesPaid: 0,
+    },
+  ];
+  let bRoth = grossBalance;
+  let bTrad = grossBalance;
+  let bSavings = fvTaxSavings;
+  let cumTax = 0;
+  for (let y = 1; y <= retirementYears; y++) {
+    // Roth: withdrawal capped by available Roth balance (independent of Traditional)
+    const actualRothWithdrawal = Math.min(bRoth, retirement401kWithdrawal);
+
+    // Traditional: draw from 401k first, cover any shortfall from savings.
+    const actualTradWithdrawal = Math.min(bTrad, retirement401kWithdrawal);
+    const tradShortfall = retirement401kWithdrawal - actualTradWithdrawal;
+    const savingsWithdrawal = Math.min(bSavings, tradShortfall);
+
+    // Ordinary income tax on the 401k portion
+    const actualTradTax =
+      actualTradWithdrawal > 0
+        ? getEffectiveIncrementalRate(
+            retirementOtherIncome,
+            actualTradWithdrawal,
+            retirementTaxTable,
+          ) * actualTradWithdrawal
+        : 0;
+
+    // LTCG tax on savings withdrawal (gains approximated as full withdrawal)
+    const savingsTax = savingsWithdrawal * SAVINGS_LTCG_RATE;
+
+    cumTax += actualTradTax + savingsTax;
+
+    bRoth = (bRoth - actualRothWithdrawal) * (1 + growthRate);
+    bTrad = (bTrad - actualTradWithdrawal) * (1 + growthRate);
+    bSavings = (bSavings - savingsWithdrawal) * (1 + growthRate);
+
+    burndownData.push({
+      age: retirementAge + y,
+      rothBalance: bRoth,
+      tradBalance: bTrad,
+      tradSavings: bSavings,
+      tradTotal: bTrad + bSavings,
+      annualTaxesPaid: actualTradTax + savingsTax,
+      annualTradNet: actualTradWithdrawal - actualTradTax, // 401k portion only
+      tradSavingsNet: savingsWithdrawal - savingsTax, // savings portion (LTCG taxed, shown in gold)
+      annualRothNet: actualRothWithdrawal,
+      cumTaxesPaid: cumTax,
+    });
+  }
+
   return {
     currentMarginalRate: marginalRate,
     currentEffectiveRate: effectiveRate,
@@ -206,5 +295,9 @@ export function calcRothVsTraditional(
     breakEvenRate,
     sensitivityData,
     yearlyData,
+    burndownData,
+    annualTaxesPaidEachYear: annualTaxOnWithdrawal,
+    annualTradNetIncome,
+    annualRothNetIncome,
   };
 }

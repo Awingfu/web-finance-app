@@ -55,6 +55,7 @@ import styles from "../../styles/RothVsTraditional.module.scss";
 
 const ROTH_COLOR = "#3498db";
 const TRAD_COLOR = "#e67e22";
+const TRAD_SAVINGS_COLOR = "#f39c12";
 const REF_COLOR = "#e74c3c";
 
 const formatChartDollar = (v: number) =>
@@ -64,7 +65,7 @@ const formatChartDollar = (v: number) =>
       ? `$${(v / 1_000).toFixed(0)}k`
       : `$${v.toFixed(0)}`;
 
-type ChartView = "breakeven" | "growth";
+type ChartView = "breakeven" | "growth" | "burndown";
 type TablePreset = PresetId | "custom";
 
 // ─── Custom bracket editor types ──────────────────────────────────────────────
@@ -116,6 +117,7 @@ type CoreInputs = Omit<RothTraditionalInputs, "retirementTaxTable">;
 const DEFAULT_INPUTS: CoreInputs = {
   currentAge: 30,
   retirementAge: 65,
+  lifeExpectancyAge: 90,
   annualContribution: 24500,
   currentIncome: 100000,
   filingStatus: "single",
@@ -129,6 +131,7 @@ const DEFAULT_INPUTS: CoreInputs = {
 export default function RothVsTraditional() {
   const [inputs, setInputs] = useState<CoreInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("breakeven");
+  const [equalNetMode, setEqualNetMode] = useState(false);
 
   // Tax table state
   const [tablePreset, setTablePreset] = useState<TablePreset>("federal_2026");
@@ -180,6 +183,43 @@ export default function RothVsTraditional() {
           inputs.retirementOtherIncome,
           retirementTaxTable,
         );
+
+  // ── Burndown chart data ───────────────────────────────────────────────────
+  // In equal-net mode, Roth withdraws only enough each year to match
+  // Traditional's after-tax take-home (401k net + savings net). This is the
+  // fair comparison: same spendable income, so Roth's balance depletes slower.
+  const burndownChartData = useMemo(() => {
+    if (!equalNetMode) {
+      return result.burndownData.map((p, i) => ({
+        ...p,
+        otherIncome: i === 0 ? 0 : inputs.retirementOtherIncome,
+      }));
+    }
+    // Recompute Roth balance/withdrawal year-by-year targeting Traditional's net.
+    // Lock in the target on the first year with positive Traditional income and
+    // hold it constant — so Roth keeps withdrawing at the same rate even after
+    // Traditional (401k + savings) is fully depleted.
+    let bRothEq = result.burndownData[0]?.rothBalance ?? 0;
+    let rothTargetNet = 0;
+    return result.burndownData.map((p, i) => {
+      if (i === 0) return { ...p, otherIncome: 0 };
+      const tradTotalNet = p.annualTradNet + p.tradSavingsNet;
+      if (rothTargetNet === 0 && tradTotalNet > 0) rothTargetNet = tradTotalNet;
+      const rothWithdrawal = Math.min(bRothEq, rothTargetNet);
+      bRothEq = (bRothEq - rothWithdrawal) * (1 + inputs.growthRate);
+      return {
+        ...p,
+        rothBalance: bRothEq,
+        annualRothNet: rothWithdrawal,
+        otherIncome: inputs.retirementOtherIncome,
+      };
+    });
+  }, [
+    result.burndownData,
+    inputs.retirementOtherIncome,
+    inputs.growthRate,
+    equalNetMode,
+  ]);
 
   // ── Tax table editor helpers ───────────────────────────────────────────────
   const handlePresetChange = (newPreset: TablePreset) => {
@@ -343,7 +383,7 @@ export default function RothVsTraditional() {
           {/* ── Retirement Assumptions ── */}
           <p className={styles.sectionLabel}>Retirement Assumptions</p>
 
-          <div className={styles.twoCol}>
+          <div className={styles.threeCol}>
             <div className={styles.col}>
               <Form.Label>Current Age</Form.Label>
               <Form.Select
@@ -354,6 +394,9 @@ export default function RothVsTraditional() {
                   setField("currentAge", age);
                   if (inputs.retirementAge <= age) {
                     setField("retirementAge", age + 1);
+                  }
+                  if (inputs.lifeExpectancyAge <= age + 1) {
+                    setField("lifeExpectancyAge", age + 2);
                   }
                 }}
               >
@@ -369,9 +412,13 @@ export default function RothVsTraditional() {
               <Form.Select
                 className="mb-3"
                 value={inputs.retirementAge}
-                onChange={(e) =>
-                  setField("retirementAge", parseInt(e.target.value))
-                }
+                onChange={(e) => {
+                  const age = parseInt(e.target.value);
+                  setField("retirementAge", age);
+                  if (inputs.lifeExpectancyAge <= age) {
+                    setField("lifeExpectancyAge", age + 1);
+                  }
+                }}
               >
                 {Array.from(
                   { length: 90 - inputs.currentAge },
@@ -382,6 +429,30 @@ export default function RothVsTraditional() {
                   </option>
                 ))}
               </Form.Select>
+            </div>
+            <div className={styles.col}>
+              <Form.Label>Life Expectancy Age</Form.Label>
+              <TooltipOnHover
+                text="The age you plan to model income through. Used for the Retirement Burndown chart to show how balances and taxes accumulate over your retirement years."
+                nest={
+                  <Form.Select
+                    className="mb-3"
+                    value={inputs.lifeExpectancyAge}
+                    onChange={(e) =>
+                      setField("lifeExpectancyAge", parseInt(e.target.value))
+                    }
+                  >
+                    {Array.from(
+                      { length: 120 - inputs.retirementAge },
+                      (_, i) => inputs.retirementAge + 1 + i,
+                    ).map((age) => (
+                      <option key={age} value={age}>
+                        {age}
+                      </option>
+                    ))}
+                  </Form.Select>
+                }
+              />
             </div>
           </div>
 
@@ -411,7 +482,7 @@ export default function RothVsTraditional() {
           {/* ── Retirement Income ── */}
           <p className={styles.sectionLabel}>Retirement Income</p>
 
-          <Form.Label>Expected Other Income at Retirement</Form.Label>
+          <Form.Label>Expected Ordinary Income at Retirement</Form.Label>
           <TooltipOnHover
             text="Social Security benefits plus any ordinary wages or pension income you expect in retirement. Do NOT include dividends or long-term capital gains — those are taxed at separate LTCG rates and don't push your ordinary income into higher brackets."
             nest={
@@ -439,7 +510,7 @@ export default function RothVsTraditional() {
 
           <Form.Label>Expected Annual 401k / IRA Withdrawal</Form.Label>
           <TooltipOnHover
-            text="How much you plan to withdraw from Traditional 401k or IRA accounts each year. This stacks on top of your other income and determines the actual marginal rate you'll pay on those withdrawals."
+            text="How much you plan to withdraw from 401k or IRA accounts each year. This stacks on top of your other income and determines the actual marginal rate you'll pay on those withdrawals."
             nest={
               <InputGroup className="mb-1 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
@@ -459,9 +530,9 @@ export default function RothVsTraditional() {
             }
           />
           <p className={styles.rateHint}>
-            Effective rate on 401k withdrawals:{" "}
+            Effective rate on traditional 401k withdrawals:{" "}
             <strong>{formatPercent(liveWithdrawalRate)}</strong> (
-            {formatCurrency(inputs.retirementOtherIncome)} other +{" "}
+            {formatCurrency(inputs.retirementOtherIncome)} base +{" "}
             {formatCurrency(inputs.retirement401kWithdrawal)} 401k ={" "}
             {formatCurrency(
               inputs.retirementOtherIncome + inputs.retirement401kWithdrawal,
@@ -685,7 +756,16 @@ export default function RothVsTraditional() {
                 {formatCurrency(result.afterTaxTraditional)}
               </div>
               <div className={styles.cardSub}>
-                After-tax withdrawal + reinvested savings
+                Simplified: after-tax withdrawal [Gross × (1−r)] + reinvested
+                savings
+                <br />
+                {formatChartDollar(result.grossBalanceAtRetirement)} × (1−
+                {Math.round(result.estimatedRetirementRate * 100)}%) +{" "}
+                {formatChartDollar(
+                  result.afterTaxTraditional -
+                    result.grossBalanceAtRetirement *
+                      (1 - result.estimatedRetirementRate),
+                )}
               </div>
             </div>
             <div
@@ -749,6 +829,13 @@ export default function RothVsTraditional() {
                 variant="outline-primary"
               >
                 Account Growth
+              </ToggleButton>
+              <ToggleButton
+                id="view-burndown"
+                value="burndown"
+                variant="outline-primary"
+              >
+                Post-Retirement
               </ToggleButton>
             </ToggleButtonGroup>
           </div>
@@ -870,6 +957,209 @@ export default function RothVsTraditional() {
                 Both accounts accumulate the same 401k balance (green).
                 Traditional also generates reinvested tax savings (orange) — the
                 key source of its advantage when your retirement rate is lower.
+              </p>
+            </div>
+          )}
+
+          {/* Retirement burndown chart */}
+          {chartView === "burndown" && (
+            <div className={styles.chartWrap}>
+              <h5 className="text-center mb-3">
+                Post-Retirement: Income & Balance (Age {inputs.retirementAge}–
+                {inputs.lifeExpectancyAge})
+              </h5>
+
+              <div className={styles.equalNetToggle}>
+                <Form.Check
+                  type="switch"
+                  id="equal-net-toggle"
+                  checked={equalNetMode}
+                  onChange={(e) => setEqualNetMode(e.target.checked)}
+                  label={
+                    equalNetMode
+                      ? "Equal after-tax income — Roth withdraws to match Traditional's net take-home"
+                      : "Equal gross withdrawal — both draw the same amount before taxes"
+                  }
+                />
+              </div>
+
+              {/* Annual income summary cards */}
+              <div
+                className={styles.summaryCards}
+                style={{ marginBottom: "1rem" }}
+              >
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>Roth 401k Take-Home</div>
+                  <div
+                    className={styles.cardValue}
+                    style={{ color: ROTH_COLOR }}
+                  >
+                    {formatCurrency(
+                      equalNetMode
+                        ? result.annualTradNetIncome
+                        : result.annualRothNetIncome,
+                    )}
+                  </div>
+                  <div className={styles.cardSub}>
+                    {equalNetMode
+                      ? "Matched to Traditional net take-home"
+                      : "Full withdrawal, no taxes"}
+                  </div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>Trad 401k Take-Home</div>
+                  <div
+                    className={styles.cardValue}
+                    style={{ color: TRAD_COLOR }}
+                  >
+                    {formatCurrency(result.annualTradNetIncome)}
+                  </div>
+                  <div className={styles.cardSub}>
+                    After federal taxes on withdrawal
+                  </div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>Trad Annual Taxes</div>
+                  <div className={styles.cardValue}>
+                    {formatCurrency(result.annualTaxesPaidEachYear)}
+                  </div>
+                  <div className={styles.cardSub}>
+                    {formatPercent(result.estimatedRetirementRate)} effective
+                    rate on 401k
+                  </div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>
+                    Total Trad Taxes (
+                    {inputs.lifeExpectancyAge - inputs.retirementAge} yrs)
+                  </div>
+                  <div className={styles.cardValue}>
+                    {formatCurrency(
+                      result.annualTaxesPaidEachYear *
+                        (inputs.lifeExpectancyAge - inputs.retirementAge),
+                    )}
+                  </div>
+                  <div className={styles.cardSub}>
+                    Cumulative tax drag vs Roth
+                  </div>
+                </div>
+              </div>
+
+              {/* Chart 1: Account balance over retirement */}
+              <p className={styles.chartSubtitle}>Account Balance</p>
+              <ResponsiveContainer width="100%" height={280}>
+                <LineChart
+                  data={burndownChartData}
+                  margin={{ top: 4, right: 20, left: 10, bottom: 24 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis
+                    dataKey="age"
+                    label={{
+                      value: "Age",
+                      position: "insideBottom",
+                      offset: -12,
+                    }}
+                  />
+                  <YAxis tickFormatter={formatChartDollar} width={65} />
+                  <Tooltip
+                    formatter={(
+                      value: number | undefined,
+                      name: string | undefined,
+                    ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    labelFormatter={(age) => `Age ${age}`}
+                  />
+                  <Legend verticalAlign="top" />
+                  <Line
+                    type="monotone"
+                    dataKey="tradTotal"
+                    name="Trad Total Balance"
+                    stroke={TRAD_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="rothBalance"
+                    name="Roth Balance"
+                    stroke={ROTH_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className={styles.chartNote}>
+                Orange = Traditional total (401k + reinvested savings), blue =
+                Roth.{" "}
+                {equalNetMode
+                  ? "Equal after-tax income mode: Roth withdraws less each year to match Traditional's net take-home, so its balance depletes more slowly."
+                  : "Equal gross withdrawal mode: both draw the same amount before taxes, so Roth depletes faster (it's providing more after-tax income)."}
+              </p>
+
+              {/* Chart 2: Annual income per year */}
+              <p
+                className={styles.chartSubtitle}
+                style={{ marginTop: "1.5rem" }}
+              >
+                Annual Income
+              </p>
+              <ResponsiveContainer width="100%" height={280}>
+                <BarChart
+                  data={burndownChartData}
+                  margin={{ top: 4, right: 20, left: 10, bottom: 24 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis
+                    dataKey="age"
+                    label={{
+                      value: "Age",
+                      position: "insideBottom",
+                      offset: -12,
+                    }}
+                  />
+                  <YAxis tickFormatter={formatChartDollar} width={65} />
+                  <Tooltip
+                    formatter={(
+                      value: number | undefined,
+                      name: string | undefined,
+                    ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    labelFormatter={(age) => `Age ${age}`}
+                  />
+                  <Legend verticalAlign="top" />
+                  <Bar
+                    dataKey="otherIncome"
+                    name="Ordinary Income"
+                    fill="#2ecc71"
+                    fillOpacity={0.85}
+                  />
+                  <Bar
+                    dataKey="annualTradNet"
+                    name="Trad 401k Net"
+                    fill={TRAD_COLOR}
+                    fillOpacity={0.85}
+                  />
+                  <Bar
+                    dataKey="tradSavingsNet"
+                    name="Trad Savings (LTCG)"
+                    fill={TRAD_SAVINGS_COLOR}
+                    fillOpacity={0.85}
+                  />
+                  <Bar
+                    dataKey="annualRothNet"
+                    name="Roth 401k Net"
+                    fill={ROTH_COLOR}
+                    fillOpacity={0.85}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+              <p className={styles.chartNote}>
+                Green = ordinary income (SS + wages, same for both). Orange =
+                Traditional net 401k take-home (ordinary income tax). Gold =
+                Traditional reinvested savings net (15% LTCG, kicks in once 401k
+                depletes). Blue = Roth take-home (tax-free).{" "}
+                {equalNetMode
+                  ? `Equal after-tax income mode: Roth withdraws ${formatCurrency(result.annualTradNetIncome)}/yr to match Traditional's net — blue bars are shorter but the Roth balance lasts longer.`
+                  : `Equal gross withdrawal mode: Roth draws the full ${formatCurrency(inputs.retirement401kWithdrawal)}/yr — blue bars are taller (no taxes) but the balance depletes faster.`}
               </p>
             </div>
           )}

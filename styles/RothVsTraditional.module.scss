@@ -120,6 +120,23 @@ $medium: 1080px;
   margin-top: 0.25rem;
 }
 
+.equalNetToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
+
+.chartSubtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
 // ── Section label ────────────────────────────────────────────────────────────
 
 .sectionLabel {
@@ -138,9 +155,10 @@ $medium: 1080px;
   margin-bottom: 1rem;
 }
 
-// ── Two-column row for inputs ────────────────────────────────────────────────
+// ── Two/three-column rows for inputs ─────────────────────────────────────────
 
-.twoCol {
+.twoCol,
+.threeCol {
   display: flex;
   gap: 12px;
   margin-bottom: 1rem;
@@ -148,6 +166,7 @@ $medium: 1080px;
 
 .col {
   flex: 1;
+  min-width: 0;
 }
 
 // ── Custom bracket editor ─────────────────────────────────────────────────────
