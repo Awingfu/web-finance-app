@@ -20,6 +20,7 @@ import {
   STANDARD_DEDUCTION_SINGLE,
   STANDARD_DEDUCTION_MFJ,
 } from "../src/utils/retirement_income_utils";
+import { ROTH_TRAD_LAST_UPDATED } from "../src/utils/roth_traditional_utils";
 import { formatCurrency } from "../src/utils";
 
 interface FaqItem {
@@ -605,6 +606,53 @@ const FAQ_SECTIONS: FaqSection[] = [
               standard deduction — leaving ~$33,000 of room in the 0% LTCG
               bracket. They can realize up to $33,000 in gains completely
               tax-free that year.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
+    page: "Roth vs Traditional 401k",
+    href: "/retirement/roth-vs-traditional",
+    items: [
+      {
+        id: "roth-vs-trad-inflation",
+        question:
+          "Shouldn't tax rates or income be adjusted for inflation and future wage growth?",
+        answer: (
+          <>
+            <p>
+              No adjustment is needed because the comparison is based on{" "}
+              <strong>ratios, not nominal dollar amounts</strong>. The
+              break-even rule — Traditional wins if your effective retirement
+              rate is below your current marginal rate — holds regardless of
+              inflation. Here&apos;s why:
+            </p>
+            <p>
+              If wages and prices both double by the time you retire, your 401k
+              balance doubles too. But so does the income that fills each tax
+              bracket, and Congress historically indexes brackets to inflation.
+              The result is that your{" "}
+              <em>
+                effective rate on withdrawals stays the same in real terms
+              </em>
+              . The ratio that drives the decision (current marginal rate vs.
+              retirement effective rate) is unchanged whether you work in
+              today&apos;s dollars or future dollars.
+            </p>
+            <p>
+              Put another way: inflating every number by the same factor cancels
+              out. Comparing today&apos;s rates directly is both accurate and
+              simpler than trying to project nominal tax brackets decades into
+              the future.
+            </p>
+            <p>
+              The one scenario where this breaks down is if tax <em>policy</em>{" "}
+              changes materially — e.g., Congress raises rates across the board.
+              That&apos;s why the tool offers a &ldquo;+10pp&rdquo; preset and a
+              custom bracket editor: to let you stress-test the comparison
+              against hypothetical future rate environments.
             </p>
           </>
         ),
