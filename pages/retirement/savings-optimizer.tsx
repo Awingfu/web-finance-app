@@ -7,7 +7,7 @@ import {
   InputGroup,
   Table,
 } from "react-bootstrap";
-import { Header, Footer, TooltipOnHover } from "../src/components";
+import { Header, Footer, TooltipOnHover } from "../../src/components";
 import {
   downloadCSV,
   formatCurrency,
@@ -16,14 +16,14 @@ import {
   RetirementTable,
   RetirementTableRow,
   RetirementTableStrategy,
-} from "../src/utils";
+} from "../../src/utils";
 import {
   _401k_maximum_contribution_individual,
   _401k_maximum_contribution_total,
   _401k_numbers_last_updated,
-} from "../src/utils/constants";
+} from "../../src/utils/constants";
 import styles from "../styles/Retirement.module.scss";
-import { RetirementState, PreferencesState } from "../src/utils/types";
+import { RetirementState, PreferencesState } from "../../src/utils/types";
 
 const payPeriodAlreadyPassedIcon = "\u203E"; // overline
 const payPeriodAlreadyPassedText =
@@ -42,12 +42,8 @@ const _401kMaxReachedEarlyNote =
 
 /**
  * Future Goals
- * 1. New inputs: Bonus, Bonus paycheck, new salary (raise) and which paycheck, company match, mega backdoor availability
- * 2. different frontloading strategies inc company match and 401k true limit
- * a. max, then match. (current) b. flat amount. c. pure max and ignore match
- * 3. cost analysis with fv assumption for each strategy
+ * 1. New inputs: One time bonus and new salary (raise) and which paycheck they apply to
  */
-
 function RetirementSavings() {
   const [retirement, setRetirement] = useState<RetirementState>({
     salary: 60000,
