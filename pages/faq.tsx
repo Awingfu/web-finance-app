@@ -613,6 +613,164 @@ const FAQ_SECTIONS: FaqSection[] = [
     ],
   },
   {
+    page: "Roth Conversion Ladder",
+    href: "/retirement/roth-conversion-ladder",
+    items: [
+      {
+        id: "roth-ladder-what",
+        question: "What is a Roth Conversion Ladder and why do people use it?",
+        answer: (
+          <>
+            <p>
+              A <strong>Roth Conversion Ladder</strong> is a strategy where you
+              systematically convert money from a Traditional IRA or 401k into a
+              Roth IRA over several years — one &ldquo;rung&rdquo; at a time.
+              Each conversion is a taxable event, but once it has seasoned for
+              five years, the converted principal can be withdrawn penalty-free
+              at any age.
+            </p>
+            <p>
+              <strong>Why do people use it?</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>Early retirement access (FIRE):</strong> Normally,
+                withdrawing from a Traditional IRA or 401k before age 59½
+                triggers a 10% early withdrawal penalty on top of income tax.
+                The ladder sidesteps this by converting money years in advance,
+                letting it season, and then withdrawing penalty-free.
+              </li>
+              <li>
+                <strong>Tax bracket optimization:</strong> Rather than waiting
+                and taking large, heavily-taxed RMDs at 73+, you convert
+                gradually during low-income years — filling up a lower bracket
+                (e.g., 12% or 22%) instead of paying 24–32% later.
+              </li>
+              <li>
+                <strong>Reducing future RMDs:</strong> Every dollar converted to
+                Roth shrinks the Traditional balance that will eventually be
+                subject to Required Minimum Distributions, which can push you
+                into higher brackets and increase Social Security taxation.
+              </li>
+              <li>
+                <strong>Tax-free growth forever:</strong> Roth accounts have no
+                RMDs during the owner&apos;s lifetime and all growth is
+                tax-free. Converting earlier gives more years of tax-free
+                compounding.
+              </li>
+            </ul>
+            <p>
+              The ideal execution: pay the conversion tax from outside cash (not
+              from the converted amount itself) so the full converted dollar
+              goes into Roth and grows tax-free. This is why the tool shows
+              taxes as an informational cost rather than deducting them from the
+              Roth balance.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "roth-5yr-rule",
+        question: "What is the Roth 5-year rule?",
+        answer: (
+          <>
+            <p>
+              There are actually <strong>two separate 5-year rules</strong> for
+              Roth accounts, and confusing them is common:
+            </p>
+            <p>
+              <strong>1. The earnings 5-year rule</strong> — applies to tax-free
+              withdrawal of <em>earnings</em> (growth). Your Roth IRA must have
+              been open for at least 5 years before earnings can be withdrawn
+              tax-free, even after age 59½. The clock starts January 1 of the
+              year of your first Roth IRA contribution or conversion. You only
+              have one clock for all your Roth IRAs combined, so opening one
+              early locks in the start date.
+            </p>
+            <p>
+              <strong>2. The conversion 5-year rule</strong> — applies to
+              penalty-free withdrawal of <em>converted principal</em> before age
+              59½. Each Roth conversion starts its own 5-year clock. Converted
+              principal (not earnings) can be withdrawn penalty-free after 5
+              years, even before 59½. This is the clock the Roth Conversion
+              Ladder exploits.
+            </p>
+            <p>
+              <strong>Example:</strong> You convert $50,000 in 2025. In 2030 (5
+              years later), you can withdraw that $50,000 principal penalty-free
+              regardless of your age. The growth on that $50,000 must wait until
+              age 59½ (and the earnings 5-year rule is also satisfied) to be
+              withdrawn tax-free.
+            </p>
+            <p>
+              <strong>Withdrawal ordering for Roth IRAs:</strong> The IRS treats
+              Roth IRA withdrawals in a specific order:
+            </p>
+            <ol>
+              <li>Regular contributions (always penalty and tax-free)</li>
+              <li>
+                Converted amounts (penalty-free after 5 years per conversion)
+              </li>
+              <li>
+                Earnings (tax and penalty-free only after 59½ + 5-year rule)
+              </li>
+            </ol>
+            <p>
+              This ordering is favorable — contributions come out first so you
+              can always access what you put in directly. The ladder strategy
+              builds a growing pool of converted principal that progressively
+              becomes available each year.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "roth-ladder-timing",
+        question: "When should I start a Roth Conversion Ladder?",
+        answer: (
+          <>
+            <p>
+              The best time to convert is when your{" "}
+              <strong>taxable income is low</strong> — so the conversion is
+              taxed at the lowest possible rate. Common windows:
+            </p>
+            <ul>
+              <li>
+                <strong>Early retirement gap years:</strong> The period between
+                retiring early and when Social Security, pensions, or RMDs
+                begin. With little or no ordinary income, you can convert large
+                amounts at 10–22% rates.
+              </li>
+              <li>
+                <strong>Career sabbaticals or low-income years:</strong> A year
+                of part-time work, parental leave, or a planned career break can
+                offer an opportunity to convert at reduced rates.
+              </li>
+              <li>
+                <strong>Before RMDs begin at 73:</strong> Pre-RMD retirement
+                years are often the last chance to do large conversions at
+                predictable rates before mandatory withdrawals force income
+                higher.
+              </li>
+            </ul>
+            <p>
+              <strong>The 5-year lead time matters:</strong> Because each rung
+              takes 5 years to season, you need to start converting at least 5
+              years before you want penalty-free access. If you retire at 50 and
+              want withdrawals at 55, conversions must begin by age 50. Plan the
+              ladder in advance — it cannot be rushed.
+            </p>
+            <p>
+              The tool lets you set a &ldquo;Last Conversion Age&rdquo; and
+              shows which rungs will season within your horizon, so you can
+              verify the timing works before committing to the strategy.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
     page: "Roth vs Traditional 401k",
     href: "/retirement/roth-vs-traditional",
     items: [
@@ -650,7 +808,7 @@ const FAQ_SECTIONS: FaqSection[] = [
             <p>
               The one scenario where this breaks down is if tax <em>policy</em>{" "}
               changes materially — e.g., Congress raises rates across the board.
-              That&apos;s why the tool offers a &ldquo;+10pp&rdquo; preset and a
+              That&apos;s why the tool offers a &ldquo;+10%&rdquo; preset and a
               custom bracket editor: to let you stress-test the comparison
               against hypothetical future rate environments.
             </p>

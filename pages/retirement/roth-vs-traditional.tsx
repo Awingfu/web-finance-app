@@ -553,7 +553,7 @@ export default function RothVsTraditional() {
             >
               <option value="federal_2026">2026 Federal Brackets</option>
               <option value="federal_2026_plus10">
-                Higher Taxes — 2026 brackets + 10pp on each rate
+                Higher Taxes — 2026 brackets + 10% on each rate
               </option>
               <option value="custom">Custom — define your own brackets</option>
             </Form.Select>

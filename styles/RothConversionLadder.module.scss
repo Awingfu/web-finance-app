@@ -1,0 +1,216 @@
+// ── Roth Conversion Ladder page ─────────────────────────────────────────────
+
+$small: 720px;
+$medium: 1080px;
+
+.results {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4rem;
+
+  @media screen and (min-width: $medium) {
+    width: 55%;
+    margin: 0 2% 2% 2%;
+  }
+
+  @media screen and (min-width: $small) and (max-width: $medium) {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+
+  @media screen and (max-width: $small) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+// ── Summary cards ────────────────────────────────────────────────────────────
+
+.summaryCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  flex: 1 1 140px;
+  background: var(--bs-secondary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 130px;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.cardSub {
+  font-size: 0.72rem;
+  opacity: 0.55;
+  margin-top: 4px;
+}
+
+// ── Charts ───────────────────────────────────────────────────────────────────
+
+.chartToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.chartWrap {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.chartNote {
+  font-size: 0.78rem;
+  opacity: 0.65;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.chartSubtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+// ── Section label ────────────────────────────────────────────────────────────
+
+.sectionLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+// ── Rate hint (small inline info below inputs) ────────────────────────────────
+
+.rateHint {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin-bottom: 1rem;
+}
+
+// ── Two/three-column rows for inputs ─────────────────────────────────────────
+
+.twoCol,
+.threeCol {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Custom bracket editor ─────────────────────────────────────────────────────
+
+.bracketEditor {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 14px 14px 10px;
+  margin-bottom: 1rem;
+}
+
+.bracketTable {
+  font-size: 0.85rem;
+  margin-bottom: 0.75rem;
+
+  th {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  td {
+    vertical-align: middle;
+    padding: 4px 6px 4px 0;
+  }
+}
+
+.bracketFrom {
+  font-size: 0.82rem;
+  opacity: 0.7;
+  white-space: nowrap;
+  padding-right: 4px !important;
+}
+
+.unlimited {
+  font-size: 0.82rem;
+  opacity: 0.5;
+  font-style: italic;
+}
+
+.bracketDelete {
+  background: none;
+  border: none;
+  font-size: 1.15rem;
+  line-height: 1;
+  padding: 0 2px;
+  cursor: pointer;
+  opacity: 0.4;
+  color: inherit;
+
+  &:hover:not(:disabled) {
+    opacity: 1;
+    color: #e74c3c;
+  }
+
+  &:disabled {
+    opacity: 0.15;
+    cursor: default;
+  }
+}
+
+// ── Conversion mode toggle ────────────────────────────────────────────────────
+
+.conversionModeToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+// ── Ladder info callout ───────────────────────────────────────────────────────
+
+.ladderNote {
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 1.5rem;
+  font-size: 0.88rem;
+  line-height: 1.55;
+  border: 1px solid var(--bs-border-color);
+  background: var(--bs-secondary-bg);
+  opacity: 0.85;
+}
+
+// ── Equal-net / mode toggle reuse ─────────────────────────────────────────────
+
+.equalNetToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
