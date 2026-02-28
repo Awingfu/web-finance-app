@@ -115,6 +115,25 @@ $medium: 1080px;
   flex: 1;
 }
 
+// ── Catch-Up slider ───────────────────────────────────────────────────────────
+
+.catchUpSlider {
+  margin-bottom: 1.25rem;
+}
+
+.catchUpAgeDisplay {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+
+.catchUpAgeBadge {
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
 // ── Inflation sub-panel ───────────────────────────────────────────────────────
 
 .inflationPanel {

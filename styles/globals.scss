@@ -81,8 +81,34 @@ $theme-colors: (
   background-color: $secondary;
 }
 
-@media (max-width: 425px) {
+@media (max-width: 1079px) {
   .navbar-brand {
     margin: 0;
+  }
+}
+
+// ── Dark mode button fixes ────────────────────────────────────────────────────
+// $secondary (#052f5f) is near-black, so outline-secondary border/text is
+// invisible against Bootstrap's dark background. Override the unselected state
+// to use a white/translucent appearance. Active (selected) state is untouched.
+[data-bs-theme="dark"] {
+  .btn-outline-secondary {
+    --bs-btn-color: rgba(255, 255, 255, 0.75);
+    --bs-btn-border-color: rgba(255, 255, 255, 0.35);
+    --bs-btn-hover-color: #fff;
+    --bs-btn-hover-bg: rgba(255, 255, 255, 0.1);
+    --bs-btn-hover-border-color: rgba(255, 255, 255, 0.55);
+    --bs-btn-disabled-color: rgba(255, 255, 255, 0.3);
+    --bs-btn-disabled-border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  // $primary (#06a77d) is ~L40%, giving only ~2.6:1 contrast on dark backgrounds
+  // (Bootstrap dark bg is ~#212529, L12%). Lighten the unselected state to a
+  // brighter green that clears 4.5:1. Active (selected fill) state is untouched.
+  .btn-outline-primary {
+    --bs-btn-color: #2ecc71;
+    --bs-btn-border-color: #2ecc71;
+    --bs-btn-disabled-color: rgba(46, 204, 113, 0.4);
+    --bs-btn-disabled-border-color: rgba(46, 204, 113, 0.25);
   }
 }

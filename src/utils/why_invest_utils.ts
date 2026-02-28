@@ -34,6 +34,20 @@ export interface DelayDataPoint {
   isCurrent: boolean; // true when startAge === inputs.currentAge
 }
 
+export interface CatchUpPoint {
+  age: number;
+  userPath: number | null;
+  catchUpPath: number | null;
+}
+
+export interface CatchUpResult {
+  catchUpContrib: number;
+  diffPerYear: number; // catchUpContrib - annualContrib (+ve = need more, -ve = need less)
+  userTotalContrib: number;
+  catchUpTotalContrib: number;
+  catchUpData: CatchUpPoint[];
+}
+
 export interface WhyInvestResult {
   yearlyData: YearlyDataPoint[];
   delayData: DelayDataPoint[];
@@ -51,6 +65,76 @@ function annuityFV(annual: number, rate: number, years: number): number {
   if (years <= 0) return 0;
   if (rate === 0) return annual * years;
   return annual * ((Math.pow(1 + rate, years) - 1) / rate);
+}
+
+/**
+ * Calculates the annual contribution required for a "comparison" person who
+ * starts investing at comparisonAge to reach the same final market value as the
+ * user at retirementAge. Builds chart data for both paths.
+ */
+export function calcCatchUp(
+  inputs: WhyInvestInputs,
+  comparisonAge: number,
+  userYearlyData: YearlyDataPoint[],
+  finalMarket: number,
+  annualContrib: number,
+): CatchUpResult {
+  const {
+    currentAge,
+    retirementAge,
+    startingBalance,
+    inflationEnabled,
+    marketReturnRate,
+    inflationRate,
+  } = inputs;
+
+  const marketRate = inflationEnabled
+    ? (1 + marketReturnRate) / (1 + inflationRate) - 1
+    : marketReturnRate;
+
+  const n = retirementAge - comparisonAge;
+
+  // Solve: finalMarket = startingBalance*(1+r)^n + C*((1+r)^n - 1)/r
+  let catchUpContrib: number;
+  if (n <= 0) {
+    catchUpContrib = Infinity;
+  } else if (marketRate === 0) {
+    catchUpContrib = (finalMarket - startingBalance) / n;
+  } else {
+    const growth = Math.pow(1 + marketRate, n);
+    catchUpContrib =
+      ((finalMarket - startingBalance * growth) * marketRate) / (growth - 1);
+  }
+
+  // Build chart data from the earlier start age to retirementAge
+  const minAge = Math.min(currentAge, comparisonAge);
+  const userPathByAge = new Map(userYearlyData.map((p) => [p.age, p.market]));
+
+  const catchUpData: CatchUpPoint[] = [];
+  let catchUpBal = startingBalance;
+
+  for (let age = minAge; age <= retirementAge; age++) {
+    const userPath = userPathByAge.get(age) ?? null;
+    const catchUpPath = age >= comparisonAge ? catchUpBal : null;
+    catchUpData.push({ age, userPath, catchUpPath });
+    if (age >= comparisonAge && age < retirementAge) {
+      catchUpBal = catchUpBal * (1 + marketRate) + catchUpContrib;
+    }
+  }
+
+  const safeContrib = isFinite(catchUpContrib)
+    ? Math.max(0, catchUpContrib)
+    : 0;
+  const userYears = retirementAge - currentAge;
+  const catchUpYears = Math.max(0, n);
+
+  return {
+    catchUpContrib: safeContrib,
+    diffPerYear: catchUpContrib - annualContrib,
+    userTotalContrib: annualContrib * userYears,
+    catchUpTotalContrib: safeContrib * catchUpYears,
+    catchUpData,
+  };
 }
 
 export function calcWhyInvest(inputs: WhyInvestInputs): WhyInvestResult {
