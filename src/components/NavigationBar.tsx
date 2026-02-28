@@ -64,7 +64,7 @@ const NavigationBar = () => {
   // useLayoutEffect over useEffect as useEffect shows artifacts of lower resolution options briefly during routing
   useLayoutEffect(() => {
     function handleResize() {
-      setIsMobile(window.innerWidth <= 425);
+      setIsMobile(window.innerWidth < 1080);
     }
 
     handleResize();

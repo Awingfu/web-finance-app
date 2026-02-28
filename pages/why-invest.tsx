@@ -23,7 +23,7 @@ import {
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../src/components";
 import { formatCurrency, formatPercent, formatStateValue } from "../src/utils";
-import { calcWhyInvest } from "../src/utils/why_invest_utils";
+import { calcWhyInvest, calcCatchUp } from "../src/utils/why_invest_utils";
 import type { WhyInvestInputs } from "../src/utils/why_invest_utils";
 import retirementStyles from "../styles/Retirement.module.scss";
 import styles from "../styles/WhyInvest.module.scss";
@@ -34,6 +34,7 @@ const MARKET_COLOR = "#2ecc71";
 const MARKET_COLOR_DARK = "#27ae60";
 const SAVINGS_COLOR = "#3498db";
 const CONTRIB_COLOR = "#95a5a6";
+const CATCHUP_COLOR = "#e67e22";
 
 const formatChartDollar = (v: number) =>
   v >= 1_000_000
@@ -42,7 +43,7 @@ const formatChartDollar = (v: number) =>
       ? `$${(v / 1_000).toFixed(0)}k`
       : `$${v.toFixed(0)}`;
 
-type ChartView = "growth" | "delay" | "breakdown";
+type ChartView = "growth" | "delay" | "catchup";
 
 // ─── Default inputs ────────────────────────────────────────────────────────────
 
@@ -63,6 +64,9 @@ const DEFAULT_INPUTS: WhyInvestInputs = {
 export default function WhyInvest() {
   const [inputs, setInputs] = useState<WhyInvestInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("growth");
+  const [comparisonAge, setComparisonAge] = useState(
+    Math.min(DEFAULT_INPUTS.currentAge + 10, DEFAULT_INPUTS.retirementAge - 1),
+  );
 
   const setField = <K extends keyof WhyInvestInputs>(
     key: K,
@@ -76,6 +80,30 @@ export default function WhyInvest() {
 
   const annualContrib = result.annualContribution;
   const years = inputs.retirementAge - inputs.currentAge;
+
+  const catchUpSliderMin = 16;
+  const catchUpSliderMax = inputs.retirementAge - 1;
+  const clampedCompAge = Math.min(
+    Math.max(comparisonAge, catchUpSliderMin),
+    catchUpSliderMax,
+  );
+  const catchUp = useMemo(
+    () =>
+      calcCatchUp(
+        inputs,
+        clampedCompAge,
+        result.yearlyData,
+        result.finalMarket,
+        annualContrib,
+      ),
+    [
+      inputs,
+      clampedCompAge,
+      result.yearlyData,
+      result.finalMarket,
+      annualContrib,
+    ],
+  );
 
   const realMarketRate =
     (1 + inputs.marketReturnRate) / (1 + inputs.inflationRate) - 1;
@@ -413,6 +441,13 @@ export default function WhyInvest() {
               >
                 Cost of Waiting
               </ToggleButton>
+              <ToggleButton
+                id="view-catchup"
+                value="catchup"
+                variant="outline-primary"
+              >
+                Catch-Up Calculator
+              </ToggleButton>
             </ToggleButtonGroup>
           </div>
 
@@ -483,6 +518,177 @@ export default function WhyInvest() {
                 gains from compounding.
                 {inputs.inflationEnabled &&
                   " All values adjusted for inflation."}
+              </p>
+            </div>
+          )}
+
+          {/* Chart 3 — Catch-Up Calculator */}
+          {chartView === "catchup" && (
+            <div className={styles.chartWrap}>
+              {/* Age slider */}
+              <div className={styles.catchUpSlider}>
+                <div className={styles.catchUpAgeDisplay}>
+                  <Form.Label className="mb-0">
+                    Compare: if someone starts investing at age
+                  </Form.Label>
+                  <span
+                    className={styles.catchUpAgeBadge}
+                    style={{
+                      color:
+                        clampedCompAge > inputs.currentAge
+                          ? "#e74c3c"
+                          : clampedCompAge < inputs.currentAge
+                            ? MARKET_COLOR
+                            : undefined,
+                    }}
+                  >
+                    {clampedCompAge}
+                  </span>
+                </div>
+                <Form.Range
+                  min={catchUpSliderMin}
+                  max={catchUpSliderMax}
+                  value={clampedCompAge}
+                  onChange={(e) => setComparisonAge(parseInt(e.target.value))}
+                />
+                <div className="d-flex justify-content-between">
+                  <small className="text-muted">{catchUpSliderMin}</small>
+                  <small className="text-muted">{catchUpSliderMax}</small>
+                </div>
+              </div>
+
+              {/* Summary cards */}
+              <div className={styles.summaryCards}>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>Required Contribution</div>
+                  <div
+                    className={styles.cardValue}
+                    style={{ color: CATCHUP_COLOR }}
+                  >
+                    {formatCurrency(catchUp.catchUpContrib)}/yr
+                  </div>
+                  <div className={styles.cardSub}>
+                    starting age {clampedCompAge} →{" "}
+                    {formatCurrency(result.finalMarket)} at{" "}
+                    {inputs.retirementAge}
+                  </div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>vs Your Contribution</div>
+                  <div
+                    className={styles.cardValue}
+                    style={{
+                      color:
+                        catchUp.diffPerYear > 0
+                          ? "#e74c3c"
+                          : catchUp.diffPerYear < 0
+                            ? MARKET_COLOR
+                            : undefined,
+                    }}
+                  >
+                    {catchUp.diffPerYear > 0 ? "+" : ""}
+                    {formatCurrency(catchUp.diffPerYear)}/yr
+                  </div>
+                  <div className={styles.cardSub}>
+                    {catchUp.diffPerYear > 0
+                      ? "more needed per year"
+                      : catchUp.diffPerYear < 0
+                        ? "less needed per year"
+                        : "same as your plan"}
+                  </div>
+                </div>
+                <div className={styles.card}>
+                  <div className={styles.cardLabel}>
+                    Total Extra Contributed
+                  </div>
+                  <div
+                    className={styles.cardValue}
+                    style={{
+                      color:
+                        catchUp.catchUpTotalContrib > catchUp.userTotalContrib
+                          ? "#e74c3c"
+                          : MARKET_COLOR,
+                    }}
+                  >
+                    {catchUp.catchUpTotalContrib > catchUp.userTotalContrib
+                      ? "+"
+                      : ""}
+                    {formatCurrency(
+                      catchUp.catchUpTotalContrib - catchUp.userTotalContrib,
+                    )}
+                  </div>
+                  <div className={styles.cardSub}>
+                    {catchUp.catchUpTotalContrib > catchUp.userTotalContrib
+                      ? "extra out-of-pocket"
+                      : "less out-of-pocket"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Line chart */}
+              <h5 className="text-center mb-3">
+                Investment Growth to Age {inputs.retirementAge}
+                {inputs.inflationEnabled && (
+                  <span className="text-muted fs-6">
+                    {" "}
+                    (in today&apos;s dollars)
+                  </span>
+                )}
+              </h5>
+              <ResponsiveContainer width="100%" height={340}>
+                <LineChart
+                  data={catchUp.catchUpData}
+                  margin={{ top: 10, right: 20, left: 10, bottom: 24 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis
+                    dataKey="age"
+                    label={{
+                      value: "Age",
+                      position: "insideBottom",
+                      offset: -12,
+                    }}
+                  />
+                  <YAxis tickFormatter={formatChartDollar} width={65} />
+                  <Tooltip
+                    formatter={(
+                      value: number | undefined,
+                      name: string | undefined,
+                    ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    labelFormatter={(age) => `Age ${age}`}
+                  />
+                  <Legend verticalAlign="top" />
+                  <Line
+                    type="monotone"
+                    dataKey="userPath"
+                    name={`Your path (age ${inputs.currentAge}, ${formatCurrency(annualContrib)}/yr)`}
+                    stroke={MARKET_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="catchUpPath"
+                    name={`Age ${clampedCompAge} path (${formatCurrency(catchUp.catchUpContrib)}/yr)`}
+                    stroke={CATCHUP_COLOR}
+                    strokeWidth={2}
+                    dot={false}
+                    connectNulls={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+              <p className={styles.chartNote}>
+                Both paths reach the same value (
+                {formatCurrency(result.finalMarket)}) at age{" "}
+                {inputs.retirementAge}. Starting{" "}
+                {clampedCompAge > inputs.currentAge
+                  ? `${clampedCompAge - inputs.currentAge} years later`
+                  : clampedCompAge < inputs.currentAge
+                    ? `${inputs.currentAge - clampedCompAge} years earlier`
+                    : "at the same age"}{" "}
+                {clampedCompAge !== inputs.currentAge &&
+                  `requires ${formatCurrency(Math.abs(catchUp.diffPerYear))}/yr ${catchUp.diffPerYear > 0 ? "more" : "less"}.`}
               </p>
             </div>
           )}

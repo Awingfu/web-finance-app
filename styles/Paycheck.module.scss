@@ -1,7 +1,6 @@
 $extraSmall: 480px;
 $small: 720px;
 $medium: 1080px;
-$desktop: 1200px;
 
 .container {
   display: flex;
@@ -65,14 +64,9 @@ $desktop: 1200px;
 }
 
 .paycheckForm {
-  @media screen and (min-width: $desktop) {
+  @media screen and (min-width: $medium) {
     width: 40%;
     margin: 0 2% 5% 2%;
-  }
-
-  @media screen and (min-width: $medium) and (max-width: $desktop) {
-    margin: 0 20%;
-    padding: 0 100px;
   }
 
   @media screen and (min-width: $small) and (max-width: $medium) {
@@ -87,15 +81,9 @@ $desktop: 1200px;
 .table {
   margin-top: 4rem;
 
-  @media screen and (min-width: $desktop) {
+  @media screen and (min-width: $medium) {
     width: 40%;
     margin: 0 2%;
-  }
-
-  @media screen and (min-width: $medium) and (max-width: $desktop) {
-    margin-left: 20%;
-    margin-right: 20%;
-    padding: 0 100px;
   }
 
   @media screen and (min-width: $small) and (max-width: $medium) {
@@ -112,7 +100,7 @@ $desktop: 1200px;
 .content {
   display: flex;
   flex-direction: column;
-  @media screen and (min-width: $desktop) {
+  @media screen and (min-width: $medium) {
     flex-direction: row;
     justify-content: space-evenly;
   }
