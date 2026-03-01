@@ -221,6 +221,52 @@ export default function RothVsTraditional() {
     equalNetMode,
   ]);
 
+  // ── After-tax growth chart data ───────────────────────────────────────────
+  // Estimates liquidation value at each age after income tax, LTCG, and any
+  // early withdrawal penalty (10% before age 59.5).
+  //   Roth: contributions always penalty-free; 10% penalty on earnings only before 60.
+  //   Traditional 401k: ordinary income tax + 10% penalty on full amount before 60.
+  //   Traditional savings (brokerage): 15% LTCG on gains, no early penalty.
+  const EARLY_PENALTY_AGE = 60;
+  const SAVINGS_LTCG_RATE = 0.15;
+  const growthAfterTaxData = useMemo(() => {
+    return result.yearlyData.map((point, idx) => {
+      const yearsContributed = idx + 1;
+      const { age, accountBalance, taxSavingsBalance } = point;
+      const earlyPenalty = age < EARLY_PENALTY_AGE;
+
+      // Roth: 10% penalty on earnings only before age 59.5
+      const rothContributionsTotal =
+        inputs.annualContribution * yearsContributed;
+      const rothEarnings = Math.max(0, accountBalance - rothContributionsTotal);
+      const rothAfterTax =
+        accountBalance - (earlyPenalty ? 0.1 * rothEarnings : 0);
+
+      // Traditional 401k: income tax + 10% penalty on full balance before age 59.5
+      const tradPenalty = earlyPenalty ? 0.1 : 0;
+      const trad401kAfterTax = Math.max(
+        0,
+        accountBalance * (1 - result.estimatedRetirementRate - tradPenalty),
+      );
+
+      // Traditional savings (brokerage): 15% LTCG on gains, no early penalty
+      const savingsContributionsTotal =
+        result.annualTaxSavings * yearsContributed;
+      const savingsGains = Math.max(
+        0,
+        taxSavingsBalance - savingsContributionsTotal,
+      );
+      const savingsAfterTax =
+        taxSavingsBalance - SAVINGS_LTCG_RATE * savingsGains;
+
+      return {
+        age,
+        rothAfterTax,
+        tradAfterTax: trad401kAfterTax + savingsAfterTax,
+      };
+    });
+  }, [result, inputs.annualContribution]);
+
   // ── Tax table editor helpers ───────────────────────────────────────────────
   const handlePresetChange = (newPreset: TablePreset) => {
     if (newPreset === "custom" && tablePreset !== "custom") {
@@ -910,55 +956,127 @@ export default function RothVsTraditional() {
             </div>
           )}
 
-          {/* Account growth chart */}
+          {/* Account growth charts */}
           {chartView === "growth" && (
-            <div className={styles.chartWrap}>
-              <h5 className="text-center mb-3">Account Balance Over Time</h5>
-              <ResponsiveContainer width="100%" height={380}>
-                <BarChart
-                  data={result.yearlyData}
-                  margin={{ top: 10, right: 20, left: 10, bottom: 24 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis
-                    dataKey="age"
-                    label={{
-                      value: "Age",
-                      position: "insideBottom",
-                      offset: -12,
-                    }}
-                  />
-                  <YAxis tickFormatter={formatChartDollar} width={65} />
-                  <Tooltip
-                    formatter={(
-                      value: number | undefined,
-                      name: string | undefined,
-                    ) => [formatCurrency(value ?? 0), name ?? ""]}
-                    labelFormatter={(age) => `Age ${age}`}
-                  />
-                  <Legend verticalAlign="top" />
-                  <Bar
-                    dataKey="accountBalance"
-                    name="401k Balance (both)"
-                    stackId="a"
-                    fill="#2ecc71"
-                    fillOpacity={0.85}
-                  />
-                  <Bar
-                    dataKey="taxSavingsBalance"
-                    name="Traditional: Tax Savings Reinvested"
-                    stackId="b"
-                    fill={TRAD_COLOR}
-                    fillOpacity={0.85}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-              <p className={styles.chartNote}>
-                Both accounts accumulate the same 401k balance (green).
-                Traditional also generates reinvested tax savings (orange) — the
-                key source of its advantage when your retirement rate is lower.
-              </p>
-            </div>
+            <>
+              <div className={styles.chartWrap}>
+                <h5 className="text-center mb-3">
+                  Gross Account Balance Over Time
+                </h5>
+                <ResponsiveContainer width="100%" height={380}>
+                  <BarChart
+                    data={result.yearlyData}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 24 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis
+                      dataKey="age"
+                      label={{
+                        value: "Age",
+                        position: "insideBottom",
+                        offset: -12,
+                      }}
+                    />
+                    <YAxis tickFormatter={formatChartDollar} width={65} />
+                    <Tooltip
+                      formatter={(
+                        value: number | undefined,
+                        name: string | undefined,
+                      ) => [formatCurrency(value ?? 0), name ?? ""]}
+                      labelFormatter={(age) => `Age ${age}`}
+                    />
+                    <Legend verticalAlign="top" />
+                    <Bar
+                      dataKey="accountBalance"
+                      name="401k Balance (both)"
+                      stackId="a"
+                      fill="#2ecc71"
+                      fillOpacity={0.85}
+                    />
+                    <Bar
+                      dataKey="taxSavingsBalance"
+                      name="Traditional: Tax Savings Reinvested"
+                      stackId="b"
+                      fill={TRAD_COLOR}
+                      fillOpacity={0.85}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+                <p className={styles.chartNote}>
+                  Both accounts accumulate the same 401k balance (green).
+                  Traditional also generates reinvested tax savings (orange) —
+                  the key source of its advantage when your retirement rate is
+                  lower.
+                </p>
+              </div>
+
+              <div className={styles.chartWrap}>
+                <h5 className="text-center mb-3">After-Tax Value Over Time</h5>
+                <ResponsiveContainer width="100%" height={380}>
+                  <LineChart
+                    data={growthAfterTaxData}
+                    margin={{ top: 10, right: 20, left: 10, bottom: 24 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                    <XAxis
+                      dataKey="age"
+                      label={{
+                        value: "Age",
+                        position: "insideBottom",
+                        offset: -12,
+                      }}
+                    />
+                    <YAxis tickFormatter={formatChartDollar} width={65} />
+                    <Tooltip
+                      formatter={(
+                        value: number | undefined,
+                        name: string | undefined,
+                      ) => [formatCurrency(value ?? 0), name ?? ""]}
+                      labelFormatter={(age) => `Age ${age}`}
+                    />
+                    <Legend verticalAlign="top" />
+                    {inputs.currentAge < EARLY_PENALTY_AGE && (
+                      <ReferenceLine
+                        x={EARLY_PENALTY_AGE}
+                        stroke={REF_COLOR}
+                        strokeDasharray="5 4"
+                        label={{
+                          value: "Age 60: penalty ends",
+                          position: "insideTopRight",
+                          fill: REF_COLOR,
+                          fontSize: 11,
+                          dx: 4,
+                        }}
+                      />
+                    )}
+                    <Line
+                      type="monotone"
+                      dataKey="rothAfterTax"
+                      name="Roth After-Tax"
+                      stroke={ROTH_COLOR}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="tradAfterTax"
+                      name="Traditional After-Tax (incl. savings)"
+                      stroke={TRAD_COLOR}
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+                <p className={styles.chartNote}>
+                  Estimated liquidation value at each age after income tax and
+                  any early withdrawal penalties. Before age 59.5: Traditional
+                  401k taxed at your estimated retirement rate (
+                  {Math.round(result.estimatedRetirementRate * 100)}%) plus 10%
+                  early withdrawal penalty. Roth: 10% penalty on earnings only —
+                  contributions always penalty-free.
+                </p>
+              </div>
+            </>
           )}
 
           {/* Retirement burndown chart */}

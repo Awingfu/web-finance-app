@@ -44,6 +44,8 @@ import incomeStyles from "../../styles/RetirementIncome.module.scss";
 
 const CHART_COLORS = {
   ss: "#2ecc71",
+  pension: "#1abc9c",
+  other: "#fd9595",
   k401: "#e67e22",
   brokerage: "#9b59b6",
   roth: "#3498db",
@@ -71,6 +73,9 @@ const DEFAULT_INPUTS: RetirementIncomeInputs = {
   lifeExpectancyAge: 90,
   ssnMonthlyBenefit: 2000,
   ssnStartAge: 67,
+  pensionMonthlyBenefit: 0,
+  pensionStartAge: 65,
+  otherAnnualIncome: 0,
   balance401k: 250000,
   balanceBrokerage: 0,
   brokerageCostBasisPercent: 50,
@@ -88,6 +93,8 @@ function RetirementIncome() {
 
   // Optional account section visibility
   const [showSS, setShowSS] = useState(true);
+  const [showPension, setShowPension] = useState(false);
+  const [showOther, setShowOther] = useState(false);
   const [show401k, setShow401k] = useState(true);
   const [showBrokerage, setShowBrokerage] = useState(false);
   const [showRoth, setShowRoth] = useState(false);
@@ -117,6 +124,15 @@ function RetirementIncome() {
     setField("ssnMonthlyBenefit", 0);
     setField("ssnStartAge", 67);
     setShowSS(false);
+  };
+  const closePension = () => {
+    setField("pensionMonthlyBenefit", 0);
+    setField("pensionStartAge", 65);
+    setShowPension(false);
+  };
+  const closeOther = () => {
+    setField("otherAnnualIncome", 0);
+    setShowOther(false);
   };
   const close401k = () => {
     setField("balance401k", 0);
@@ -151,6 +167,8 @@ function RetirementIncome() {
     const headers = [
       "Age",
       "SS Income ($)",
+      "Pension Income ($)",
+      "Other Income ($)",
       "401k Withdrawal ($)",
       "Brokerage Withdrawal ($)",
       "Roth/After-Tax Withdrawal ($)",
@@ -168,6 +186,8 @@ function RetirementIncome() {
     const dataRows = rows.map((r) => [
       r.age,
       r.ssIncome,
+      r.pensionIncome,
+      r.otherIncome,
       r.withdrawal401k,
       r.withdrawalBrokerage,
       r.withdrawalRoth,
@@ -186,6 +206,8 @@ function RetirementIncome() {
   };
 
   // Chart bars: only render series that have non-zero data
+  const hasPensionData = rows.some((r) => r.pensionIncome > 0);
+  const hasOtherData = rows.some((r) => r.otherIncome > 0);
   const has401kData = rows.some((r) => r.withdrawal401k > 0);
   const hasBrokerageData = rows.some((r) => r.withdrawalBrokerage > 0);
   const hasRothData = rows.some((r) => r.withdrawalRoth > 0);
@@ -373,6 +395,32 @@ function RetirementIncome() {
                 + Social Security
               </button>
             )}
+            {!showPension && (
+              <button
+                type="button"
+                className={incomeStyles.addAccountTile}
+                style={{
+                  borderColor: CHART_COLORS.pension,
+                  color: CHART_COLORS.pension,
+                }}
+                onClick={() => setShowPension(true)}
+              >
+                + Pension
+              </button>
+            )}
+            {!showOther && (
+              <button
+                type="button"
+                className={incomeStyles.addAccountTile}
+                style={{
+                  borderColor: CHART_COLORS.other,
+                  color: CHART_COLORS.other,
+                }}
+                onClick={() => setShowOther(true)}
+              >
+                + Other Income
+              </button>
+            )}
             {!showBrokerage && (
               <button
                 type="button"
@@ -542,6 +590,106 @@ function RetirementIncome() {
                   />
                 </div>
               </div>
+            </div>
+          )}
+
+          {showPension && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.pension }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.pension }}>Pension</span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={closePension}
+                  aria-label="Remove pension"
+                >
+                  ×
+                </button>
+              </div>
+              <div className={incomeStyles.ageRow}>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Monthly Benefit</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="Fixed monthly pension payment. Fully taxable as ordinary income."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <InputGroup.Text>$</InputGroup.Text>
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.pensionMonthlyBenefit)}
+                          onChange={(e) =>
+                            updateNumber(e, "pensionMonthlyBenefit", 0, 100000)
+                          }
+                        />
+                        <InputGroup.Text>/ mo</InputGroup.Text>
+                      </InputGroup>
+                    }
+                  />
+                </div>
+                <div className={incomeStyles.ageField}>
+                  <Form.Label className="mb-1">
+                    <small>Age Pension Starts</small>
+                  </Form.Label>
+                  <TooltipOnHover
+                    text="The age at which your pension payments begin."
+                    nest={
+                      <InputGroup className="mb-2 w-100">
+                        <Form.Control
+                          type="number"
+                          onWheel={(e) => e.currentTarget.blur()}
+                          value={formatStateValue(inputs.pensionStartAge)}
+                          onChange={(e) =>
+                            updateNumber(e, "pensionStartAge", 40, 90)
+                          }
+                        />
+                      </InputGroup>
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {showOther && (
+            <div
+              className={incomeStyles.accountSection}
+              style={{ borderColor: CHART_COLORS.other }}
+            >
+              <div className={incomeStyles.accountSectionHeader}>
+                <span style={{ color: CHART_COLORS.other }}>Other Income</span>
+                <button
+                  type="button"
+                  className={incomeStyles.closeBtn}
+                  onClick={closeOther}
+                  aria-label="Remove other income"
+                >
+                  ×
+                </button>
+              </div>
+              <Form.Label className="mb-1">
+                <small>Annual Amount</small>
+              </Form.Label>
+              <TooltipOnHover
+                text="Rental income, part-time work, annuity payments, or any other fixed annual income. Taxed as ordinary income."
+                nest={
+                  <InputGroup className="mb-2 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.otherAnnualIncome)}
+                      onChange={(e) => updateNumber(e, "otherAnnualIncome")}
+                    />
+                    <InputGroup.Text>/ yr</InputGroup.Text>
+                  </InputGroup>
+                }
+              />
             </div>
           )}
 
@@ -869,6 +1017,22 @@ function RetirementIncome() {
                     stackId="a"
                     fill={CHART_COLORS.ss}
                   />
+                  {hasPensionData && (
+                    <Bar
+                      dataKey="pensionIncome"
+                      name="Pension"
+                      stackId="a"
+                      fill={CHART_COLORS.pension}
+                    />
+                  )}
+                  {hasOtherData && (
+                    <Bar
+                      dataKey="otherIncome"
+                      name="Other Income"
+                      stackId="a"
+                      fill={CHART_COLORS.other}
+                    />
+                  )}
                   {hasBrokerageData && (
                     <Bar
                       dataKey="withdrawalBrokerage"
@@ -1009,6 +1173,8 @@ function RetirementIncome() {
                   <tr>
                     <th>Age</th>
                     <th>SS ($)</th>
+                    {hasPensionData && <th>Pension ($)</th>}
+                    {hasOtherData && <th>Other ($)</th>}
                     {has401kData && <th>401k ($)</th>}
                     {hasBrokerageData && <th>Brokerage ($)</th>}
                     {hasRothData && <th>Roth ($)</th>}
@@ -1025,6 +1191,12 @@ function RetirementIncome() {
                     <tr key={row.age}>
                       <td>{row.age}</td>
                       <td>{formatCurrency(row.ssIncome)}</td>
+                      {hasPensionData && (
+                        <td>{formatCurrency(row.pensionIncome)}</td>
+                      )}
+                      {hasOtherData && (
+                        <td>{formatCurrency(row.otherIncome)}</td>
+                      )}
                       {has401kData && (
                         <td>{formatCurrency(row.withdrawal401k)}</td>
                       )}
