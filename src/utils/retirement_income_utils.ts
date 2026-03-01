@@ -118,6 +118,9 @@ export interface RetirementIncomeInputs {
   lifeExpectancyAge: number; // how far to simulate (and deplete to for spend_down)
   ssnMonthlyBenefit: number;
   ssnStartAge: number;
+  pensionMonthlyBenefit: number; // monthly pension income, 0 = none
+  pensionStartAge: number;
+  otherAnnualIncome: number; // flat annual income (rental, part-time, annuity, etc.), 0 = none
   balance401k: number;
   balanceBrokerage: number;
   brokerageCostBasisPercent: number; // 0–100: what % of brokerage is cost basis (rest = gains)
@@ -134,6 +137,8 @@ export interface YearlyRow {
   age: number;
   // Income sources
   ssIncome: number;
+  pensionIncome: number;
+  otherIncome: number;
   rmdAmount: number; // required portion from 401k
   withdrawal401k: number; // total from 401k (includes RMD)
   withdrawalBrokerage: number;
@@ -206,19 +211,28 @@ function calcLtcgTax(
 
 /**
  * Compute total federal income tax for a given year.
- * Accounts for: 401k withdrawals, SS taxation (up to 85%), and brokerage gains (LTCG).
+ * Accounts for: 401k withdrawals, pension, other income, SS taxation (up to 85%), and brokerage gains (LTCG).
  * Note: early withdrawal penalty is separate (calcEarlyWithdrawalPenalty).
+ * Pension and other income are fully taxable as ordinary income and count toward SS provisional income.
  */
 function calcAnnualTax(
   withdrawal401k: number,
   ssIncome: number,
   brokerageGains: number,
+  pensionIncome: number,
+  otherIncome: number,
   filingStatus: FilingStatus,
 ): number {
   const deduction = getStandardDeduction(filingStatus);
 
   // SS taxable portion: provisional income = AGI (ex-SS) + SS/2
-  const provisionalIncome = withdrawal401k + brokerageGains + ssIncome / 2;
+  // Pension and other ordinary income contribute to provisional income per IRS rules
+  const provisionalIncome =
+    withdrawal401k +
+    brokerageGains +
+    pensionIncome +
+    otherIncome +
+    ssIncome / 2;
   let ssTaxable = 0;
   if (provisionalIncome > 34000 && filingStatus === "single") {
     ssTaxable = Math.min(ssIncome * 0.85, (provisionalIncome - 34000) * 0.85);
@@ -230,8 +244,11 @@ function calcAnnualTax(
     ssTaxable = Math.min(ssIncome * 0.5, (provisionalIncome - 32000) * 0.5);
   }
 
-  // Ordinary income = 401k withdrawals + taxable SS portion, less standard deduction
-  const ordinaryIncome = Math.max(0, withdrawal401k + ssTaxable - deduction);
+  // Ordinary income = 401k + taxable SS + pension + other, less standard deduction
+  const ordinaryIncome = Math.max(
+    0,
+    withdrawal401k + ssTaxable + pensionIncome + otherIncome - deduction,
+  );
 
   const ordinaryTax = calcOrdinaryTax(ordinaryIncome, filingStatus);
   const ltcgTax = calcLtcgTax(brokerageGains, ordinaryIncome, filingStatus);
@@ -274,6 +291,9 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
     lifeExpectancyAge,
     ssnMonthlyBenefit,
     ssnStartAge,
+    pensionMonthlyBenefit,
+    pensionStartAge,
+    otherAnnualIncome,
     annualGrowthRate,
     cashInterestRate,
     brokerageCostBasisPercent,
@@ -305,13 +325,19 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
     // 3. Social Security income
     const ssIncome = age >= ssnStartAge ? ssnMonthlyBenefit * 12 : 0;
 
+    // 3b. Pension and other fixed income
+    const pensionIncome =
+      age >= pensionStartAge ? pensionMonthlyBenefit * 12 : 0;
+    const otherIncome = otherAnnualIncome;
+
     // 4. RMD from 401k (mandatory)
     const rmdAmount = Math.min(getRmd(age, balance401k), balance401k);
 
     // 5. Determine target income based on strategy
     let targetIncome: number;
     if (inputs.strategy === "maintain_wealth") {
-      // Withdraw only what the portfolio earned — portfolio returns to pre-growth level
+      // Withdraw only what the portfolio earned — portfolio returns to pre-growth level.
+      // Pension/other income are additive on top; they don't reduce portfolio withdrawals.
       const totalGains =
         balance401k -
         pre401k +
@@ -324,8 +350,18 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
       targetIncome = inputs.desiredAnnualIncome;
     }
 
-    // 5. How much more do we need beyond SS and RMD?
-    let remainingNeeded = Math.max(0, targetIncome - ssIncome - rmdAmount);
+    // 5b. How much more do we need from the portfolio beyond fixed income and RMD?
+    // For maintain_wealth: pension/other don't reduce portfolio withdrawals (they're additive).
+    // For set_withdrawal_rate/spend_down: pension/other reduce what the portfolio must provide.
+    let remainingNeeded: number;
+    if (inputs.strategy === "maintain_wealth") {
+      remainingNeeded = Math.max(0, targetIncome - ssIncome - rmdAmount);
+    } else {
+      remainingNeeded = Math.max(
+        0,
+        targetIncome - ssIncome - rmdAmount - pensionIncome - otherIncome,
+      );
+    }
 
     // 6. Withdrawal order: Cash → Brokerage → 401k (beyond RMD) → Roth
     let withdrawalCash = 0;
@@ -366,6 +402,8 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
       withdrawal401k,
       ssIncome,
       brokerageGains,
+      pensionIncome,
+      otherIncome,
       filingStatus,
     );
 
@@ -379,6 +417,8 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
     // 10. Totals
     const totalGrossIncome =
       ssIncome +
+      pensionIncome +
+      otherIncome +
       withdrawal401k +
       withdrawalBrokerage +
       withdrawalRoth +
@@ -394,6 +434,8 @@ function runSimulation(inputs: RetirementIncomeInputs): YearlyRow[] {
     rows.push({
       age,
       ssIncome,
+      pensionIncome,
+      otherIncome,
       rmdAmount,
       withdrawal401k,
       withdrawalBrokerage,

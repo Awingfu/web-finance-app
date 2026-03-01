@@ -22,9 +22,21 @@ const Home: NextPage = () => {
             <p>Estimate your take home pay</p>
           </Link>
 
-          <Link href="/why-invest" className={styles.card} passHref>
+          <Link href="/learn/why-invest" className={styles.card} passHref>
             <h2>Why Invest? &rarr;</h2>
             <p>See the power of compounding and the cost of waiting</p>
+          </Link>
+
+          <Link
+            href="/learn/why-retirement-account"
+            className={styles.card}
+            passHref
+          >
+            <h2>Why Retirement Account? &rarr;</h2>
+            <p>
+              See how 401k and IRA accounts beat taxable investing with tax-free
+              compounding
+            </p>
           </Link>
 
           <Link

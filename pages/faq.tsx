@@ -551,6 +551,61 @@ const FAQ_SECTIONS: FaqSection[] = [
         ),
       },
       {
+        id: "why-no-dividends",
+        question: "Why doesn't the planner separately model dividend income?",
+        answer: (
+          <>
+            <p>
+              Because dividends don&apos;t change the tax math — they&apos;re
+              already captured by the model. The reason differs by account type:
+            </p>
+            <p>
+              <strong>Taxable brokerage accounts</strong>
+            </p>
+            <p>
+              Qualified dividends are taxed at the same LTCG rates as selling
+              shares. Receiving a $15,000 dividend from your brokerage and
+              spending it is economically identical to selling $15,000 worth of
+              appreciated shares for income — in both cases, you owe LTCG tax on
+              the gain portion at the same rate. The planner models brokerage
+              withdrawals with LTCG treatment on the gains fraction, so the
+              result is already correct whether those dollars came from
+              dividends or a sale.
+            </p>
+            <p>
+              Example: you hold $500,000 in a dividend-paying index fund with a
+              3% yield. That&apos;s $15,000/year in dividends taxed at LTCG
+              rates. If instead you held a non-dividend fund and sold $15,000 of
+              shares each year, the tax owed would be the same — the IRS
+              doesn&apos;t care which method generated the income, only what
+              your gain was.
+            </p>
+            <p>
+              <strong>Traditional retirement accounts (401k, IRA)</strong>
+            </p>
+            <p>
+              Inside a tax-deferred account, dividends, capital gains, and all
+              other growth are invisible to the IRS until withdrawal. It
+              doesn&apos;t matter if your 401k balance grew because dividends
+              were reinvested or because share prices rose — when you withdraw
+              $X, you owe ordinary income tax on $X, period. The internal
+              mechanics of the account (dividend reinvestment, capital gain
+              distributions, fund turnover) have zero tax consequence until the
+              money leaves the account. Only the withdrawal amount matters,
+              which is exactly what the planner models.
+            </p>
+            <p>
+              <strong>Roth accounts</strong>
+            </p>
+            <p>
+              Same logic: all growth inside a Roth is tax-free regardless of
+              whether it came from dividends or price appreciation. The source
+              of the growth is irrelevant to the tax calculation.
+            </p>
+          </>
+        ),
+      },
+      {
         id: "zero-ltcg",
         question:
           "How can I strategically pay 0% tax on long-term capital gains?",

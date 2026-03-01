@@ -21,12 +21,16 @@ import {
   Cell,
   ResponsiveContainer,
 } from "recharts";
-import { Header, Footer, TooltipOnHover } from "../src/components";
-import { formatCurrency, formatPercent, formatStateValue } from "../src/utils";
-import { calcWhyInvest, calcCatchUp } from "../src/utils/why_invest_utils";
-import type { WhyInvestInputs } from "../src/utils/why_invest_utils";
-import retirementStyles from "../styles/Retirement.module.scss";
-import styles from "../styles/WhyInvest.module.scss";
+import { Header, Footer, TooltipOnHover } from "../../src/components";
+import {
+  formatCurrency,
+  formatPercent,
+  formatStateValue,
+} from "../../src/utils";
+import { calcWhyInvest, calcCatchUp } from "../../src/utils/why_invest_utils";
+import type { WhyInvestInputs } from "../../src/utils/why_invest_utils";
+import retirementStyles from "../../styles/Retirement.module.scss";
+import styles from "../../styles/WhyInvest.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 

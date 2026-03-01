@@ -8,10 +8,11 @@ This is a NextJS/React app that contains tools to help with personal finance dec
 
 1. **Paycheck Calculator** (`/paycheck`) — Estimate take-home pay after federal, state, and local taxes and deductions
 2. **Why Invest?** (`/why-invest`) — Visualize the power of compounding and the cost of delaying investment
-3. **401k Optimizer** (`/retirement/savings-optimizer`) — Choose a contribution strategy (frontload, equal, backload) to max out your 401k
-4. **Retirement Income Planner** (`/retirement/income`) — Model year-by-year withdrawals across accounts (401k, Roth, brokerage, cash, Social Security) with taxes, RMDs, and three withdrawal strategies
-5. **Roth vs Traditional** (`/retirement/roth-vs-traditional`) — Compare after-tax retirement wealth between Roth and Traditional 401k contributions at different tax scenarios
-6. **Roth Conversion Ladder** (`/retirement/roth-conversion-ladder`) — Simulate year-by-year Roth conversions with 5-year seasoning tracking, tax cost estimates, and bracket-fill or fixed-amount strategies
+3. **Why Retirement Account** (`/learn/why-retirement-account`) — Compare Roth, Traditional 401k, and taxable brokerage accounts side-by-side with gross and after-tax value charts (including early withdrawal penalties before age 59.5)
+4. **401k Optimizer** (`/retirement/savings-optimizer`) — Choose a contribution strategy (frontload, equal, backload) to max out your 401k
+5. **Retirement Income Planner** (`/retirement/income`) — Model year-by-year withdrawals across accounts (401k, Roth, brokerage, cash, Social Security) with taxes, RMDs, and three withdrawal strategies
+6. **Roth vs Traditional** (`/retirement/roth-vs-traditional`) — Compare after-tax retirement wealth between Roth and Traditional 401k contributions at different tax scenarios
+7. **Roth Conversion Ladder** (`/retirement/roth-conversion-ladder`) — Simulate year-by-year Roth conversions with 5-year seasoning tracking, tax cost estimates, and bracket-fill or fixed-amount strategies
 
 ### Planned Tools
 
@@ -48,6 +49,7 @@ Upon merge to `main` branch, GitHub Actions will autodeploy this site to <https:
     roth_traditional_utils.ts       — Roth vs Traditional comparison logic
     roth_conversion_ladder_utils.ts — Roth Conversion Ladder simulation
     why_invest_utils.ts             — Why Invest compounding calculations
+    why_retirement_account_utils.ts — Why Retirement Account Roth/Trad/Taxable comparison
     paycheck_utils.ts               — Paycheck tax calculation logic
     withholdings_federal/state/local.ts — Withholding tables
 /styles                 — Per-page SCSS modules + globals.scss

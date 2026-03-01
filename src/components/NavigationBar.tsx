@@ -21,7 +21,16 @@ const isGroup = (entry: NavEntry): entry is NavGroup => "group" in entry;
 
 const NAV_ENTRIES: NavEntry[] = [
   { href: "/paycheck", label: "Paycheck" },
-  { href: "/why-invest", label: "Why Invest?" },
+  {
+    group: "Learn",
+    links: [
+      { href: "/learn/why-invest", label: "Why Invest?" },
+      {
+        href: "/learn/why-retirement-account",
+        label: "Why Retirement Account?",
+      },
+    ],
+  },
   {
     group: "Retirement",
     links: [
@@ -40,7 +49,8 @@ const NAV_ENTRIES: NavEntry[] = [
 const PAGE_NAMES: Record<string, string> = {
   "/": "Home",
   "/paycheck": "Paycheck",
-  "/why-invest": "Why Invest?",
+  "/learn/why-invest": "Why Invest?",
+  "/learn/why-retirement-account": "Why Retirement Account?",
   "/retirement/savings-optimizer": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
