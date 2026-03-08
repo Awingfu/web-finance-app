@@ -72,6 +72,14 @@ const Home: NextPage = () => {
               Optimize year-by-year Roth conversions to minimize lifetime taxes
             </p>
           </Link>
+
+          <Link href="/retirement/fire" className={styles.card} passHref>
+            <h2>FIRE Calculator &rarr;</h2>
+            <p>
+              Find your Financial Independence number and compare CoastFIRE,
+              BaristaFIRE, and FatFIRE milestones
+            </p>
+          </Link>
         </div>
       </main>
 

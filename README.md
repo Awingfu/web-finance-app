@@ -238,3 +238,85 @@ Setting up prettier and pre-commit hooks [Guide](https://gist.github.com/primary
 
 - [Next.js Documentation](https://nextjs.org/docs) — learn about Next.js features and API
 - [Learn Next.js](https://nextjs.org/learn) — an interactive Next.js tutorial
+
+## Claude Generated TODOs
+
+Here's my thinking organized by category, with notes on what makes each one a good fit for this
+app's format (inputs → chart/table insight):
+
+---
+
+High Impact, Fits the Pattern Well
+
+Rent vs. Buy
+The single most consequential financial decision most people make. Inputs: home price, down
+payment, rent, mortgage rate, appreciation rate, years in home. Output: break-even year chart,
+total cost comparison. People routinely get this wrong because they ignore opportunity cost on
+the down payment and maintenance costs.
+
+Debt Payoff: Avalanche vs. Snowball
+Inputs: list of debts (balance, rate, min payment), extra monthly payment. Outputs: months to
+payoff, total interest paid, side-by-side comparison of the two strategies. Clear table +
+"interest saved" chart.
+
+HSA Triple Tax Advantage
+Very natural companion to the retirement account page — same format. Inputs: contribution
+amount, years, investment growth rate, medical expense assumptions. Compares HSA (invest and
+reimburse later) vs. spending immediately vs. taxable brokerage. The "triple tax free" story is
+widely misunderstood.
+
+---
+
+Educational / Literacy Gaps
+
+Marginal vs. Effective Tax Rate
+Extremely common misconception ("if I get a raise I'll take home less"). Inputs: income, filing
+status. Output: a stacked bar showing each dollar taxed at each bracket rate, effective rate vs.
+marginal rate. Would fit in the Learn section.
+
+Dollar Cost Averaging vs. Lump Sum
+Inputs: amount to invest, time horizon, return rate, volatility. Output: probability
+distribution of outcomes, median final values. There's solid research (Vanguard: lump sum wins
+~2/3 of the time) that surprises most people.
+
+Social Security: When to Claim
+Inputs: benefit at 62/FRA/70, health/life expectancy estimate, other income. Output: break-even
+age chart, total lifetime benefit by claim age. The optimal strategy shifts dramatically with
+life expectancy.
+
+---
+
+Useful Planning Tools
+
+Mortgage: Extra Payments Calculator
+Inputs: loan amount, rate, term, extra monthly payment. Output: amortization table, years saved,
+interest saved chart. Simple but the interest-saved number is always shocking to people.
+
+Emergency Fund Runway
+Inputs: monthly expenses, current savings, income stability. Output: months of runway,
+recommended target, how long to build it at different savings rates. Simple but foundational —
+good "start here" tool.
+
+College Savings (529)
+Inputs: child's age, target college cost, current savings, contribution. Output: projected
+balance vs. estimated cost, funding gap. Different life stage from the retirement tools but high
+anxiety topic.
+
+---
+
+Which I'd Build First
+
+Given what's already in the app, the natural next three are:
+
+1. Rent vs. Buy — highest real-world decision value, fits the chart format perfectly
+2. Marginal vs. Effective Tax Rate — fits in Learn alongside the other two, closes a huge
+   literacy gap without being a "planning" tool (lighter lift to build)
+
+HSA would also be a very easy build since it mirrors the retirement account page almost exactly.
+
+TODO:
+
+- basic predict net worth calculator (FV) or when can i retire
+- refactor everything
+- clean up cards on home page or organize
+- three fund portfolio? explanation and modeling

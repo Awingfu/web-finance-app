@@ -826,6 +826,212 @@ const FAQ_SECTIONS: FaqSection[] = [
     ],
   },
   {
+    page: "FIRE Calculator",
+    href: "/retirement/fire",
+    items: [
+      {
+        id: "fire-what-is-fire-number",
+        question: "What is FIRE and how is my FIRE number calculated?",
+        answer: (
+          <>
+            <p>
+              <strong>FIRE</strong> stands for{" "}
+              <strong>Financial Independence, Retire Early</strong>. The goal is
+              to accumulate enough invested assets that your portfolio can
+              sustain your lifestyle indefinitely — so you no longer need to
+              work for money.
+            </p>
+            <p>
+              Your <strong>FIRE number</strong> is the portfolio size where your
+              safe annual withdrawal equals your annual spending:
+            </p>
+            <p>
+              <strong>FIRE number = Annual Spending ÷ Withdrawal Rate</strong>
+            </p>
+            <p>
+              At the default 4% withdrawal rate, the formula simplifies to{" "}
+              <strong>Annual Spending × 25</strong>. For example, if you spend
+              $50,000/year, your FIRE number is $1,250,000. The 4% rule is based
+              on the{" "}
+              <strong>
+                Trinity Study (1998, updated 2010) and subsequent research
+              </strong>
+              , which found that a 4% initial withdrawal rate — adjusted for
+              inflation each year — historically survived 30+ year retirements
+              across most market conditions.
+            </p>
+            <p>
+              You can adjust the withdrawal rate in the calculator. A lower rate
+              (e.g., 3–3.5%) gives more margin of safety for very long
+              retirements; a higher rate (e.g., 5%) reduces the required
+              portfolio but increases the risk of running out of money.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "fire-variants",
+        question: "What is the difference between LeanFIRE, FIRE, and FatFIRE?",
+        answer: (
+          <>
+            <p>
+              The FIRE community has developed several variants to accommodate
+              different lifestyles and timelines. This calculator shows three:
+            </p>
+            <ul>
+              <li>
+                <strong>LeanFIRE:</strong> Full early retirement on a frugal
+                budget — modeled here as 75% of your current spending. You reach
+                this milestone sooner, but it leaves little room for
+                discretionary expenses or unexpected costs.
+              </li>
+              <li>
+                <strong>FIRE:</strong> Full financial independence at your
+                current spending level. No work required.
+              </li>
+              <li>
+                <strong>FatFIRE:</strong> Financial independence with extra
+                cushion — modeled here as 150% of current spending. Covers a
+                more luxurious lifestyle or large unexpected expenses without
+                stress.
+              </li>
+            </ul>
+          </>
+        ),
+      },
+      {
+        id: "fire-4pct-rule",
+        question: "Is the 4% rule still valid, and what are its limitations?",
+        answer: (
+          <>
+            <p>
+              The 4% rule holds up well historically but has important
+              limitations to understand:
+            </p>
+            <p>
+              <strong>Where it came from:</strong> The Trinity Study (1998)
+              tested withdrawal rates against historical U.S. market data and
+              found a 4% initial withdrawal rate — increased with inflation each
+              year — had a very high success rate over 30-year periods.
+            </p>
+            <p>
+              <strong>Limitations:</strong>
+            </p>
+            <ul>
+              <li>
+                <strong>Time horizon:</strong> The original study used 30-year
+                periods. If you retire at 40 and live to 90, you need a 50-year
+                horizon — many researchers suggest 3–3.5% is safer for very long
+                retirements.
+              </li>
+              <li>
+                <strong>Sequence of returns risk:</strong> A market crash early
+                in retirement is more damaging than the same crash later. A bad
+                first decade can permanently impair a fixed-withdrawal strategy.
+              </li>
+              <li>
+                <strong>U.S. data bias:</strong> The study used U.S. stock and
+                bond returns, which were exceptional over the 20th century.
+                International diversification helps but historical performance
+                varies by country.
+              </li>
+              <li>
+                <strong>Spending flexibility:</strong> Real retirees adapt —
+                spending less in down markets and more in good ones. A flexible
+                withdrawal strategy can tolerate a higher initial rate than a
+                rigid 4%.
+              </li>
+            </ul>
+            <p>
+              The calculator uses your chosen withdrawal rate to compute all
+              milestones. Adjusting it is the fastest way to stress-test your
+              plan.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "fire-real-return",
+        question:
+          'What is a "real return rate" and why does the calculator use it instead of a nominal rate?',
+        answer: (
+          <>
+            <p>
+              A <strong>real return rate</strong> is your investment return
+              after subtracting inflation. The calculator uses real returns so
+              that all dollar amounts stay in{" "}
+              <strong>today&apos;s purchasing power</strong> — no inflation
+              adjustment is needed later.
+            </p>
+            <p>
+              <strong>Example:</strong> If the stock market returns 10% per year
+              and inflation is 3%, your real return is approximately 7%. A
+              portfolio that grows to $2M in nominal terms may only be worth
+              $1.25M in today&apos;s dollars after 15 years of 3% inflation. The
+              calculator sidesteps this complexity by working entirely in real
+              terms.
+            </p>
+            <p>
+              <strong>Why 7%?</strong> The U.S. stock market has historically
+              returned roughly 10% nominally and ~7% after inflation over long
+              periods. This is a reasonable central estimate, but the future may
+              differ. You can lower the rate to be conservative (e.g., 5–6%) or
+              raise it if you expect higher returns.
+            </p>
+            <p>
+              The consequence: because everything is in real terms, the FIRE
+              number shown is the amount you need in <em>today&apos;s</em>{" "}
+              dollars — your actual nominal portfolio target will be higher if
+              you&apos;re still years away from retirement.
+            </p>
+          </>
+        ),
+      },
+      {
+        id: "fire-savings-rate-power",
+        question:
+          "Why does spending less accelerate FIRE so much more than earning more?",
+        answer: (
+          <>
+            <p>
+              Reducing spending hits your FIRE timeline from{" "}
+              <strong>two directions at once</strong>, which is why the Savings
+              Rate Impact chart bends so sharply:
+            </p>
+            <ol>
+              <li>
+                <strong>Your FIRE number shrinks.</strong> Since FIRE number =
+                spending ÷ withdrawal rate, every dollar less you spend reduces
+                the target portfolio directly (by 25× at a 4% rate).
+              </li>
+              <li>
+                <strong>Your savings rate rises.</strong> Assuming income stays
+                constant, the money not spent goes directly into savings,
+                accelerating portfolio growth.
+              </li>
+            </ol>
+            <p>
+              Earning more only helps on one dimension: it increases savings
+              (assuming spending doesn&apos;t rise with income). Spending less
+              simultaneously reduces the target AND increases the rate you
+              approach it.
+            </p>
+            <p>
+              <strong>Example:</strong> You earn $80,000 and spend $60,000
+              (savings rate 25%). Your FIRE number at 4% SWR is $1,500,000.
+              <br />
+              If you reduce spending by $10,000 to $50,000: savings rate rises
+              to 37.5% and FIRE number drops to $1,250,000 — a $250,000 smaller
+              target reached with 50% more annual savings. The compounding of
+              both effects is what makes the years-to-FIRE curve so steep on the
+              left side of the chart.
+            </p>
+          </>
+        ),
+      },
+    ],
+  },
+  {
     page: "Roth vs Traditional 401k",
     href: "/retirement/roth-vs-traditional",
     items: [

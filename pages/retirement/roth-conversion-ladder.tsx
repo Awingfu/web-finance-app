@@ -115,10 +115,10 @@ const LADDER_HORIZON_AGE = 90;
 type CoreInputs = Omit<RothConversionInputs, "taxTable" | "lifeExpectancyAge">;
 
 const DEFAULT_INPUTS: CoreInputs = {
-  currentAge: 45,
+  currentAge: 40,
   conversionEndAge: 59,
   traditionalBalance: 500_000,
-  rothBalance: 50_000,
+  rothBalance: 0,
   otherIncome: 30_000,
   conversionMode: "fixed",
   annualConversion: 50_000,
