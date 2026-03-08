@@ -41,6 +41,7 @@ const NAV_ENTRIES: NavEntry[] = [
         href: "/retirement/roth-conversion-ladder",
         label: "Roth Conversion Ladder",
       },
+      { href: "/retirement/fire", label: "FIRE Calculator" },
     ],
   },
   { href: "/faq", label: "FAQ" },
@@ -56,6 +57,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/retirement/income": "Retirement Income",
   "/retirement/roth-vs-traditional": "Roth vs Traditional",
   "/retirement/roth-conversion-ladder": "Roth Conversion Ladder",
+  "/retirement/fire": "FIRE Calculator",
   "/faq": "FAQ",
 };
 
