@@ -25,9 +25,7 @@ import styles from "../../styles/Fire.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const COAST_COLOR = "#95a5a6";
 const LEAN_COLOR = "#f39c12";
-const BARISTA_COLOR = "#e67e22";
 const FIRE_COLOR = "#2ecc71";
 const FAT_COLOR = "#9b59b6";
 const PORTFOLIO_COLOR = "#2c3e50";
@@ -41,13 +39,11 @@ const formatChartDollar = (v: number) =>
 
 const DEFAULT_INPUTS: FireInputs = {
   currentAge: 30,
-  targetRetirementAge: 65,
   currentPortfolio: 25_000,
   annualSpending: 50_000,
   annualSavings: 20_000,
   returnRate: 0.07,
   withdrawalRate: 0.04,
-  partTimeIncome: 15_000,
 };
 
 type ChartView = "growth" | "sensitivity";
@@ -56,25 +52,11 @@ type ChartView = "growth" | "sensitivity";
 
 const VARIANT_CARDS = [
   {
-    key: "coast" as const,
-    label: "CoastFIRE",
-    color: COAST_COLOR,
-    description:
-      "You already have enough invested to reach FI by traditional retirement without adding another dollar.",
-  },
-  {
     key: "lean" as const,
     label: "LeanFIRE",
     color: LEAN_COLOR,
     description:
       "Early retirement on 75% of current spending — tight budget but full freedom.",
-  },
-  {
-    key: "barista" as const,
-    label: "BaristaFIRE",
-    color: BARISTA_COLOR,
-    description:
-      "Semi-retire with part-time work covering some expenses — smaller portfolio needed.",
   },
   {
     key: "fire" as const,
@@ -115,23 +97,14 @@ const FirePage = () => {
 
   const currentSavingsRatePct = Math.round(currentSavingsRate * 100);
 
-  // How much the current portfolio grows to by retirement if contributions stop now
-  const yearsToRetirement = Math.max(
-    0,
-    inputs.targetRetirementAge - inputs.currentAge,
-  );
-  const coastProjectedBalance =
-    inputs.currentPortfolio *
-    Math.pow(1 + inputs.returnRate, yearsToRetirement);
-
-  // Portfolio growth chart: show up to max(latest milestone age, targetRetirementAge + 5)
+  // Portfolio growth chart: show up to the latest milestone age (or at least current age + 35)
   const latestMilestoneAge = Math.max(
     0,
     ...Object.values(fireAges).filter((a): a is number => a !== null),
   );
   const growthChartMaxAge = Math.max(
     latestMilestoneAge,
-    inputs.targetRetirementAge + 5,
+    inputs.currentAge + 35,
   );
 
   // Age select options
@@ -154,37 +127,18 @@ const FirePage = () => {
           <div className={retirementStyles.form}>
             {/* Your Situation */}
             <div className={styles.sectionLabel}>Your Situation</div>
-            <div className={styles.twoCol}>
-              <div className={styles.col}>
-                <Form.Label>Current Age</Form.Label>
-                <Form.Select
-                  value={inputs.currentAge}
-                  onChange={(e) => set("currentAge", e.target.value)}
-                >
-                  {ageOptions(16, 80).map((age) => (
-                    <option key={age} value={age}>
-                      {age}
-                    </option>
-                  ))}
-                </Form.Select>
-              </div>
-              <div className={styles.col}>
-                <TooltipOnHover
-                  text="Used to calculate your CoastFIRE number — the amount needed today to grow to your FI number by this age without additional contributions."
-                  nest={<Form.Label>Target Retirement Age</Form.Label>}
-                />
-                <Form.Select
-                  value={inputs.targetRetirementAge}
-                  onChange={(e) => set("targetRetirementAge", e.target.value)}
-                >
-                  {ageOptions(inputs.currentAge + 1, 90).map((age) => (
-                    <option key={age} value={age}>
-                      {age}
-                    </option>
-                  ))}
-                </Form.Select>
-              </div>
-            </div>
+            <Form.Label>Current Age</Form.Label>
+            <Form.Select
+              className="mb-3"
+              value={inputs.currentAge}
+              onChange={(e) => set("currentAge", e.target.value)}
+            >
+              {ageOptions(16, 80).map((age) => (
+                <option key={age} value={age}>
+                  {age}
+                </option>
+              ))}
+            </Form.Select>
 
             {/* Current Portfolio */}
             <div className={styles.sectionLabel}>Current Portfolio</div>
@@ -292,22 +246,6 @@ const FirePage = () => {
                 </div>
               </div>
             </div>
-
-            {/* BaristaFIRE */}
-            <div className={styles.sectionLabel}>BaristaFIRE</div>
-            <TooltipOnHover
-              text="Part-time income that reduces the portfolio you need to semi-retire. Named for jobs like a Starbucks barista that also provide health benefits."
-              nest={<Form.Label>Annual Part-Time Income</Form.Label>}
-            />
-            <InputGroup className="mb-4">
-              <InputGroup.Text>$</InputGroup.Text>
-              <Form.Control
-                type="number"
-                min={0}
-                value={inputs.partTimeIncome}
-                onChange={(e) => set("partTimeIncome", e.target.value)}
-              />
-            </InputGroup>
           </div>
 
           {/* ── Results ── */}
@@ -348,72 +286,23 @@ const FirePage = () => {
                       {label}
                     </div>
 
-                    {key === "coast" ? (
-                      <>
-                        <div style={{ marginBottom: 8, opacity: 0.75 }}>
-                          If you have this invested today and contribute nothing
-                          more, it grows to your full FIRE number by age{" "}
-                          {inputs.targetRetirementAge}.
-                        </div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
-                          {formatCurrency(milestones.coast)}
-                          <span
-                            style={{
-                              fontWeight: 400,
-                              fontSize: "0.75rem",
-                              opacity: 0.7,
-                            }}
-                          >
-                            {" "}
-                            needed today
-                          </span>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            opacity: 0.7,
-                            marginTop: 4,
-                          }}
-                        >
-                          Your portfolio at {inputs.targetRetirementAge} (no
-                          contributions):{" "}
-                          <strong>
-                            {formatCurrency(coastProjectedBalance)}
-                          </strong>
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.72rem",
-                            opacity: 0.55,
-                            marginTop: 2,
-                          }}
-                        >
-                          {coastProjectedBalance >= milestones.fire
-                            ? "You are already coasting!"
-                            : age !== null
-                              ? `Reach coast amount at age ${age}`
-                              : "Not in range"}
-                        </div>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ marginBottom: 8, opacity: 0.75 }}>
-                          {description}
-                        </div>
-                        <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
-                          {formatCurrency(milestones[key])}
-                        </div>
-                        <div
-                          style={{
-                            fontSize: "0.75rem",
-                            opacity: 0.6,
-                            marginTop: 2,
-                          }}
-                        >
-                          {age !== null ? `Age ${age}` : "Not in range"}
-                        </div>
-                      </>
-                    )}
+                    <>
+                      <div style={{ marginBottom: 8, opacity: 0.75 }}>
+                        {description}
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: "0.95rem" }}>
+                        {formatCurrency(milestones[key])}
+                      </div>
+                      <div
+                        style={{
+                          fontSize: "0.75rem",
+                          opacity: 0.6,
+                          marginTop: 2,
+                        }}
+                      >
+                        {age !== null ? `Age ${age}` : "Not in range"}
+                      </div>
+                    </>
                   </div>
                 );
               })}
@@ -477,32 +366,12 @@ const FirePage = () => {
                       dot={false}
                     />
                     <ReferenceLine
-                      y={milestones.coast}
-                      stroke={COAST_COLOR}
-                      strokeDasharray="4 2"
-                      label={{
-                        value: "CoastFIRE",
-                        fill: COAST_COLOR,
-                        fontSize: 11,
-                      }}
-                    />
-                    <ReferenceLine
                       y={milestones.lean}
                       stroke={LEAN_COLOR}
                       strokeDasharray="4 2"
                       label={{
                         value: "LeanFIRE",
                         fill: LEAN_COLOR,
-                        fontSize: 11,
-                      }}
-                    />
-                    <ReferenceLine
-                      y={milestones.barista}
-                      stroke={BARISTA_COLOR}
-                      strokeDasharray="4 2"
-                      label={{
-                        value: "BaristaFIRE",
-                        fill: BARISTA_COLOR,
                         fontSize: 11,
                       }}
                     />

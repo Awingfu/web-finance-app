@@ -2,27 +2,21 @@
 
 export interface FireInputs {
   currentAge: number;
-  targetRetirementAge: number;
   currentPortfolio: number;
   annualSpending: number;
   annualSavings: number;
   returnRate: number;
   withdrawalRate: number;
-  partTimeIncome: number;
 }
 
 export interface FireMilestones {
-  coast: number;
   lean: number;
-  barista: number;
   fire: number;
   fat: number;
 }
 
 export interface FireAges {
-  coast: number | null;
   lean: number | null;
-  barista: number | null;
   fire: number | null;
   fat: number | null;
 }
@@ -51,13 +45,11 @@ export interface FireResult {
 export function calcFire(inputs: FireInputs): FireResult {
   const {
     currentAge,
-    targetRetirementAge,
     currentPortfolio,
     annualSpending,
     annualSavings,
     returnRate,
     withdrawalRate,
-    partTimeIncome,
   } = inputs;
 
   const leanSpending = annualSpending * 0.75;
@@ -71,18 +63,9 @@ export function calcFire(inputs: FireInputs): FireResult {
   const fireNumber = annualSpending / wr;
   const leanNumber = leanSpending / wr;
   const fatNumber = fatSpending / wr;
-  const baristaAnnualNeeded = Math.max(0, annualSpending - partTimeIncome);
-  const baristaNumber = baristaAnnualNeeded / wr;
-  const yearsToRetirement = targetRetirementAge - currentAge;
-  const coastNumber =
-    yearsToRetirement > 0
-      ? fireNumber / Math.pow(1 + returnRate, yearsToRetirement)
-      : fireNumber;
 
   const milestones: FireMilestones = {
-    coast: coastNumber,
     lean: leanNumber,
-    barista: baristaNumber,
     fire: fireNumber,
     fat: fatNumber,
   };
@@ -90,9 +73,7 @@ export function calcFire(inputs: FireInputs): FireResult {
   // Year-by-year accumulation to age 100
   const yearlyData: YearlyFirePoint[] = [];
   const fireAges: FireAges = {
-    coast: null,
     lean: null,
-    barista: null,
     fire: null,
     fat: null,
   };
@@ -101,11 +82,7 @@ export function calcFire(inputs: FireInputs): FireResult {
   for (let age = currentAge; age <= 100; age++) {
     yearlyData.push({ age, portfolio: Math.round(portfolio) });
 
-    if (portfolio >= coastNumber && fireAges.coast === null)
-      fireAges.coast = age;
     if (portfolio >= leanNumber && fireAges.lean === null) fireAges.lean = age;
-    if (portfolio >= baristaNumber && fireAges.barista === null)
-      fireAges.barista = age;
     if (portfolio >= fireNumber && fireAges.fire === null) fireAges.fire = age;
     if (portfolio >= fatNumber && fireAges.fat === null) fireAges.fat = age;
 

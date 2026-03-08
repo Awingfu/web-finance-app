@@ -871,35 +871,19 @@ const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         id: "fire-variants",
-        question:
-          "What is the difference between CoastFIRE, LeanFIRE, BaristaFIRE, FIRE, and FatFIRE?",
+        question: "What is the difference between LeanFIRE, FIRE, and FatFIRE?",
         answer: (
           <>
             <p>
               The FIRE community has developed several variants to accommodate
-              different lifestyles and timelines:
+              different lifestyles and timelines. This calculator shows three:
             </p>
             <ul>
-              <li>
-                <strong>CoastFIRE:</strong> You have enough invested today that
-                — even if you contribute nothing more — it will compound to your
-                full FIRE number by your target retirement age. You can
-                &ldquo;coast&rdquo; and only need to cover current living
-                expenses, not aggressively save. The calculator shows how much
-                that number is and whether you&apos;ve already hit it.
-              </li>
               <li>
                 <strong>LeanFIRE:</strong> Full early retirement on a frugal
                 budget — modeled here as 75% of your current spending. You reach
                 this milestone sooner, but it leaves little room for
                 discretionary expenses or unexpected costs.
-              </li>
-              <li>
-                <strong>BaristaFIRE:</strong> Semi-retirement where part-time
-                work (like a barista job that also offers health benefits)
-                covers some expenses, requiring a smaller portfolio. Enter your
-                expected part-time income and the calculator reduces the FIRE
-                number accordingly.
               </li>
               <li>
                 <strong>FIRE:</strong> Full financial independence at your
