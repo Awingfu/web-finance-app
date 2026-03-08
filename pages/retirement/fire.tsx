@@ -140,20 +140,18 @@ const FirePage = () => {
 
   return (
     <div className={retirementStyles.container}>
-      <Header />
+      <Header titleName="FIRE Calculator" />
+
       <main className={retirementStyles.main}>
+        <h1>FIRE Calculator</h1>
+        <p>
+          Find your Financial Independence number and see when you reach each
+          FIRE milestone.
+        </p>
+
         <div className={retirementStyles.content}>
           {/* ── Form ── */}
           <div className={retirementStyles.form}>
-            <h1 style={{ textAlign: "center" }}>FIRE Calculator</h1>
-            <p
-              className="text-muted"
-              style={{ fontSize: "0.9rem", textAlign: "center" }}
-            >
-              Find your Financial Independence number and see when you reach
-              each FIRE milestone.
-            </p>
-
             {/* Your Situation */}
             <div className={styles.sectionLabel}>Your Situation</div>
             <div className={styles.twoCol}>
