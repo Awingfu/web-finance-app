@@ -1,0 +1,166 @@
+@use "breakpoints" as *;
+
+// ─── Preset buttons ──────────────────────────────────────────────────────────
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.presetBtn {
+  padding: 0.25rem 0.65rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--bs-border-color);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--bs-body-color);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+
+  &:hover {
+    background-color: var(--bs-primary);
+    border-color: var(--bs-primary);
+    color: #fff;
+  }
+}
+
+// ─── Slider labels ───────────────────────────────────────────────────────────
+
+.sliderEnds {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--bs-secondary-color);
+}
+
+// ─── Allocation bar ──────────────────────────────────────────────────────────
+
+.allocationBar {
+  display: flex;
+  height: 36px;
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--bs-border-color);
+  margin-bottom: 0.5rem;
+}
+
+.barUs,
+.barIntl,
+.barBonds {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #fff;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: width 0.2s ease;
+}
+
+.barUs {
+  background-color: #0070f3;
+}
+
+.barIntl {
+  background-color: #2ecc71;
+}
+
+.barBonds {
+  background-color: #e67e22;
+}
+
+// ─── Custom chart tooltip ────────────────────────────────────────────────────
+
+.chartTooltip {
+  background: var(--bs-body-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 6px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.tooltipLabel {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.tooltipMuted {
+  color: var(--bs-secondary-color);
+  font-size: 0.8rem;
+}
+
+// ─── Compare metric toggle ───────────────────────────────────────────────────
+
+.compareToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+// ─── Educational section ─────────────────────────────────────────────────────
+
+.learnSection {
+  padding: 2rem;
+
+  @media screen and (min-width: $medium) {
+    padding: 2rem 4%;
+  }
+
+  @media screen and (min-width: $small) and (max-width: $medium) {
+    padding: 2rem 100px;
+  }
+
+  @media screen and (max-width: $small) {
+    padding: 1.5rem 20px;
+  }
+}
+
+.learnGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+
+  @media screen and (max-width: $medium) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.learnCard {
+  border: 1px solid var(--bs-border-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+
+  p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+    color: var(--bs-body-color);
+  }
+}
+
+.learnCardHeader {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 0.6rem;
+}
+
+.learnFunds {
+  font-size: 0.8rem !important;
+  color: var(--bs-secondary-color) !important;
+  font-style: italic;
+}
+
+.assumptions {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+  line-height: 1.6;
+  margin-top: 0.5rem;
+}

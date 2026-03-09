@@ -29,6 +29,12 @@ const SECTIONS: Section[] = [
         description:
           "See how 401k and IRA accounts beat taxable investing with tax-free compounding",
       },
+      {
+        href: "/learn/three-fund-portfolio",
+        title: "3-Fund Portfolio",
+        description:
+          "Build a simple, diversified portfolio with US stocks, international stocks, and bonds",
+      },
     ],
   },
   {

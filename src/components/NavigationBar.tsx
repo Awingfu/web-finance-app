@@ -29,6 +29,10 @@ const NAV_ENTRIES: NavEntry[] = [
         href: "/learn/why-retirement-account",
         label: "Why Retirement Account?",
       },
+      {
+        href: "/learn/three-fund-portfolio",
+        label: "3-Fund Portfolio",
+      },
     ],
   },
   {
@@ -52,6 +56,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/paycheck": "Paycheck",
   "/learn/why-invest": "Why Invest?",
   "/learn/why-retirement-account": "Why Retirement Account?",
+  "/learn/three-fund-portfolio": "3-Fund Portfolio",
   "/retirement/savings-optimizer": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
