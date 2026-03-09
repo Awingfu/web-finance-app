@@ -246,12 +246,17 @@ export default function ThreeFundPortfolio() {
     [stats],
   );
 
-  // Iso-Sharpe line: y = RISK_FREE*100 + sharpe * x, spanning chart x-domain
+  // Iso-Sharpe line: y = RISK_FREE*100 + sharpe * x, clamped to Y domain [3.5, 11]
   const isoSharpeLineData = useMemo(
     () =>
-      [0, 3, 6, 9, 12, 15, 18, 21].map((x) => ({
+      [3, 6, 9, 12, 15, 18].map((x) => ({
         x,
-        y: RISK_FREE * 100 + stats.sharpe * x,
+        y: parseFloat(
+          Math.min(
+            11,
+            Math.max(3.5, RISK_FREE * 100 + stats.sharpe * x),
+          ).toFixed(2),
+        ),
       })),
     [stats.sharpe],
   );
@@ -564,9 +569,15 @@ export default function ThreeFundPortfolio() {
           {/* ── Chart 2: Risk vs Return Scatter ──────────────────────── */}
           {chartView === "risk-return" && (
             <div className={shared.chartWrap}>
+              <p className={shared.chartNote}>
+                Blue dashed line — every point on it has the same Sharpe ratio (
+                {stats.sharpe.toFixed(2)}) as your portfolio. Portfolios above
+                the line are more efficient. <strong>Sharpe ratio</strong> =
+                (return − 4% risk-free) ÷ volatility.
+              </p>
               <ResponsiveContainer width="100%" height={400}>
                 <ScatterChart
-                  margin={{ top: 50, right: 30, left: 10, bottom: 40 }}
+                  margin={{ top: 30, right: 30, left: 10, bottom: 40 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis
@@ -583,14 +594,14 @@ export default function ThreeFundPortfolio() {
                   <YAxis
                     type="number"
                     dataKey="y"
-                    domain={[3.5, 11]}
-                    tickFormatter={(v) => `${v}%`}
+                    domain={[3, 12]}
+                    tickFormatter={(v) => `${Number(v)}%`}
                     label={{
                       value: "Expected Return (%)",
                       angle: -90,
                       position: "insideLeft",
                       style: { textAnchor: "middle" },
-                      dx: -5,
+                      offset: 10,
                     }}
                     width={65}
                   />
@@ -615,7 +626,7 @@ export default function ThreeFundPortfolio() {
                       );
                     }}
                   />
-                  <Legend verticalAlign="top" />
+                  <Legend verticalAlign="top" wrapperStyle={{ top: 0 }} />
 
                   {/* Iso-Sharpe line through user's portfolio */}
                   <Scatter
@@ -674,13 +685,6 @@ export default function ThreeFundPortfolio() {
                   />
                 </ScatterChart>
               </ResponsiveContainer>
-              <p className={shared.chartNote}>
-                Gray cloud = all possible 3-asset allocations. The blue dashed
-                line passes through your portfolio — every point on it has the
-                same Sharpe ratio ({stats.sharpe.toFixed(2)}). Portfolios above
-                the line are more efficient. <strong>Sharpe</strong> = (return −
-                4% risk-free) ÷ volatility.
-              </p>
             </div>
           )}
 
