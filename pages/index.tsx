@@ -35,6 +35,12 @@ const SECTIONS: Section[] = [
         description:
           "Build a simple, diversified portfolio with US stocks, international stocks, and bonds",
       },
+      {
+        href: "/learn/tax-rates",
+        title: "How Federal Income Tax Works",
+        description:
+          "See how progressive tax brackets work and why your effective rate is always lower than your marginal rate",
+      },
     ],
   },
   {
