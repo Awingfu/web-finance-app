@@ -32,11 +32,11 @@ import styles from "../../styles/ThreeFundPortfolio.module.scss";
 
 const US_RETURN = 0.1;
 const US_VOL = 0.155;
-const INTL_RETURN = 0.075;
+const INTL_RETURN = 0.09; // forward-looking; intl valuations are cheaper than US
 const INTL_VOL = 0.165;
 const BONDS_RETURN = 0.04;
 const BONDS_VOL = 0.06;
-const RHO_US_INTL = 0.75;
+const RHO_US_INTL = 0.65; // long-run avg; post-2008 correlation (~0.75) overstates diversification benefit
 const RHO_US_BONDS = -0.05;
 const RHO_INTL_BONDS = 0.05;
 const RISK_FREE = 0.04;
@@ -154,9 +154,9 @@ const COMPARE_PORTFOLIOS = [
 const PRESETS = [
   { label: "All US", stocksPct: 100, usPct: 100 },
   { label: "Aggressive", stocksPct: 100, usPct: 80 },
+  { label: "All International", stocksPct: 100, usPct: 0 },
   { label: "Classic 3-Fund", stocksPct: 80, usPct: 75 },
   { label: "Conservative", stocksPct: 60, usPct: 67 },
-  { label: "All International", stocksPct: 100, usPct: 0 },
   { label: "All Bonds", stocksPct: 0, usPct: 75 },
 ] as const;
 
@@ -244,6 +244,16 @@ export default function ThreeFundPortfolio() {
       },
     ],
     [stats],
+  );
+
+  // Iso-Sharpe line: y = RISK_FREE*100 + sharpe * x, spanning chart x-domain
+  const isoSharpeLineData = useMemo(
+    () =>
+      [0, 3, 6, 9, 12, 15, 18, 21].map((x) => ({
+        x,
+        y: RISK_FREE * 100 + stats.sharpe * x,
+      })),
+    [stats.sharpe],
   );
 
   // Bar chart comparison data: all presets + user's portfolio
@@ -429,7 +439,9 @@ export default function ThreeFundPortfolio() {
             <div className={shared.card}>
               <div className={shared.cardLabel}>Sharpe Ratio</div>
               <div className={shared.cardValue}>{stats.sharpe.toFixed(2)}</div>
-              <div className={shared.cardSub}>return per unit of risk</div>
+              <div className={shared.cardSub}>
+                +{stats.sharpe.toFixed(2)}% above risk-free per 1% of volatility
+              </div>
             </div>
           </div>
 
@@ -605,6 +617,21 @@ export default function ThreeFundPortfolio() {
                   />
                   <Legend verticalAlign="top" />
 
+                  {/* Iso-Sharpe line through user's portfolio */}
+                  <Scatter
+                    data={isoSharpeLineData}
+                    line={{
+                      stroke: "#0070f3",
+                      strokeWidth: 1.5,
+                      strokeDasharray: "6 3",
+                      strokeOpacity: 0.5,
+                    }}
+                    shape={(props: { cx?: number; cy?: number }) => (
+                      <circle cx={props.cx ?? 0} cy={props.cy ?? 0} r={0} />
+                    )}
+                    legendType="none"
+                  />
+
                   {/* Feasible set background */}
                   <Scatter
                     data={frontierData}
@@ -648,10 +675,11 @@ export default function ThreeFundPortfolio() {
                 </ScatterChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
-                Higher and further left = better Sharpe ratio (more return per
-                unit of risk). Gray cloud = all possible 3-asset allocations.{" "}
-                <strong>Sharpe</strong> = (return − 4% risk-free) ÷ volatility ·
-                Your portfolio: <strong>{stats.sharpe.toFixed(2)}</strong>.
+                Gray cloud = all possible 3-asset allocations. The blue dashed
+                line passes through your portfolio — every point on it has the
+                same Sharpe ratio ({stats.sharpe.toFixed(2)}). Portfolios above
+                the line are more efficient. <strong>Sharpe</strong> = (return −
+                4% risk-free) ÷ volatility.
               </p>
             </div>
           )}
@@ -792,10 +820,13 @@ export default function ThreeFundPortfolio() {
 
         <p className={styles.assumptions}>
           <strong>Assumptions:</strong> US stocks: 10.0% avg return, 15.5%
-          volatility · International: 7.5%, 16.5% · Bonds: 4.0%, 6.0% · US–Intl
-          correlation: 0.75 · Sharpe ratio uses 4% risk-free rate. Historical
-          returns do not guarantee future results. Projection assumes a lump sum
-          with no additional contributions.
+          volatility · International: 9.0%, 16.5% (forward-looking; lower
+          valuations suggest higher expected returns than recent history) ·
+          Bonds: 4.0%, 6.0% · US-Intl correlation: 0.65 (long-run average;
+          post-2008 correlation of ~0.75 overstates the diversification benefit)
+          · Sharpe ratio uses 4% risk-free rate. Historical returns do not
+          guarantee future results. Projection assumes a lump sum with no
+          additional contributions.
         </p>
       </div>
 
