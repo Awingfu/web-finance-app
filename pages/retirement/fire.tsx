@@ -22,6 +22,7 @@ import { calcFire } from "../../src/utils/fire_utils";
 import type { FireInputs } from "../../src/utils/fire_utils";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import styles from "../../styles/Fire.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -126,7 +127,7 @@ const FirePage = () => {
           {/* ── Form ── */}
           <div className={retirementStyles.form}>
             {/* Your Situation */}
-            <div className={styles.sectionLabel}>Your Situation</div>
+            <div className={shared.sectionLabel}>Your Situation</div>
             <Form.Label>Current Age</Form.Label>
             <Form.Select
               className="mb-3"
@@ -141,7 +142,7 @@ const FirePage = () => {
             </Form.Select>
 
             {/* Current Portfolio */}
-            <div className={styles.sectionLabel}>Current Portfolio</div>
+            <div className={shared.sectionLabel}>Current Portfolio</div>
             <Form.Label>Current Portfolio Value</Form.Label>
             <InputGroup className="mb-3">
               <InputGroup.Text>$</InputGroup.Text>
@@ -154,9 +155,9 @@ const FirePage = () => {
             </InputGroup>
 
             {/* Annual Finances */}
-            <div className={styles.sectionLabel}>Annual Finances</div>
-            <div className={styles.twoCol}>
-              <div className={styles.col}>
+            <div className={shared.sectionLabel}>Annual Finances</div>
+            <div className={shared.twoCol}>
+              <div className={shared.col}>
                 <Form.Label>Annual Spending</Form.Label>
                 <InputGroup>
                   <InputGroup.Text>$</InputGroup.Text>
@@ -168,7 +169,7 @@ const FirePage = () => {
                   />
                 </InputGroup>
               </div>
-              <div className={styles.col}>
+              <div className={shared.col}>
                 <Form.Label>Annual Savings</Form.Label>
                 <InputGroup>
                   <InputGroup.Text>$</InputGroup.Text>
@@ -181,19 +182,19 @@ const FirePage = () => {
                 </InputGroup>
               </div>
             </div>
-            <div className={styles.rateHint}>
+            <div className={shared.rateHint}>
               Implied income: {formatCurrency(impliedIncome)} · Savings rate:{" "}
               {formatPercent(currentSavingsRate)}
             </div>
-            <div className={styles.rateHint}>
+            <div className={shared.rateHint}>
               LeanFIRE spending: {formatCurrency(leanSpending)} · FatFIRE
               spending: {formatCurrency(fatSpending)}
             </div>
 
             {/* Growth & Withdrawal */}
-            <div className={styles.sectionLabel}>Growth &amp; Withdrawal</div>
-            <div className={styles.twoCol}>
-              <div className={styles.col}>
+            <div className={shared.sectionLabel}>Growth &amp; Withdrawal</div>
+            <div className={shared.twoCol}>
+              <div className={shared.col}>
                 <TooltipOnHover
                   text="Expected real (after-inflation) annual return. 7% approximates long-run S&P 500 returns after inflation."
                   nest={<Form.Label>Real Return Rate</Form.Label>}
@@ -214,11 +215,11 @@ const FirePage = () => {
                   />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
-                <div className={styles.rateHint}>
+                <div className={shared.rateHint}>
                   7% ≈ historical S&P 500 after inflation
                 </div>
               </div>
-              <div className={styles.col}>
+              <div className={shared.col}>
                 <TooltipOnHover
                   text="Safe withdrawal rate — the percentage of your portfolio you withdraw annually in retirement. The classic 4% rule comes from the Trinity Study."
                   nest={<Form.Label>Withdrawal Rate</Form.Label>}
@@ -240,7 +241,7 @@ const FirePage = () => {
                   />
                   <InputGroup.Text>%</InputGroup.Text>
                 </InputGroup>
-                <div className={styles.rateHint}>
+                <div className={shared.rateHint}>
                   4% rule: withdraw 4% of portfolio/yr — historically survives
                   30+ years
                 </div>
@@ -249,7 +250,7 @@ const FirePage = () => {
           </div>
 
           {/* ── Results ── */}
-          <div className={styles.results}>
+          <div className={shared.results}>
             {/* Alert */}
             {fireAges.fire !== null ? (
               <Alert variant="success" className="mb-3">
@@ -265,7 +266,7 @@ const FirePage = () => {
             )}
 
             {/* FIRE variant cards — education + milestone in one */}
-            <div className={styles.sectionLabel}>FIRE Milestones</div>
+            <div className={shared.sectionLabel}>FIRE Milestones</div>
             <div className={styles.variantCards}>
               {VARIANT_CARDS.map(({ key, label, color, description }) => {
                 const age = fireAges[key];
@@ -309,7 +310,7 @@ const FirePage = () => {
             </div>
 
             {/* Chart toggle */}
-            <div className={styles.chartToggle}>
+            <div className={shared.chartToggle}>
               <ToggleButtonGroup
                 type="radio"
                 name="chartView"
@@ -335,7 +336,7 @@ const FirePage = () => {
 
             {/* Portfolio Growth chart */}
             {chartView === "growth" && (
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart
                     data={yearlyData.filter((d) => d.age <= growthChartMaxAge)}
@@ -398,7 +399,7 @@ const FirePage = () => {
 
             {/* Savings Rate Impact chart */}
             {chartView === "sensitivity" && (
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart
                     data={sensitivityData}
@@ -465,7 +466,7 @@ const FirePage = () => {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <div className={styles.chartNote}>
+                <div className={shared.chartNote}>
                   Holding income constant — spending less shrinks your FI number
                   AND increases savings, compounding the effect.
                 </div>

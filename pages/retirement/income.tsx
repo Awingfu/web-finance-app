@@ -41,6 +41,7 @@ import {
 } from "../../src/utils/retirement_income_utils";
 import styles from "../../styles/Retirement.module.scss";
 import incomeStyles from "../../styles/RetirementIncome.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 const CHART_COLORS = {
   ss: "#2ecc71",
@@ -365,7 +366,7 @@ function RetirementIncome() {
           />
 
           {/* ── Assets ── */}
-          <p className={incomeStyles.sectionLabel}>Assets</p>
+          <p className={shared.sectionLabel}>Assets</p>
 
           {/* Add account tiles */}
           <div className={incomeStyles.addAccountButtons}>
@@ -856,44 +857,42 @@ function RetirementIncome() {
         </Form>
 
         {/* ── CHARTS + SUMMARY ── */}
-        <div className={incomeStyles.results}>
+        <div className={shared.results}>
           {/* Summary cards */}
-          <div className={incomeStyles.summaryCards}>
-            <div className={incomeStyles.card}>
-              <div className={incomeStyles.cardLabel}>Total Gross Income</div>
-              <div className={incomeStyles.cardValue}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Total Gross Income</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(summary.totalGrossIncome)}
               </div>
             </div>
-            <div className={incomeStyles.card}>
-              <div className={incomeStyles.cardLabel}>Federal Taxes Paid</div>
-              <div className={incomeStyles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Federal Taxes Paid</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(summary.totalTaxesPaid)}
               </div>
             </div>
             {summary.totalPenaltiesPaid > 0 && (
-              <div className={incomeStyles.card}>
-                <div className={incomeStyles.cardLabel}>
-                  Early W/D Penalties
-                </div>
-                <div className={incomeStyles.cardValue}>
+              <div className={shared.card}>
+                <div className={shared.cardLabel}>Early W/D Penalties</div>
+                <div className={shared.cardValue}>
                   {formatCurrency(summary.totalPenaltiesPaid)}
                 </div>
               </div>
             )}
-            <div className={incomeStyles.card}>
-              <div className={incomeStyles.cardLabel}>Total Net Income</div>
-              <div className={incomeStyles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Total Net Income</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(summary.totalNetIncome)}
               </div>
             </div>
-            <div className={incomeStyles.card}>
-              <div className={incomeStyles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 {summary.ageAccountsDepleted
                   ? "Accounts Depleted at Age"
                   : "Remaining at End"}
               </div>
-              <div className={incomeStyles.cardValue}>
+              <div className={shared.cardValue}>
                 {summary.ageAccountsDepleted
                   ? summary.ageAccountsDepleted
                   : formatCurrency(rows[rows.length - 1]?.totalBalance ?? 0)}
@@ -945,7 +944,7 @@ function RetirementIncome() {
             )}
 
           {/* Chart toggle */}
-          <div className={incomeStyles.chartToggle}>
+          <div className={shared.chartToggle}>
             <ToggleButtonGroup
               type="radio"
               name="chartView"
@@ -971,7 +970,7 @@ function RetirementIncome() {
 
           {/* Income sources bar chart */}
           {chartView === "income" && (
-            <div className={incomeStyles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">Annual Income by Source</h5>
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart
@@ -1075,7 +1074,7 @@ function RetirementIncome() {
                   )}
                 </BarChart>
               </ResponsiveContainer>
-              <p className={incomeStyles.chartNote}>
+              <p className={shared.chartNote}>
                 Right stack (red) shows federal tax and any early withdrawal
                 penalty — separate from income bars.
               </p>
@@ -1084,7 +1083,7 @@ function RetirementIncome() {
 
           {/* Account balances area chart */}
           {chartView === "balances" && (
-            <div className={incomeStyles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">Account Balances Over Time</h5>
               <ResponsiveContainer width="100%" height={380}>
                 <AreaChart

@@ -50,6 +50,7 @@ import type {
 } from "../../src/utils/retirement_tax_tables";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import styles from "../../styles/RothVsTraditional.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -361,7 +362,7 @@ export default function RothVsTraditional() {
         {/* ── FORM ─────────────────────────────────────────────────────────── */}
         <Form className={retirementStyles.form}>
           {/* ── Current Situation ── */}
-          <p className={styles.sectionLabel}>Your Current Situation</p>
+          <p className={shared.sectionLabel}>Your Current Situation</p>
 
           <Form.Label>Filing Status</Form.Label>
           <InputGroup className="mb-3 w-100">
@@ -397,7 +398,7 @@ export default function RothVsTraditional() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Marginal: <strong>{formatPercent(liveMarginalRate)}</strong>
             {" · "}Effective:{" "}
             <strong>{formatPercent(liveEffectiveRate)}</strong>
@@ -427,10 +428,10 @@ export default function RothVsTraditional() {
           />
 
           {/* ── Retirement Assumptions ── */}
-          <p className={styles.sectionLabel}>Retirement Assumptions</p>
+          <p className={shared.sectionLabel}>Retirement Assumptions</p>
 
-          <div className={styles.threeCol}>
-            <div className={styles.col}>
+          <div className={shared.threeCol}>
+            <div className={shared.col}>
               <Form.Label>Current Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -453,7 +454,7 @@ export default function RothVsTraditional() {
                 ))}
               </Form.Select>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Retirement Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -476,7 +477,7 @@ export default function RothVsTraditional() {
                 ))}
               </Form.Select>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Life Expectancy Age</Form.Label>
               <TooltipOnHover
                 text="The age you plan to model income through. Used for the Retirement Burndown chart to show how balances and taxes accumulate over your retirement years."
@@ -526,7 +527,7 @@ export default function RothVsTraditional() {
           />
 
           {/* ── Retirement Income ── */}
-          <p className={styles.sectionLabel}>Retirement Income</p>
+          <p className={shared.sectionLabel}>Retirement Income</p>
 
           <Form.Label>Expected Ordinary Income at Retirement</Form.Label>
           <TooltipOnHover
@@ -549,7 +550,7 @@ export default function RothVsTraditional() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Includes Social Security + wages/pension only — not dividends or
             LTCG
           </p>
@@ -575,7 +576,7 @@ export default function RothVsTraditional() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Effective rate on traditional 401k withdrawals:{" "}
             <strong>{formatPercent(liveWithdrawalRate)}</strong> (
             {formatCurrency(inputs.retirementOtherIncome)} base +{" "}
@@ -587,7 +588,7 @@ export default function RothVsTraditional() {
           </p>
 
           {/* ── Retirement Tax Table ── */}
-          <p className={styles.sectionLabel}>Retirement Tax Table</p>
+          <p className={shared.sectionLabel}>Retirement Tax Table</p>
 
           <Form.Label>Tax Table Preset</Form.Label>
           <InputGroup className="mb-3 w-100">
@@ -607,8 +608,8 @@ export default function RothVsTraditional() {
 
           {/* Bracket editor — always visible; locked for presets */}
           <div className={styles.bracketEditor}>
-            <div className={styles.twoCol} style={{ alignItems: "flex-end" }}>
-              <div className={styles.col}>
+            <div className={shared.twoCol} style={{ alignItems: "flex-end" }}>
+              <div className={shared.col}>
                 <Form.Label>
                   <small>Standard Deduction</small>
                 </Form.Label>
@@ -713,7 +714,7 @@ export default function RothVsTraditional() {
         </Form>
 
         {/* ── RESULTS ──────────────────────────────────────────────────────── */}
-        <div className={styles.results}>
+        <div className={shared.results}>
           <Alert variant={winnerVariant} className="mb-3">
             <strong>{winnerLabel}</strong>
             {result.winner === "roth" && (
@@ -752,48 +753,48 @@ export default function RothVsTraditional() {
           </Alert>
 
           {/* Summary cards — stats row */}
-          <div className={styles.summaryCards}>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Your Marginal Rate Now</div>
-              <div className={styles.cardValue}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Your Marginal Rate Now</div>
+              <div className={shared.cardValue}>
                 {formatPercent(result.currentMarginalRate)}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Effective Rate on 401k W/D</div>
-              <div className={styles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Effective Rate on 401k W/D</div>
+              <div className={shared.cardValue}>
                 {formatPercent(result.estimatedRetirementRate)}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Annual Tax Savings (Trad)</div>
-              <div className={styles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Annual Tax Savings (Trad)</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.annualTaxSavings)}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Account Balance at {inputs.retirementAge}
               </div>
-              <div className={styles.cardValue}>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.grossBalanceAtRetirement)}
               </div>
             </div>
           </div>
 
           {/* Comparison cards — Traditional vs Roth outcome row */}
-          <div className={styles.summaryCards}>
+          <div className={shared.summaryCards}>
             <div
-              className={styles.card}
+              className={shared.card}
               style={{
                 borderColor:
                   result.winner === "traditional" ? TRAD_COLOR : undefined,
                 borderWidth: result.winner === "traditional" ? 2 : 1,
               }}
             >
-              <div className={styles.cardLabel}>Traditional Net</div>
+              <div className={shared.cardLabel}>Traditional Net</div>
               <div
-                className={styles.cardValue}
+                className={shared.cardValue}
                 style={{
                   color:
                     result.winner === "traditional" ? TRAD_COLOR : undefined,
@@ -801,7 +802,7 @@ export default function RothVsTraditional() {
               >
                 {formatCurrency(result.afterTaxTraditional)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Simplified: after-tax withdrawal [Gross × (1−r)] + reinvested
                 savings
                 <br />
@@ -815,31 +816,31 @@ export default function RothVsTraditional() {
               </div>
             </div>
             <div
-              className={styles.card}
+              className={shared.card}
               style={{
                 borderColor: result.winner === "roth" ? ROTH_COLOR : undefined,
                 borderWidth: result.winner === "roth" ? 2 : 1,
               }}
             >
-              <div className={styles.cardLabel}>Roth Net</div>
+              <div className={shared.cardLabel}>Roth Net</div>
               <div
-                className={styles.cardValue}
+                className={shared.cardValue}
                 style={{
                   color: result.winner === "roth" ? ROTH_COLOR : undefined,
                 }}
               >
                 {formatCurrency(result.afterTaxRoth)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Full balance, no tax at withdrawal
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 {result.winner === "roth" ? "Roth" : "Traditional"} Advantage
               </div>
               <div
-                className={styles.cardValue}
+                className={shared.cardValue}
                 style={{
                   color:
                     result.winner === "roth"
@@ -855,7 +856,7 @@ export default function RothVsTraditional() {
           </div>
 
           {/* Chart toggle */}
-          <div className={styles.chartToggle}>
+          <div className={shared.chartToggle}>
             <ToggleButtonGroup
               type="radio"
               name="chartView"
@@ -888,7 +889,7 @@ export default function RothVsTraditional() {
 
           {/* Break-even chart */}
           {chartView === "breakeven" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">
                 After-Tax Value vs Effective Retirement Tax Rate
               </h5>
@@ -946,7 +947,7 @@ export default function RothVsTraditional() {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 Lines cross at{" "}
                 <strong>{formatPercent(result.breakEvenRate)}</strong> (your
                 current marginal rate). Left = Traditional wins; right = Roth
@@ -959,7 +960,7 @@ export default function RothVsTraditional() {
           {/* Account growth charts */}
           {chartView === "growth" && (
             <>
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <h5 className="text-center mb-3">
                   Gross Account Balance Over Time
                 </h5>
@@ -1002,7 +1003,7 @@ export default function RothVsTraditional() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-                <p className={styles.chartNote}>
+                <p className={shared.chartNote}>
                   Both accounts accumulate the same 401k balance (green).
                   Traditional also generates reinvested tax savings (orange) —
                   the key source of its advantage when your retirement rate is
@@ -1010,7 +1011,7 @@ export default function RothVsTraditional() {
                 </p>
               </div>
 
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <h5 className="text-center mb-3">After-Tax Value Over Time</h5>
                 <ResponsiveContainer width="100%" height={380}>
                   <LineChart
@@ -1067,7 +1068,7 @@ export default function RothVsTraditional() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <p className={styles.chartNote}>
+                <p className={shared.chartNote}>
                   Estimated liquidation value at each age after income tax and
                   any early withdrawal penalties. Before age 59.5: Traditional
                   401k taxed at your estimated retirement rate (
@@ -1081,13 +1082,13 @@ export default function RothVsTraditional() {
 
           {/* Retirement burndown chart */}
           {chartView === "burndown" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">
                 Post-Retirement: Income & Balance (Age {inputs.retirementAge}–
                 {inputs.lifeExpectancyAge})
               </h5>
 
-              <div className={styles.equalNetToggle}>
+              <div className={shared.equalNetToggle}>
                 <Form.Check
                   type="switch"
                   id="equal-net-toggle"
@@ -1103,13 +1104,13 @@ export default function RothVsTraditional() {
 
               {/* Annual income summary cards */}
               <div
-                className={styles.summaryCards}
+                className={shared.summaryCards}
                 style={{ marginBottom: "1rem" }}
               >
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>Roth 401k Take-Home</div>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>Roth 401k Take-Home</div>
                   <div
-                    className={styles.cardValue}
+                    className={shared.cardValue}
                     style={{ color: ROTH_COLOR }}
                   >
                     {formatCurrency(
@@ -1118,53 +1119,53 @@ export default function RothVsTraditional() {
                         : result.annualRothNetIncome,
                     )}
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     {equalNetMode
                       ? "Matched to Traditional net take-home"
                       : "Full withdrawal, no taxes"}
                   </div>
                 </div>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>Trad 401k Take-Home</div>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>Trad 401k Take-Home</div>
                   <div
-                    className={styles.cardValue}
+                    className={shared.cardValue}
                     style={{ color: TRAD_COLOR }}
                   >
                     {formatCurrency(result.annualTradNetIncome)}
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     After federal taxes on withdrawal
                   </div>
                 </div>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>Trad Annual Taxes</div>
-                  <div className={styles.cardValue}>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>Trad Annual Taxes</div>
+                  <div className={shared.cardValue}>
                     {formatCurrency(result.annualTaxesPaidEachYear)}
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     {formatPercent(result.estimatedRetirementRate)} effective
                     rate on 401k
                   </div>
                 </div>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>
                     Total Trad Taxes (
                     {inputs.lifeExpectancyAge - inputs.retirementAge} yrs)
                   </div>
-                  <div className={styles.cardValue}>
+                  <div className={shared.cardValue}>
                     {formatCurrency(
                       result.annualTaxesPaidEachYear *
                         (inputs.lifeExpectancyAge - inputs.retirementAge),
                     )}
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     Cumulative tax drag vs Roth
                   </div>
                 </div>
               </div>
 
               {/* Chart 1: Account balance over retirement */}
-              <p className={styles.chartSubtitle}>Account Balance</p>
+              <p className={shared.chartSubtitle}>Account Balance</p>
               <ResponsiveContainer width="100%" height={280}>
                 <LineChart
                   data={burndownChartData}
@@ -1206,7 +1207,7 @@ export default function RothVsTraditional() {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 Orange = Traditional total (401k + reinvested savings), blue =
                 Roth.{" "}
                 {equalNetMode
@@ -1216,7 +1217,7 @@ export default function RothVsTraditional() {
 
               {/* Chart 2: Annual income per year */}
               <p
-                className={styles.chartSubtitle}
+                className={shared.chartSubtitle}
                 style={{ marginTop: "1.5rem" }}
               >
                 Annual Income
@@ -1270,7 +1271,7 @@ export default function RothVsTraditional() {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 Green = ordinary income (SS + wages, same for both). Orange =
                 Traditional net 401k take-home (ordinary income tax). Gold =
                 Traditional reinvested savings net (0–20% LTCG, kicks in once

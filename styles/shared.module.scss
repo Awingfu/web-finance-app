@@ -1,0 +1,134 @@
+// ── Shared result-panel classes ───────────────────────────────────────────────
+// Used by all calculator pages that show a results panel alongside a form.
+// Import as: import shared from '../styles/shared.module.scss'
+
+@use "breakpoints" as *;
+
+// ── Results panel ─────────────────────────────────────────────────────────────
+
+.results {
+  display: flex;
+  flex-direction: column;
+  margin-top: 4rem;
+
+  @media screen and (min-width: $medium) {
+    width: 55%;
+    margin: 0 2% 2% 2%;
+  }
+
+  @media screen and (min-width: $small) and (max-width: $medium) {
+    margin-left: 100px;
+    margin-right: 100px;
+  }
+
+  @media screen and (max-width: $small) {
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+}
+
+// ── Summary cards ─────────────────────────────────────────────────────────────
+
+.summaryCards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.card {
+  flex: 1 1 140px;
+  background: var(--bs-secondary-bg);
+  border: 1px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  min-width: 130px;
+}
+
+.cardLabel {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.cardValue {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.cardSub {
+  font-size: 0.72rem;
+  opacity: 0.55;
+  margin-top: 4px;
+}
+
+// ── Charts ────────────────────────────────────────────────────────────────────
+
+.chartToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+}
+
+.chartWrap {
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.chartNote {
+  font-size: 0.78rem;
+  opacity: 0.65;
+  text-align: center;
+  margin-top: 0.25rem;
+}
+
+.chartSubtitle {
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 4px;
+  text-align: center;
+}
+
+// ── Section label & hints ─────────────────────────────────────────────────────
+
+.sectionLabel {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.6;
+  margin-bottom: 8px;
+}
+
+.rateHint {
+  font-size: 0.8rem;
+  opacity: 0.65;
+  margin-bottom: 1rem;
+}
+
+// ── Multi-column input rows ───────────────────────────────────────────────────
+
+.twoCol,
+.threeCol {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+
+.col {
+  flex: 1;
+  min-width: 0;
+}
+
+// ── Misc toggles ─────────────────────────────────────────────────────────────
+
+.equalNetToggle {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+  font-size: 0.85rem;
+}
