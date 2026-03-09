@@ -4,22 +4,31 @@
 
 This is a NextJS/React app that contains tools to help with personal finance decisions:
 
-### Current Tools
+### Learn
 
-1. **Paycheck Calculator** (`/paycheck`) — Estimate take-home pay after federal, state, and local taxes and deductions
-2. **Why Invest?** (`/why-invest`) — Visualize the power of compounding and the cost of delaying investment
-3. **Why Retirement Account** (`/learn/why-retirement-account`) — Compare Roth, Traditional 401k, and taxable brokerage accounts side-by-side with gross and after-tax value charts (including early withdrawal penalties before age 59.5)
-4. **401k Optimizer** (`/retirement/savings-optimizer`) — Choose a contribution strategy (frontload, equal, backload) to max out your 401k
-5. **Retirement Income Planner** (`/retirement/income`) — Model year-by-year withdrawals across accounts (401k, Roth, brokerage, cash, Social Security) with taxes, RMDs, and three withdrawal strategies
-6. **Roth vs Traditional** (`/retirement/roth-vs-traditional`) — Compare after-tax retirement wealth between Roth and Traditional 401k contributions at different tax scenarios
-7. **Roth Conversion Ladder** (`/retirement/roth-conversion-ladder`) — Simulate year-by-year Roth conversions with 5-year seasoning tracking, tax cost estimates, and bracket-fill or fixed-amount strategies
+1. **Why Invest?** (`/learn/why-invest`) — Visualize the power of compounding and the cost of delaying investment
+2. **Why Retirement Account?** (`/learn/why-retirement-account`) — Compare Roth, Traditional 401k, and taxable brokerage accounts side-by-side with gross and after-tax value charts (including early withdrawal penalties before age 59.5)
+3. **3-Fund Portfolio** (`/learn/three-fund-portfolio`) — Build a simple, diversified portfolio with US stocks, international stocks, and bonds; includes interactive allocation sliders, growth/risk/compare charts
+4. **How Federal Income Tax Works** (`/learn/tax-rates`) — See how progressive tax brackets work, visualize the bracket breakdown for your income, and understand the difference between marginal and effective rates
+
+### Calculators
+
+5. **Paycheck Calculator** (`/paycheck`) — Estimate take-home pay after federal, state, and local taxes and deductions
+6. **FIRE Calculator** (`/retirement/fire`) — Find your Financial Independence number and compare CoastFIRE, BaristaFIRE, and FatFIRE milestones
+
+### Retirement Planning
+
+7. **401k Optimizer** (`/retirement/savings-optimizer`) — Choose a contribution strategy (frontload, equal, backload) to max out your 401k
+8. **Retirement Income Planner** (`/retirement/income`) — Model year-by-year withdrawals across accounts (401k, Roth, brokerage, cash, Social Security) with taxes, RMDs, and three withdrawal strategies
+9. **Roth vs Traditional** (`/retirement/roth-vs-traditional`) — Compare after-tax retirement wealth between Roth and Traditional 401k contributions at different tax scenarios
+10. **Roth Conversion Ladder** (`/retirement/roth-conversion-ladder`) — Simulate year-by-year Roth conversions with 5-year seasoning tracking, tax cost estimates, and bracket-fill or fixed-amount strategies
 
 ### Planned Tools
 
-1. **Social Security Estimator** (High Prio) — Estimate Social Security benefits based on earnings and retirement age. Keep it simple and assume static income
-2. **Budgeting** — Track income and expenses with category breakdowns. Maybe just given an income, calculate taxes then what budget should look like and export it
-3. **Debt Payoff Planner** — Compare avalanche vs snowball strategies for paying down debt
-4. **Savings Goal Tracker** — Calculate how long it takes to reach a savings goal given a monthly contribution. Probably a simple FV calculator
+1. **Rent vs Buy** — Compare total cost of renting vs buying with break-even year chart and opportunity cost on down payment
+2. **Social Security: When to Claim** — Break-even age chart and lifetime benefit by claim age (62 / FRA / 70)
+3. **HSA Triple Tax Advantage** — Model the HSA invest-and-reimburse-later strategy vs spending immediately vs taxable brokerage
+4. **Debt Payoff Planner** — Compare avalanche vs snowball strategies with total interest paid and payoff timeline
 
 ## Technology
 
@@ -37,6 +46,7 @@ Upon merge to `main` branch, GitHub Actions will autodeploy this site to <https:
 
 ```
 /pages                  — Route-level page components
+  /learn/               — Learn section pages
   /retirement/          — Retirement tool pages
 /src
   /components           — Shared UI: Header, Footer, NavigationBar, TooltipOnHover
@@ -239,84 +249,3 @@ Setting up prettier and pre-commit hooks [Guide](https://gist.github.com/primary
 - [Next.js Documentation](https://nextjs.org/docs) — learn about Next.js features and API
 - [Learn Next.js](https://nextjs.org/learn) — an interactive Next.js tutorial
 
-## Claude Generated TODOs
-
-Here's my thinking organized by category, with notes on what makes each one a good fit for this
-app's format (inputs → chart/table insight):
-
----
-
-High Impact, Fits the Pattern Well
-
-Rent vs. Buy
-The single most consequential financial decision most people make. Inputs: home price, down
-payment, rent, mortgage rate, appreciation rate, years in home. Output: break-even year chart,
-total cost comparison. People routinely get this wrong because they ignore opportunity cost on
-the down payment and maintenance costs.
-
-Debt Payoff: Avalanche vs. Snowball
-Inputs: list of debts (balance, rate, min payment), extra monthly payment. Outputs: months to
-payoff, total interest paid, side-by-side comparison of the two strategies. Clear table +
-"interest saved" chart.
-
-HSA Triple Tax Advantage
-Very natural companion to the retirement account page — same format. Inputs: contribution
-amount, years, investment growth rate, medical expense assumptions. Compares HSA (invest and
-reimburse later) vs. spending immediately vs. taxable brokerage. The "triple tax free" story is
-widely misunderstood.
-
----
-
-Educational / Literacy Gaps
-
-Marginal vs. Effective Tax Rate
-Extremely common misconception ("if I get a raise I'll take home less"). Inputs: income, filing
-status. Output: a stacked bar showing each dollar taxed at each bracket rate, effective rate vs.
-marginal rate. Would fit in the Learn section.
-
-Dollar Cost Averaging vs. Lump Sum
-Inputs: amount to invest, time horizon, return rate, volatility. Output: probability
-distribution of outcomes, median final values. There's solid research (Vanguard: lump sum wins
-~2/3 of the time) that surprises most people.
-
-Social Security: When to Claim
-Inputs: benefit at 62/FRA/70, health/life expectancy estimate, other income. Output: break-even
-age chart, total lifetime benefit by claim age. The optimal strategy shifts dramatically with
-life expectancy.
-
----
-
-Useful Planning Tools
-
-Mortgage: Extra Payments Calculator
-Inputs: loan amount, rate, term, extra monthly payment. Output: amortization table, years saved,
-interest saved chart. Simple but the interest-saved number is always shocking to people.
-
-Emergency Fund Runway
-Inputs: monthly expenses, current savings, income stability. Output: months of runway,
-recommended target, how long to build it at different savings rates. Simple but foundational —
-good "start here" tool.
-
-College Savings (529)
-Inputs: child's age, target college cost, current savings, contribution. Output: projected
-balance vs. estimated cost, funding gap. Different life stage from the retirement tools but high
-anxiety topic.
-
----
-
-Which I'd Build First
-
-Given what's already in the app, the natural next three are:
-
-1. Rent vs. Buy — highest real-world decision value, fits the chart format perfectly
-2. Marginal vs. Effective Tax Rate — fits in Learn alongside the other two, closes a huge
-   literacy gap without being a "planning" tool (lighter lift to build)
-
-HSA would also be a very easy build since it mirrors the retirement account page almost exactly.
-
-TODO:
-
-- basic predict net worth calculator (FV) or when can i retire
-- refactor everything
-- clean up cards on home page or organize
-- three fund portfolio? explanation and modeling
