@@ -552,14 +552,9 @@ export default function ThreeFundPortfolio() {
           {/* ── Chart 2: Risk vs Return Scatter ──────────────────────── */}
           {chartView === "risk-return" && (
             <div className={shared.chartWrap}>
-              <p className={shared.chartNote}>
-                Each point is a portfolio allocation. Higher and left = better
-                Sharpe ratio (more return per unit of risk). The gray cloud
-                shows the full range of possible 3-asset allocations.
-              </p>
-              <ResponsiveContainer width="100%" height={380}>
+              <ResponsiveContainer width="100%" height={400}>
                 <ScatterChart
-                  margin={{ top: 20, right: 30, left: 10, bottom: 40 }}
+                  margin={{ top: 50, right: 30, left: 10, bottom: 40 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                   <XAxis
@@ -579,12 +574,13 @@ export default function ThreeFundPortfolio() {
                     domain={[3.5, 11]}
                     tickFormatter={(v) => `${v}%`}
                     label={{
-                      value: "Expected Return",
+                      value: "Expected Return (%)",
                       angle: -90,
                       position: "insideLeft",
-                      offset: 15,
+                      style: { textAnchor: "middle" },
+                      dx: -5,
                     }}
-                    width={55}
+                    width={65}
                   />
                   <ZAxis range={[30, 30]} />
                   <Tooltip
@@ -652,10 +648,10 @@ export default function ThreeFundPortfolio() {
                 </ScatterChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
-                <strong>Sharpe ratio</strong> = (return − risk-free rate) ÷
-                volatility. A higher Sharpe means more return earned per unit of
-                risk taken. Your portfolio&apos;s Sharpe:{" "}
-                <strong>{stats.sharpe.toFixed(2)}</strong>.
+                Higher and further left = better Sharpe ratio (more return per
+                unit of risk). Gray cloud = all possible 3-asset allocations.{" "}
+                <strong>Sharpe</strong> = (return − 4% risk-free) ÷ volatility ·
+                Your portfolio: <strong>{stats.sharpe.toFixed(2)}</strong>.
               </p>
             </div>
           )}
@@ -702,20 +698,13 @@ export default function ThreeFundPortfolio() {
                 {compareMetric === "sharpe" &&
                   "Return earned per unit of risk (Sharpe ratio). Higher is better — it means more efficient use of risk."}
               </p>
-              <ResponsiveContainer width="100%" height={340}>
+              <ResponsiveContainer width="100%" height={300}>
                 <BarChart
                   data={compareData}
-                  margin={{ top: 8, right: 20, left: 10, bottom: 60 }}
+                  margin={{ top: 8, right: 20, left: 10, bottom: 8 }}
                 >
                   <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
-                  <XAxis
-                    dataKey="name"
-                    tick={{ fontSize: 11 }}
-                    interval={0}
-                    angle={-35}
-                    textAnchor="end"
-                    height={60}
-                  />
+                  <XAxis dataKey="name" tick={false} axisLine={false} />
                   <YAxis
                     tickFormatter={(v) =>
                       compareMetric === "sharpe"
@@ -743,6 +732,17 @@ export default function ThreeFundPortfolio() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
+              <div className={styles.compareLegend}>
+                {compareData.map((entry) => (
+                  <div key={entry.name} className={styles.legendItem}>
+                    <span
+                      className={styles.legendSwatch}
+                      style={{ background: entry.color }}
+                    />
+                    <span>{entry.name}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>

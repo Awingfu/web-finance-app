@@ -104,6 +104,33 @@
   margin-bottom: 0.75rem;
 }
 
+// ─── Compare bar chart legend ─────────────────────────────────────────────────
+
+.compareLegend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 1.25rem;
+  margin-top: 0.75rem;
+  padding: 0 0.5rem;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--bs-body-color);
+}
+
+.legendSwatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
 // ─── Educational section ─────────────────────────────────────────────────────
 
 .learnSection {
