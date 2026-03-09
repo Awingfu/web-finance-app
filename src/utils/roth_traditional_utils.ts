@@ -22,6 +22,7 @@ export type { RetirementTaxTable } from "./retirement_tax_tables";
 
 import {
   calcTaxFromTable,
+  calcLtcgTax,
   getMarginalRateFromTable,
   getEffectiveIncrementalRate,
   getPresetTable,
@@ -30,42 +31,6 @@ import {
 } from "./retirement_tax_tables";
 
 export const ROTH_TRAD_LAST_UPDATED = 2026;
-
-// ─── LTCG brackets (2026) ────────────────────────────────────────────────────
-// Applied to total taxable income: ordinary taxable income + LTCG gains stacked on top.
-// Thresholds: [min, max, rate]
-
-const LTCG_BRACKETS_SINGLE: [number, number, number][] = [
-  [0, 48350, 0.0],
-  [48350, 533400, 0.15],
-  [533400, Infinity, 0.2],
-];
-const LTCG_BRACKETS_MFJ: [number, number, number][] = [
-  [0, 96700, 0.0],
-  [96700, 600050, 0.15],
-  [600050, Infinity, 0.2],
-];
-
-/** Compute LTCG tax on `gains` stacked on top of `taxableOrdinary` income. */
-function calcLtcgTax(
-  gains: number,
-  taxableOrdinary: number,
-  filing: FilingStatus,
-): number {
-  if (gains <= 0) return 0;
-  const brackets = filing === "mfj" ? LTCG_BRACKETS_MFJ : LTCG_BRACKETS_SINGLE;
-  let tax = 0;
-  let remaining = gains;
-  for (const [min, max, rate] of brackets) {
-    if (taxableOrdinary >= max) continue;
-    const room = max - Math.max(min, taxableOrdinary);
-    const inBracket = Math.min(remaining, room);
-    tax += inBracket * rate;
-    remaining -= inBracket;
-    if (remaining <= 0) break;
-  }
-  return tax;
-}
 
 /**
  * Binary-search for the gross savings withdrawal that yields `targetNet`

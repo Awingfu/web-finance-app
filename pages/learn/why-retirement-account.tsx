@@ -29,6 +29,7 @@ import { calcWhyRetirementAccount } from "../../src/utils/why_retirement_account
 import type { WhyRetirementInputs } from "../../src/utils/why_retirement_account_utils";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import styles from "../../styles/WhyRetirementAccount.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -211,10 +212,10 @@ export default function WhyRetirementAccount() {
         {/* ── FORM ─────────────────────────────────────────────────────────── */}
         <Form className={retirementStyles.form}>
           {/* ── Your Situation ── */}
-          <p className={styles.sectionLabel}>Your Situation</p>
+          <p className={shared.sectionLabel}>Your Situation</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Current Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -234,7 +235,7 @@ export default function WhyRetirementAccount() {
                 ))}
               </Form.Select>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Retirement Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -256,7 +257,7 @@ export default function WhyRetirementAccount() {
           </div>
 
           {/* ── Contributions ── */}
-          <p className={styles.sectionLabel}>Contributions</p>
+          <p className={shared.sectionLabel}>Contributions</p>
 
           <Form.Label>Annual After-Tax Contribution</Form.Label>
           <TooltipOnHover
@@ -279,7 +280,7 @@ export default function WhyRetirementAccount() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Traditional pre-tax contribution:{" "}
             <strong>{formatCurrency(result.tradPreTaxContrib)}</strong> (
             {formatCurrency(inputs.annualAfterTaxContrib)} /{" "}
@@ -287,10 +288,10 @@ export default function WhyRetirementAccount() {
           </p>
 
           {/* ── Tax Rates ── */}
-          <p className={styles.sectionLabel}>Tax Rates</p>
+          <p className={shared.sectionLabel}>Tax Rates</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Current Marginal Rate</Form.Label>
               <TooltipOnHover
                 text="Your current federal marginal income tax rate. Used to gross up the Traditional contribution — contributing pre-tax means your actual deposit is larger for the same take-home cost."
@@ -313,11 +314,11 @@ export default function WhyRetirementAccount() {
                   </Form.Select>
                 }
               />
-              <p className={styles.rateHint}>
+              <p className={shared.rateHint}>
                 {bracketSubtitle(ORDINARY_BRACKETS, inputs.currentMarginalRate)}
               </p>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Expected Retirement Tax Rate</Form.Label>
               <TooltipOnHover
                 text="The ordinary income tax rate you expect to pay on Traditional withdrawals in retirement. If this equals your current rate, Roth and Traditional end up equal after tax."
@@ -362,15 +363,15 @@ export default function WhyRetirementAccount() {
               </Form.Select>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             {bracketSubtitle(LTCG_BRACKETS, inputs.ltcgRate)}
           </p>
 
           {/* ── Return Assumptions ── */}
-          <p className={styles.sectionLabel}>Return Assumptions</p>
+          <p className={shared.sectionLabel}>Return Assumptions</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Total Annual Return</Form.Label>
               <TooltipOnHover
                 text="Expected average annual return for a diversified portfolio. The S&P 500 has returned ~10% annually over the long run."
@@ -394,7 +395,7 @@ export default function WhyRetirementAccount() {
                 }
               />
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Dividend Yield</Form.Label>
               <TooltipOnHover
                 text="Portion of total return paid as dividends, taxed annually in the brokerage account. Lower yield = less annual tax drag. Broad market index funds yield ~1.5%."
@@ -422,7 +423,7 @@ export default function WhyRetirementAccount() {
         </Form>
 
         {/* ── RESULTS ──────────────────────────────────────────────────────── */}
-        <div className={styles.results}>
+        <div className={shared.results}>
           {/* Key insight alert */}
           <Alert variant="success" className="mb-3">
             <strong>
@@ -439,50 +440,50 @@ export default function WhyRetirementAccount() {
           </Alert>
 
           {/* Summary cards */}
-          <div className={styles.summaryCards}>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Roth After-Tax at {inputs.retirementAge}
               </div>
-              <div className={styles.cardValue} style={{ color: ROTH_COLOR }}>
+              <div className={shared.cardValue} style={{ color: ROTH_COLOR }}>
                 {formatCurrency(result.finalRoth)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Tax-free · {years} yrs of{" "}
                 {formatCurrency(inputs.annualAfterTaxContrib)}/yr
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Traditional After-Tax at {inputs.retirementAge}
               </div>
-              <div className={styles.cardValue} style={{ color: TRAD_COLOR }}>
+              <div className={shared.cardValue} style={{ color: TRAD_COLOR }}>
                 {formatCurrency(result.finalTradAfterTax)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 After {formatPercent(inputs.retirementOrdinaryRate)} withdrawal
                 tax
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Taxable Brokerage After-Tax at {inputs.retirementAge}
               </div>
-              <div className={styles.cardValue}>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.finalTaxableAfterTax)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 After dividend drag + {formatPercent(inputs.ltcgRate)} LTCG
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Roth Tax Savings vs Brokerage
               </div>
-              <div className={styles.cardValue} style={{ color: "#e67e22" }}>
+              <div className={shared.cardValue} style={{ color: "#e67e22" }}>
                 {formatCurrency(result.rothVsTaxableAdvantage)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Traditional saves{" "}
                 {formatCurrency(result.tradVsTaxableAdvantage)}
               </div>
@@ -498,7 +499,7 @@ export default function WhyRetirementAccount() {
           </div>
 
           {/* Chart toggle */}
-          <div className={styles.chartToggle}>
+          <div className={shared.chartToggle}>
             <ToggleButtonGroup
               type="radio"
               name="chartView"
@@ -525,7 +526,7 @@ export default function WhyRetirementAccount() {
           {/* Chart 1 — Growth Over Time */}
           {chartView === "growth" && (
             <>
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <h5 className="text-center mb-3">
                   Gross Account Balance Over Time
                 </h5>
@@ -578,14 +579,14 @@ export default function WhyRetirementAccount() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <p className={styles.chartNote}>
+                <p className={shared.chartNote}>
                   Gross balances as shown on your account statement — before
                   taxes are applied. Roth&apos;s balance is already your
                   after-tax value (nothing owed). Traditional and Taxable have
                   taxes still outstanding at withdrawal.
                 </p>
               </div>
-              <div className={styles.chartWrap}>
+              <div className={shared.chartWrap}>
                 <h5 className="text-center mb-3">After-Tax Value Over Time</h5>
                 <ResponsiveContainer width="100%" height={380}>
                   <LineChart
@@ -647,7 +648,7 @@ export default function WhyRetirementAccount() {
                     />
                   </LineChart>
                 </ResponsiveContainer>
-                <p className={styles.chartNote}>
+                <p className={shared.chartNote}>
                   All values are after-tax — what you&apos;d actually keep if
                   you cashed out at that age. Before age 59.5, a 10% early
                   withdrawal penalty applies: Traditional on the full balance,
@@ -664,7 +665,7 @@ export default function WhyRetirementAccount() {
 
           {/* Chart 2 — Tax Impact at Retirement */}
           {chartView === "tax-impact" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">What You Keep at Retirement</h5>
               <ResponsiveContainer width="100%" height={380}>
                 <BarChart
@@ -707,7 +708,7 @@ export default function WhyRetirementAccount() {
                   />
                 </BarChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 The red &ldquo;Taxes Paid&rdquo; segment shows how much goes to
                 taxes instead of your pocket. Roth pays no taxes at all on
                 growth.

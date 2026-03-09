@@ -48,6 +48,7 @@ import type {
 } from "../../src/utils/retirement_tax_tables";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import styles from "../../styles/RothConversionLadder.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -380,10 +381,10 @@ export default function RothConversionLadder() {
           </InputGroup>
 
           {/* ── Ages ── */}
-          <p className={styles.sectionLabel}>Ages</p>
+          <p className={shared.sectionLabel}>Ages</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Current Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -403,7 +404,7 @@ export default function RothConversionLadder() {
                 ))}
               </Form.Select>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Last Conversion Age</Form.Label>
               <TooltipOnHover
                 text="The last age at which you want to make Roth conversions. Conversions stop after this age. Often set to 59 to avoid overlap with penalty-free withdrawals."
@@ -430,7 +431,7 @@ export default function RothConversionLadder() {
           </div>
 
           {/* ── Account Balances ── */}
-          <p className={styles.sectionLabel}>Account Balances</p>
+          <p className={shared.sectionLabel}>Account Balances</p>
 
           <Form.Label>Traditional IRA / 401k Balance</Form.Label>
           <TooltipOnHover
@@ -475,7 +476,7 @@ export default function RothConversionLadder() {
           />
 
           {/* ── Other Income ── */}
-          <p className={styles.sectionLabel}>Other Income During Conversions</p>
+          <p className={shared.sectionLabel}>Other Income During Conversions</p>
 
           <Form.Label>Annual Ordinary Income (non-conversion)</Form.Label>
           <TooltipOnHover
@@ -498,13 +499,13 @@ export default function RothConversionLadder() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Marginal rate at this income level:{" "}
             <strong>{formatPercent(liveBaseRate)}</strong>
           </p>
 
           {/* ── Conversion Strategy ── */}
-          <p className={styles.sectionLabel}>Conversion Strategy</p>
+          <p className={shared.sectionLabel}>Conversion Strategy</p>
 
           <div className={styles.conversionModeToggle}>
             <ToggleButtonGroup
@@ -591,14 +592,14 @@ export default function RothConversionLadder() {
                 </Alert>
               )}
               {!warnZeroFill && (
-                <p className={styles.rateHint}>
+                <p className={shared.rateHint}>
                   Fill amount: <strong>{formatCurrency(liveFillAmount)}</strong>
                   /yr
                 </p>
               )}
             </>
           )}
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Effective tax rate on conversion:{" "}
             <strong>{formatPercent(liveConversionRate)}</strong>
             {liveConversionAmount > 0 && (
@@ -613,7 +614,7 @@ export default function RothConversionLadder() {
           </p>
 
           {/* ── Growth ── */}
-          <p className={styles.sectionLabel}>Growth</p>
+          <p className={shared.sectionLabel}>Growth</p>
 
           <Form.Label>Annual Growth Rate</Form.Label>
           <TooltipOnHover
@@ -639,7 +640,7 @@ export default function RothConversionLadder() {
           />
 
           {/* ── Tax Table ── */}
-          <p className={styles.sectionLabel}>Tax Table (Conversion Years)</p>
+          <p className={shared.sectionLabel}>Tax Table (Conversion Years)</p>
 
           <Form.Label>Tax Table Preset</Form.Label>
           <InputGroup className="mb-3 w-100">
@@ -659,8 +660,8 @@ export default function RothConversionLadder() {
 
           {/* Bracket editor — always visible; locked for presets */}
           <div className={styles.bracketEditor}>
-            <div className={styles.twoCol} style={{ alignItems: "flex-end" }}>
-              <div className={styles.col}>
+            <div className={shared.twoCol} style={{ alignItems: "flex-end" }}>
+              <div className={shared.col}>
                 <Form.Label>
                   <small>Standard Deduction</small>
                 </Form.Label>
@@ -755,30 +756,30 @@ export default function RothConversionLadder() {
         </Form>
 
         {/* ── RESULTS ──────────────────────────────────────────────────────── */}
-        <div className={styles.results}>
+        <div className={shared.results}>
           {/* Summary cards — row 1: conversion activity */}
-          <div className={styles.summaryCards}>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>First Withdrawal Age</div>
-              <div className={styles.cardValue}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>First Withdrawal Age</div>
+              <div className={shared.cardValue}>
                 {result.firstWithdrawalAge}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 5 years after first conversion
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Total Converted</div>
-              <div className={styles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Total Converted</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.totalConverted)}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Total Tax Paid</div>
-              <div className={styles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Total Tax Paid</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.totalTaxPaid)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Avg {formatPercent(result.averageEffectiveTaxRate)} effective
                 rate
               </div>
@@ -786,35 +787,35 @@ export default function RothConversionLadder() {
           </div>
 
           {/* Summary cards — row 2: balances at conversion end */}
-          <div className={styles.summaryCards}>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Trad Balance at {inputs.conversionEndAge}
               </div>
-              <div className={styles.cardValue}>
+              <div className={shared.cardValue}>
                 {formatCurrency(tradBalAtConversionEnd)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Remaining after last conversion
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Roth Balance at {inputs.conversionEndAge}
               </div>
-              <div className={styles.cardValue}>
+              <div className={shared.cardValue}>
                 {formatCurrency(rothBalAtConversionEnd)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Includes conversions + growth
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Seasoned Basis</div>
-              <div className={styles.cardValue}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Seasoned Basis</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(result.finalTotalSeasonedBasis)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 Penalty-free withdrawal basis
               </div>
             </div>
@@ -851,8 +852,8 @@ export default function RothConversionLadder() {
           {/* Chart 1: Ladder Rungs */}
           {ladderChartData.length > 0 && (
             <>
-              <p className={styles.chartSubtitle}>Conversion Rungs</p>
-              <div className={styles.chartWrap}>
+              <p className={shared.chartSubtitle}>Conversion Rungs</p>
+              <div className={shared.chartWrap}>
                 <ResponsiveContainer width="100%" height={260}>
                   <BarChart
                     data={ladderChartData}
@@ -915,7 +916,7 @@ export default function RothConversionLadder() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
-                <p className={styles.chartNote}>
+                <p className={shared.chartNote}>
                   Each bar = one conversion rung · Hover for tax and
                   available-from age · Dashed line = first penalty-free access
                 </p>
@@ -932,8 +933,8 @@ export default function RothConversionLadder() {
           )}
 
           {/* Chart 2: Balance Trajectory */}
-          <p className={styles.chartSubtitle}>Balance Trajectory</p>
-          <div className={styles.chartWrap}>
+          <p className={shared.chartSubtitle}>Balance Trajectory</p>
+          <div className={shared.chartWrap}>
             <ResponsiveContainer width="100%" height={280}>
               <AreaChart
                 data={balanceChartData}
@@ -997,7 +998,7 @@ export default function RothConversionLadder() {
                 />
               </AreaChart>
             </ResponsiveContainer>
-            <p className={styles.chartNote}>
+            <p className={shared.chartNote}>
               Blue = Roth total · Green = penalty-free conversion basis · Orange
               = Traditional total · Note: RMDs are not modeled here
             </p>

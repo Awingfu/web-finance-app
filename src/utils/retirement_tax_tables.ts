@@ -29,7 +29,7 @@ export type PresetId = "federal_2026" | "federal_2026_plus10";
 
 // ─── 2026 Bracket Data ────────────────────────────────────────────────────────
 
-const BRACKETS_SINGLE_2026: TaxBracket[] = [
+export const BRACKETS_SINGLE_2026: TaxBracket[] = [
   { min: 0, max: 11925, rate: 0.1 },
   { min: 11925, max: 48475, rate: 0.12 },
   { min: 48475, max: 103350, rate: 0.22 },
@@ -39,7 +39,7 @@ const BRACKETS_SINGLE_2026: TaxBracket[] = [
   { min: 626350, max: Infinity, rate: 0.37 },
 ];
 
-const BRACKETS_MFJ_2026: TaxBracket[] = [
+export const BRACKETS_MFJ_2026: TaxBracket[] = [
   { min: 0, max: 23850, rate: 0.1 },
   { min: 23850, max: 96950, rate: 0.12 },
   { min: 96950, max: 206700, rate: 0.22 },
@@ -119,6 +119,46 @@ export function getMarginalRateFromTable(
     if (taxable >= min && taxable < max) return rate;
   }
   return table.brackets[table.brackets.length - 1]?.rate ?? 0;
+}
+
+// ─── LTCG brackets (2026) ────────────────────────────────────────────────────
+// Thresholds are against taxable income; LTCG stacks on top of ordinary income.
+
+export const LTCG_BRACKETS_SINGLE_2026: [number, number, number][] = [
+  [0, 48350, 0.0],
+  [48350, 533400, 0.15],
+  [533400, Infinity, 0.2],
+];
+
+export const LTCG_BRACKETS_MFJ_2026: [number, number, number][] = [
+  [0, 96700, 0.0],
+  [96700, 600050, 0.15],
+  [600050, Infinity, 0.2],
+];
+
+/**
+ * LTCG tax on `gains` stacked on top of `taxableOrdinary` (post-deduction)
+ * ordinary income. Both parameters are taxable-income values (post standard deduction).
+ */
+export function calcLtcgTax(
+  gains: number,
+  taxableOrdinary: number,
+  filing: FilingStatus,
+): number {
+  if (gains <= 0) return 0;
+  const brackets =
+    filing === "mfj" ? LTCG_BRACKETS_MFJ_2026 : LTCG_BRACKETS_SINGLE_2026;
+  let tax = 0;
+  let remaining = gains;
+  for (const [min, max, rate] of brackets) {
+    if (taxableOrdinary >= max) continue;
+    const room = max - Math.max(min, taxableOrdinary);
+    const inBracket = Math.min(remaining, room);
+    tax += inBracket * rate;
+    remaining -= inBracket;
+    if (remaining <= 0) break;
+  }
+  return tax;
 }
 
 /**

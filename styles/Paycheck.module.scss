@@ -1,6 +1,4 @@
-$extraSmall: 480px;
-$small: 720px;
-$medium: 1080px;
+@use "breakpoints" as *;
 
 .container {
   display: flex;

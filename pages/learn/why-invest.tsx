@@ -31,6 +31,7 @@ import { calcWhyInvest, calcCatchUp } from "../../src/utils/why_invest_utils";
 import type { WhyInvestInputs } from "../../src/utils/why_invest_utils";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import styles from "../../styles/WhyInvest.module.scss";
+import shared from "../../styles/shared.module.scss";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -131,10 +132,10 @@ export default function WhyInvest() {
         {/* ── FORM ─────────────────────────────────────────────────────────── */}
         <Form className={retirementStyles.form}>
           {/* ── Your Situation ── */}
-          <p className={styles.sectionLabel}>Your Situation</p>
+          <p className={shared.sectionLabel}>Your Situation</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Current Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -154,7 +155,7 @@ export default function WhyInvest() {
                 ))}
               </Form.Select>
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Retirement Age</Form.Label>
               <Form.Select
                 className="mb-3"
@@ -176,7 +177,7 @@ export default function WhyInvest() {
           </div>
 
           {/* ── Income & Savings ── */}
-          <p className={styles.sectionLabel}>Income & Savings</p>
+          <p className={shared.sectionLabel}>Income & Savings</p>
 
           <Form.Label>Annual Salary</Form.Label>
           <TooltipOnHover
@@ -220,7 +221,7 @@ export default function WhyInvest() {
               </InputGroup>
             }
           />
-          <p className={styles.rateHint}>
+          <p className={shared.rateHint}>
             Annual contribution:{" "}
             <strong>{formatCurrency(annualContrib)}</strong> (
             {formatPercent(inputs.savingsRatePercent / 100)} &times;{" "}
@@ -228,7 +229,7 @@ export default function WhyInvest() {
           </p>
 
           {/* ── Starting Balance ── */}
-          <p className={styles.sectionLabel}>Starting Balance</p>
+          <p className={shared.sectionLabel}>Starting Balance</p>
 
           <Form.Label>Current Portfolio Balance</Form.Label>
           <TooltipOnHover
@@ -252,10 +253,10 @@ export default function WhyInvest() {
           />
 
           {/* ── Return Assumptions ── */}
-          <p className={styles.sectionLabel}>Return Assumptions</p>
+          <p className={shared.sectionLabel}>Return Assumptions</p>
 
-          <div className={styles.twoCol}>
-            <div className={styles.col}>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
               <Form.Label>Market Return</Form.Label>
               <TooltipOnHover
                 text="Expected average annual return for a diversified market portfolio (e.g., index funds). The S&P 500 has returned ~10% annually over the long run."
@@ -279,7 +280,7 @@ export default function WhyInvest() {
                 }
               />
             </div>
-            <div className={styles.col}>
+            <div className={shared.col}>
               <Form.Label>Savings / HYSA Rate</Form.Label>
               <TooltipOnHover
                 text="Expected annual interest rate for a high-yield savings account. Typically 4–5% in recent years."
@@ -306,7 +307,7 @@ export default function WhyInvest() {
           </div>
 
           {/* ── Inflation ── */}
-          <p className={styles.sectionLabel}>Inflation</p>
+          <p className={shared.sectionLabel}>Inflation</p>
 
           <Form.Check
             type="switch"
@@ -336,7 +337,7 @@ export default function WhyInvest() {
                 />
                 <InputGroup.Text>%</InputGroup.Text>
               </InputGroup>
-              <p className={styles.rateHint}>
+              <p className={shared.rateHint}>
                 Real market rate:{" "}
                 <strong>{formatPercent(realMarketRate)}</strong>
                 {" · "}Real savings rate:{" "}
@@ -347,7 +348,7 @@ export default function WhyInvest() {
         </Form>
 
         {/* ── RESULTS ──────────────────────────────────────────────────────── */}
-        <div className={styles.results}>
+        <div className={shared.results}>
           {/* Key insight alert */}
           <Alert variant="success" className="mb-3">
             <strong>
@@ -370,48 +371,48 @@ export default function WhyInvest() {
           </Alert>
 
           {/* Summary cards */}
-          <div className={styles.summaryCards}>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Annual Contribution</div>
-              <div className={styles.cardValue}>
+          <div className={shared.summaryCards}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Annual Contribution</div>
+              <div className={shared.cardValue}>
                 {formatCurrency(annualContrib)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 {formatPercent(inputs.savingsRatePercent / 100)} of salary over{" "}
                 {years} yrs
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Market Portfolio at {inputs.retirementAge}
               </div>
-              <div className={styles.cardValue} style={{ color: MARKET_COLOR }}>
+              <div className={shared.cardValue} style={{ color: MARKET_COLOR }}>
                 {formatCurrency(result.finalMarket)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 {formatPercent(inputs.marketReturnRate)} annual return
                 {inputs.inflationEnabled ? " nominal" : ""}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>
                 Savings Account at {inputs.retirementAge}
               </div>
               <div
-                className={styles.cardValue}
+                className={shared.cardValue}
                 style={{ color: SAVINGS_COLOR }}
               >
                 {formatCurrency(result.finalSavings)}
               </div>
-              <div className={styles.cardSub}>
+              <div className={shared.cardSub}>
                 {formatPercent(inputs.savingsAccountRate)} annual rate
                 {inputs.inflationEnabled ? " nominal" : ""}
               </div>
             </div>
-            <div className={styles.card}>
-              <div className={styles.cardLabel}>Investing Advantage</div>
+            <div className={shared.card}>
+              <div className={shared.cardLabel}>Investing Advantage</div>
               <div
-                className={styles.cardValue}
+                className={shared.cardValue}
                 style={{
                   color:
                     result.investingAdvantage > 0 ? MARKET_COLOR : undefined,
@@ -419,12 +420,12 @@ export default function WhyInvest() {
               >
                 {formatCurrency(result.investingAdvantage)}
               </div>
-              <div className={styles.cardSub}>Market minus savings account</div>
+              <div className={shared.cardSub}>Market minus savings account</div>
             </div>
           </div>
 
           {/* Chart toggle */}
-          <div className={styles.chartToggle}>
+          <div className={shared.chartToggle}>
             <ToggleButtonGroup
               type="radio"
               name="chartView"
@@ -457,7 +458,7 @@ export default function WhyInvest() {
 
           {/* Chart 1 — Growth Over Time */}
           {chartView === "growth" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">
                 Portfolio Growth Over Time
                 {inputs.inflationEnabled && (
@@ -517,7 +518,7 @@ export default function WhyInvest() {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 The gap between the colored lines and the dashed gray line are
                 gains from compounding.
                 {inputs.inflationEnabled &&
@@ -528,7 +529,7 @@ export default function WhyInvest() {
 
           {/* Chart 3 — Catch-Up Calculator */}
           {chartView === "catchup" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               {/* Age slider */}
               <div className={styles.catchUpSlider}>
                 <div className={styles.catchUpAgeDisplay}>
@@ -562,25 +563,25 @@ export default function WhyInvest() {
               </div>
 
               {/* Summary cards */}
-              <div className={styles.summaryCards}>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>Required Contribution</div>
+              <div className={shared.summaryCards}>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>Required Contribution</div>
                   <div
-                    className={styles.cardValue}
+                    className={shared.cardValue}
                     style={{ color: CATCHUP_COLOR }}
                   >
                     {formatCurrency(catchUp.catchUpContrib)}/yr
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     starting age {clampedCompAge} →{" "}
                     {formatCurrency(result.finalMarket)} at{" "}
                     {inputs.retirementAge}
                   </div>
                 </div>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>vs Your Contribution</div>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>vs Your Contribution</div>
                   <div
-                    className={styles.cardValue}
+                    className={shared.cardValue}
                     style={{
                       color:
                         catchUp.diffPerYear > 0
@@ -593,7 +594,7 @@ export default function WhyInvest() {
                     {catchUp.diffPerYear > 0 ? "+" : ""}
                     {formatCurrency(catchUp.diffPerYear)}/yr
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     {catchUp.diffPerYear > 0
                       ? "more needed per year"
                       : catchUp.diffPerYear < 0
@@ -601,12 +602,12 @@ export default function WhyInvest() {
                         : "same as your plan"}
                   </div>
                 </div>
-                <div className={styles.card}>
-                  <div className={styles.cardLabel}>
+                <div className={shared.card}>
+                  <div className={shared.cardLabel}>
                     Total Extra Contributed
                   </div>
                   <div
-                    className={styles.cardValue}
+                    className={shared.cardValue}
                     style={{
                       color:
                         catchUp.catchUpTotalContrib > catchUp.userTotalContrib
@@ -621,7 +622,7 @@ export default function WhyInvest() {
                       catchUp.catchUpTotalContrib - catchUp.userTotalContrib,
                     )}
                   </div>
-                  <div className={styles.cardSub}>
+                  <div className={shared.cardSub}>
                     {catchUp.catchUpTotalContrib > catchUp.userTotalContrib
                       ? "extra out-of-pocket"
                       : "less out-of-pocket"}
@@ -682,7 +683,7 @@ export default function WhyInvest() {
                   />
                 </LineChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 Both paths reach the same value (
                 {formatCurrency(result.finalMarket)}) at age{" "}
                 {inputs.retirementAge}. Starting{" "}
@@ -699,7 +700,7 @@ export default function WhyInvest() {
 
           {/* Chart 2 — Cost of Waiting */}
           {chartView === "delay" && (
-            <div className={styles.chartWrap}>
+            <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">
                 Cost of Waiting — Final Balance at Age {inputs.retirementAge}
               </h5>
@@ -756,7 +757,7 @@ export default function WhyInvest() {
                   </Bar>
                 </BarChart>
               </ResponsiveContainer>
-              <p className={styles.chartNote}>
+              <p className={shared.chartNote}>
                 {inputs.startingBalance > 0
                   ? `Current portfolio (${formatCurrency(inputs.startingBalance)}) compounds to retirement in all scenarios.`
                   : "All scenarios start from $0."}{" "}

@@ -3,83 +3,113 @@ import Link from "next/link";
 import styles from "../styles/Home.module.scss";
 import { Header, Footer } from "../src/components";
 
+interface CardDef {
+  href: string;
+  title: string;
+  description: string;
+}
+
+interface Section {
+  label: string;
+  cards: CardDef[];
+}
+
+const SECTIONS: Section[] = [
+  {
+    label: "Learn",
+    cards: [
+      {
+        href: "/learn/why-invest",
+        title: "Why Invest?",
+        description: "See the power of compounding and the cost of waiting",
+      },
+      {
+        href: "/learn/why-retirement-account",
+        title: "Why Retirement Account?",
+        description:
+          "See how 401k and IRA accounts beat taxable investing with tax-free compounding",
+      },
+    ],
+  },
+  {
+    label: "Calculators",
+    cards: [
+      {
+        href: "/paycheck",
+        title: "Paycheck Calculator",
+        description: "Estimate your take-home pay",
+      },
+      {
+        href: "/retirement/fire",
+        title: "FIRE Calculator",
+        description:
+          "Find your Financial Independence number and compare CoastFIRE, BaristaFIRE, and FatFIRE milestones",
+      },
+    ],
+  },
+  {
+    label: "Retirement Planning",
+    cards: [
+      {
+        href: "/retirement/savings-optimizer",
+        title: "401k Optimizer",
+        description: "Plan your 401k contribution strategy",
+      },
+      {
+        href: "/retirement/income",
+        title: "Retirement Income",
+        description: "Plan withdrawals across accounts with taxes and RMDs",
+      },
+      {
+        href: "/retirement/roth-vs-traditional",
+        title: "Roth vs Traditional",
+        description:
+          "Compare after-tax retirement wealth across contribution types",
+      },
+      {
+        href: "/retirement/roth-conversion-ladder",
+        title: "Roth Conversion Ladder",
+        description:
+          "Optimize year-by-year Roth conversions to minimize lifetime taxes",
+      },
+    ],
+  },
+];
+
 const Home: NextPage = () => {
   return (
     <div className={styles.container}>
       <Header />
 
       <main className={styles.main}>
-        <h1 className={styles.title}>Welcome to the Finance App.</h1>
+        <h1 className={styles.title}>Finance Tools</h1>
 
         <p className={styles.description}>
-          We have tools for you to estimate your paycheck, frontload your 401k,
-          and more.
+          Tools for paycheck estimation, retirement planning, and investment
+          strategy.
         </p>
 
-        <div className={styles.grid}>
-          <Link href="/paycheck" className={styles.card} passHref>
-            <h2>Paycheck Calculator &rarr;</h2>
-            <p>Estimate your take home pay</p>
-          </Link>
-
-          <Link href="/learn/why-invest" className={styles.card} passHref>
-            <h2>Why Invest? &rarr;</h2>
-            <p>See the power of compounding and the cost of waiting</p>
-          </Link>
-
-          <Link
-            href="/learn/why-retirement-account"
-            className={styles.card}
-            passHref
-          >
-            <h2>Why Retirement Account? &rarr;</h2>
-            <p>
-              See how 401k and IRA accounts beat taxable investing with tax-free
-              compounding
-            </p>
-          </Link>
-
-          <Link
-            href="/retirement/savings-optimizer"
-            className={styles.card}
-            passHref
-          >
-            <h2>401k Optimizer &rarr;</h2>
-            <p>Plan your 401k strategy</p>
-          </Link>
-
-          <Link href="/retirement/income" className={styles.card} passHref>
-            <h2>Retirement Income &rarr;</h2>
-            <p>Plan withdrawals across accounts with taxes and RMDs</p>
-          </Link>
-
-          <Link
-            href="/retirement/roth-vs-traditional"
-            className={styles.card}
-            passHref
-          >
-            <h2>Roth vs Traditional &rarr;</h2>
-            <p>Compare after-tax retirement wealth across contribution types</p>
-          </Link>
-
-          <Link
-            href="/retirement/roth-conversion-ladder"
-            className={styles.card}
-            passHref
-          >
-            <h2>Roth Conversion Ladder &rarr;</h2>
-            <p>
-              Optimize year-by-year Roth conversions to minimize lifetime taxes
-            </p>
-          </Link>
-
-          <Link href="/retirement/fire" className={styles.card} passHref>
-            <h2>FIRE Calculator &rarr;</h2>
-            <p>
-              Find your Financial Independence number and compare CoastFIRE,
-              BaristaFIRE, and FatFIRE milestones
-            </p>
-          </Link>
+        <div className={styles.sections}>
+          {SECTIONS.map((section) => (
+            <section key={section.label} className={styles.section}>
+              <h2 className={styles.sectionLabel}>{section.label}</h2>
+              <div className={styles.grid}>
+                {section.cards.map((card) => (
+                  <Link
+                    key={card.href}
+                    href={card.href}
+                    className={styles.card}
+                    passHref
+                  >
+                    <span className={styles.cardTitle}>
+                      {card.title} &rarr;
+                    </span>
+                    <span className={styles.cardDesc}>{card.description}</span>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
         </div>
       </main>
 

@@ -4,47 +4,24 @@
  * taxes, RMDs, Social Security, early withdrawal penalties, and growth.
  */
 
+import {
+  BRACKETS_SINGLE_2026,
+  BRACKETS_MFJ_2026,
+  STD_DEDUCTION_SINGLE_2026,
+  STD_DEDUCTION_MFJ_2026,
+  calcLtcgTax,
+  type FilingStatus,
+} from "./retirement_tax_tables";
+
+export type { FilingStatus };
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 export const INCOME_LAST_UPDATED = 2026;
 
-// 2026 federal income tax brackets [min income, max income, cumulative tax below min, marginal rate]
-const FEDERAL_BRACKETS_SINGLE: [number, number, number, number][] = [
-  [0, 11925, 0, 0.1],
-  [11925, 48475, 1192.5, 0.12],
-  [48475, 103350, 5578.5, 0.22],
-  [103350, 197300, 17651.5, 0.24],
-  [197300, 250525, 40199.5, 0.32],
-  [250525, 626350, 57231.5, 0.35],
-  [626350, Infinity, 188769.75, 0.37],
-];
-
-const FEDERAL_BRACKETS_MFJ: [number, number, number, number][] = [
-  [0, 23850, 0, 0.1],
-  [23850, 96950, 2385.0, 0.12],
-  [96950, 206700, 11157.0, 0.22],
-  [206700, 394600, 35302.72, 0.24],
-  [394600, 501050, 80398.72, 0.32],
-  [501050, 751600, 114491.52, 0.35],
-  [751600, Infinity, 202052.52, 0.37],
-];
-
-// 2026 standard deduction
-export const STANDARD_DEDUCTION_SINGLE = 15000;
-export const STANDARD_DEDUCTION_MFJ = 30000;
-
-// 2026 LTCG brackets (taxable income thresholds) [min, max, rate]
-const LTCG_BRACKETS_SINGLE: [number, number, number][] = [
-  [0, 48350, 0.0],
-  [48350, 533400, 0.15],
-  [533400, Infinity, 0.2],
-];
-
-const LTCG_BRACKETS_MFJ: [number, number, number][] = [
-  [0, 96700, 0.0],
-  [96700, 600050, 0.15],
-  [600050, Infinity, 0.2],
-];
+// 2026 standard deduction — re-exported under the names used in the income planner UI
+export const STANDARD_DEDUCTION_SINGLE = STD_DEDUCTION_SINGLE_2026;
+export const STANDARD_DEDUCTION_MFJ = STD_DEDUCTION_MFJ_2026;
 
 // IRS Uniform Lifetime Table (age → distribution period)
 // Source: IRS Publication 590-B, Table III
@@ -107,7 +84,6 @@ export const EARLY_WITHDRAWAL_PENALTY_RATE = 0.1;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type FilingStatus = "single" | "mfj";
 export type WithdrawalStrategy =
   | "maintain_wealth"
   | "set_withdrawal_rate"
@@ -159,14 +135,8 @@ export interface YearlyRow {
 
 // ─── Tax helpers ──────────────────────────────────────────────────────────────
 
-function getStandardDeduction(filingStatus: FilingStatus): number {
-  return filingStatus === "mfj"
-    ? STANDARD_DEDUCTION_MFJ
-    : STANDARD_DEDUCTION_SINGLE;
-}
-
 /**
- * Calculate ordinary income tax given taxable income and filing status.
+ * Calculate ordinary income tax given taxable income (post-deduction) and filing status.
  */
 function calcOrdinaryTax(
   taxableIncome: number,
@@ -174,37 +144,11 @@ function calcOrdinaryTax(
 ): number {
   if (taxableIncome <= 0) return 0;
   const brackets =
-    filingStatus === "mfj" ? FEDERAL_BRACKETS_MFJ : FEDERAL_BRACKETS_SINGLE;
-  for (const [min, max, cumulative, rate] of brackets) {
-    if (taxableIncome <= max) {
-      return cumulative + (taxableIncome - min) * rate;
-    }
-  }
-  return 0;
-}
-
-/**
- * Calculate LTCG tax on capital gains given ordinary income (for bracket stacking).
- */
-function calcLtcgTax(
-  gains: number,
-  ordinaryIncome: number,
-  filingStatus: FilingStatus,
-): number {
-  if (gains <= 0) return 0;
-  const brackets =
-    filingStatus === "mfj" ? LTCG_BRACKETS_MFJ : LTCG_BRACKETS_SINGLE;
+    filingStatus === "mfj" ? BRACKETS_MFJ_2026 : BRACKETS_SINGLE_2026;
   let tax = 0;
-  let remainingGains = gains;
-  const stackedBase = ordinaryIncome;
-
-  for (const [min, max, rate] of brackets) {
-    if (stackedBase >= max) continue;
-    const roomInBracket = max - Math.max(min, stackedBase);
-    const gainsInBracket = Math.min(remainingGains, roomInBracket);
-    tax += gainsInBracket * rate;
-    remainingGains -= gainsInBracket;
-    if (remainingGains <= 0) break;
+  for (const { min, max, rate } of brackets) {
+    if (taxableIncome <= min) break;
+    tax += (Math.min(taxableIncome, max) - min) * rate;
   }
   return tax;
 }
@@ -223,7 +167,8 @@ function calcAnnualTax(
   otherIncome: number,
   filingStatus: FilingStatus,
 ): number {
-  const deduction = getStandardDeduction(filingStatus);
+  const deduction =
+    filingStatus === "mfj" ? STD_DEDUCTION_MFJ_2026 : STD_DEDUCTION_SINGLE_2026;
 
   // SS taxable portion: provisional income = AGI (ex-SS) + SS/2
   // Pension and other ordinary income contribute to provisional income per IRS rules
