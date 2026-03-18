@@ -41,6 +41,12 @@ const SECTIONS: Section[] = [
         description:
           "See how progressive tax brackets work and why your effective rate is always lower than your marginal rate",
       },
+      {
+        href: "/learn/money-flow",
+        title: "Where Should My Money Go?",
+        description:
+          "An interactive priority ladder based on the Reddit r/personalfinance flowchart — enter your situation and see exactly where your next dollar should go",
+      },
     ],
   },
   {

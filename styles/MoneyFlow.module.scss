@@ -1,0 +1,209 @@
+@use "breakpoints" as *;
+
+// ─── Form helpers ─────────────────────────────────────────────────────────────
+
+.conditionalSection {
+  border-left: 3px solid var(--bs-primary);
+  padding-left: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+// ─── Summary banner ───────────────────────────────────────────────────────────
+
+.summaryBanner {
+  background: var(--bs-secondary-bg);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.surplusRow {
+  font-size: 0.9rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.2rem;
+}
+
+.surplusAmount {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #2ecc71;
+}
+
+.priorityRow {
+  font-size: 0.88rem;
+  color: var(--bs-body-color);
+}
+
+// ─── Step ladder ──────────────────────────────────────────────────────────────
+
+.ladder {
+  display: flex;
+  flex-direction: column;
+}
+
+.stepRow {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+}
+
+.stepLeft {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.stepCircle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  border: 2px solid transparent;
+}
+
+.circleDone {
+  background: #2ecc71;
+  color: #fff;
+  border-color: #2ecc71;
+}
+
+.circleCurrent {
+  background: var(--bs-primary);
+  color: #fff;
+  border-color: var(--bs-primary);
+}
+
+.circleFuture {
+  background: transparent;
+  border-color: var(--bs-border-color);
+  color: var(--bs-secondary-color);
+}
+
+.circleSkipped {
+  background: var(--bs-secondary-bg);
+  border-color: var(--bs-border-color);
+  color: var(--bs-secondary-color);
+}
+
+.stepLine {
+  width: 2px;
+  flex: 1;
+  min-height: 16px;
+  background: var(--bs-border-color);
+  margin: 3px 0;
+}
+
+.stepContent {
+  flex: 1;
+  padding: 0 0 1.5rem 1rem;
+  min-width: 0;
+  transition: opacity 0.15s;
+}
+
+.isDimmed {
+  opacity: 0.38;
+}
+
+.stepHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.stepTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+
+// ─── Badges ───────────────────────────────────────────────────────────────────
+
+.badge {
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.2em 0.55em;
+  border-radius: 999px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.badgeDone {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+  border: 1px solid rgba(46, 204, 113, 0.3);
+}
+
+.badgeCurrent {
+  background: rgba(52, 152, 219, 0.15);
+  color: var(--bs-primary);
+  border: 1px solid rgba(52, 152, 219, 0.3);
+}
+
+.badgeSkipped {
+  background: var(--bs-secondary-bg);
+  color: var(--bs-secondary-color);
+  border: 1px solid var(--bs-border-color);
+}
+
+// ─── Step content ─────────────────────────────────────────────────────────────
+
+.stepSubtitle {
+  font-size: 0.8rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.4rem;
+}
+
+.stepWhy {
+  font-size: 0.875rem;
+  line-height: 1.55;
+  margin-bottom: 0.4rem;
+  color: var(--bs-body-color);
+}
+
+.stepLimit {
+  font-size: 0.78rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.3rem;
+}
+
+// ─── Progress bar ─────────────────────────────────────────────────────────────
+
+.progressWrap {
+  height: 7px;
+  background: var(--bs-border-color);
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.progressLabel {
+  font-size: 0.78rem;
+  color: var(--bs-secondary-color);
+  margin-bottom: 0.3rem;
+}
+
+// ─── Allocation line ──────────────────────────────────────────────────────────
+
+.allocationLine {
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--bs-primary);
+  margin-top: 0.3rem;
+}
