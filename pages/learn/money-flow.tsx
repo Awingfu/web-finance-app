@@ -705,6 +705,15 @@ export default function MoneyFlow() {
             </strong>
           </p>
 
+          <Form.Check
+            type="switch"
+            id="age-50"
+            label="I am age 50 or older (catch-up contribution limits)"
+            checked={inputs.age50Plus}
+            onChange={(e) => setField("age50Plus", e.target.checked)}
+            className="mb-3"
+          />
+
           <p className={shared.sectionLabel}>Emergency Fund</p>
 
           <div className={shared.twoCol}>
@@ -820,28 +829,54 @@ export default function MoneyFlow() {
             </div>
           )}
 
-          <p className={shared.sectionLabel}>High-Interest Debt</p>
+          <p className={shared.sectionLabel}>Medium to High Interest Debt</p>
 
-          <Form.Label>Total Balance (&gt;7% APR)</Form.Label>
-          <TooltipOnHover
-            text="Credit cards, payday loans, and personal loans above ~7% APR. Do not include your mortgage."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.highInterestDebtBalance)}
-                  onChange={(e) =>
-                    setField(
-                      "highInterestDebtBalance",
-                      clamp(parseFloat(e.target.value), 0, 10_000_000),
-                    )
-                  }
-                />
-              </InputGroup>
-            }
-          />
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
+              <Form.Label>High-Interest Debt (&gt;7% APR)</Form.Label>
+              <TooltipOnHover
+                text="Credit cards, payday loans, and personal loans above ~7% APR. Do not include your mortgage."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.highInterestDebtBalance)}
+                      onChange={(e) =>
+                        setField(
+                          "highInterestDebtBalance",
+                          clamp(parseFloat(e.target.value), 0, 10_000_000),
+                        )
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+            <div className={shared.col}>
+              <Form.Label>Medium-Interest Debt (4–7% APR)</Form.Label>
+              <TooltipOnHover
+                text="Student loans, auto loans, and personal loans between 4–7% APR."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.mediumInterestDebtBalance)}
+                      onChange={(e) =>
+                        setField(
+                          "mediumInterestDebtBalance",
+                          clamp(parseFloat(e.target.value), 0, 10_000_000),
+                        )
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+          </div>
 
           <p className={shared.sectionLabel}>HSA</p>
 
@@ -941,37 +976,6 @@ export default function MoneyFlow() {
               />
             </div>
           </div>
-
-          <p className={shared.sectionLabel}>Medium-Interest Debt & Age</p>
-
-          <Form.Label>Total Balance (4–7% APR)</Form.Label>
-          <TooltipOnHover
-            text="Student loans, auto loans, and personal loans between 4–7% APR."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.mediumInterestDebtBalance)}
-                  onChange={(e) =>
-                    setField(
-                      "mediumInterestDebtBalance",
-                      clamp(parseFloat(e.target.value), 0, 10_000_000),
-                    )
-                  }
-                />
-              </InputGroup>
-            }
-          />
-
-          <Form.Check
-            type="switch"
-            id="age-50"
-            label="I am age 50 or older (catch-up contribution limits)"
-            checked={inputs.age50Plus}
-            onChange={(e) => setField("age50Plus", e.target.checked)}
-          />
         </Form>
 
         {/* ── LADDER ────────────────────────────────────────────────────────── */}
