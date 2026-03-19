@@ -624,6 +624,15 @@ export default function MoneyFlow() {
         <Form className={retirementStyles.form}>
           <p className={shared.sectionLabel}>Income & Budget</p>
 
+          <Form.Check
+            type="switch"
+            id="age-50"
+            label="I am age 50 or older (catch-up contribution limits)"
+            checked={inputs.age50Plus}
+            onChange={(e) => setField("age50Plus", e.target.checked)}
+            className="mb-3"
+          />
+
           <div className={shared.threeCol}>
             <div className={shared.col}>
               <Form.Label>Current Month</Form.Label>
@@ -709,15 +718,6 @@ export default function MoneyFlow() {
             </div>
           </div>
 
-          <Form.Check
-            type="switch"
-            id="age-50"
-            label="I am age 50 or older (catch-up contribution limits)"
-            checked={inputs.age50Plus}
-            onChange={(e) => setField("age50Plus", e.target.checked)}
-            className="mb-3"
-          />
-
           <p className={shared.sectionLabel}>Emergency Fund</p>
 
           <div className={shared.twoCol}>
@@ -768,7 +768,7 @@ export default function MoneyFlow() {
             label="My employer offers a 401k match"
             checked={inputs.has401kMatch}
             onChange={(e) => setField("has401kMatch", e.target.checked)}
-            className="mb-2"
+            className={inputs.has401kMatch ? "mb-2" : "mb-3"}
           />
 
           {inputs.has401kMatch && (
@@ -890,7 +890,7 @@ export default function MoneyFlow() {
             label="I'm enrolled in an HSA-eligible health plan"
             checked={inputs.hsaEligible}
             onChange={(e) => setField("hsaEligible", e.target.checked)}
-            className="mb-2"
+            className={inputs.hsaEligible ? "mb-2" : "mb-3"}
           />
 
           {inputs.hsaEligible && (
