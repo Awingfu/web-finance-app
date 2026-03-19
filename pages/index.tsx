@@ -47,6 +47,12 @@ const SECTIONS: Section[] = [
     label: "Calculators",
     cards: [
       {
+        href: "/learn/money-flow",
+        title: "Where Should My Money Go?",
+        description:
+          "An interactive priority ladder based on the Reddit r/personalfinance flowchart — enter your situation and see exactly where your next dollar should go",
+      },
+      {
         href: "/paycheck",
         title: "Paycheck Calculator",
         description: "Estimate your take-home pay",
