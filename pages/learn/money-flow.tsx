@@ -624,7 +624,28 @@ export default function MoneyFlow() {
         <Form className={retirementStyles.form}>
           <p className={shared.sectionLabel}>Income & Budget</p>
 
-          <div className={shared.twoCol}>
+          <div className={shared.threeCol}>
+            <div className={shared.col}>
+              <Form.Label>Current Month</Form.Label>
+              <TooltipOnHover
+                text="Used to calculate how many months remain in the year for annual contribution limits (HSA, IRA, 401k)."
+                nest={
+                  <Form.Select
+                    className="mb-3"
+                    value={inputs.currentMonth}
+                    onChange={(e) =>
+                      setField("currentMonth", parseInt(e.target.value))
+                    }
+                  >
+                    {MONTH_NAMES.map((name, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {name} ({13 - (i + 1)} mo left)
+                      </option>
+                    ))}
+                  </Form.Select>
+                }
+              />
+            </div>
             <div className={shared.col}>
               <Form.Label>Monthly Take-Home Pay</Form.Label>
               <TooltipOnHover
@@ -648,49 +669,28 @@ export default function MoneyFlow() {
               />
             </div>
             <div className={shared.col}>
-              <Form.Label>Current Month</Form.Label>
+              <Form.Label>Monthly Essential Expenses</Form.Label>
               <TooltipOnHover
-                text="Used to calculate how many months remain in the year for annual contribution limits (HSA, IRA, 401k)."
+                text="Rent/mortgage, food, utilities, transportation, insurance, and minimum debt payments. Exclude discretionary spending."
                 nest={
-                  <Form.Select
-                    className="mb-3"
-                    value={inputs.currentMonth}
-                    onChange={(e) =>
-                      setField("currentMonth", parseInt(e.target.value))
-                    }
-                  >
-                    {MONTH_NAMES.map((name, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {name} ({13 - (i + 1)} mo left)
-                      </option>
-                    ))}
-                  </Form.Select>
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.monthlyExpenses)}
+                      onChange={(e) =>
+                        setField(
+                          "monthlyExpenses",
+                          clamp(parseFloat(e.target.value), 0, 1_000_000),
+                        )
+                      }
+                    />
+                  </InputGroup>
                 }
               />
             </div>
           </div>
-
-          <Form.Label>Monthly Essential Expenses</Form.Label>
-          <TooltipOnHover
-            text="Rent/mortgage, food, utilities, transportation, insurance, and minimum debt payments. Exclude discretionary spending."
-            nest={
-              <InputGroup className="mb-1 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.monthlyExpenses)}
-                  onChange={(e) =>
-                    setField(
-                      "monthlyExpenses",
-                      clamp(parseFloat(e.target.value), 0, 1_000_000),
-                    )
-                  }
-                />
-                <InputGroup.Text>/ mo</InputGroup.Text>
-              </InputGroup>
-            }
-          />
           <p className={shared.rateHint}>
             Monthly surplus:{" "}
             <strong
