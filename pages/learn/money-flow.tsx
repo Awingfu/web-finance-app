@@ -707,42 +707,45 @@ export default function MoneyFlow() {
 
           <p className={shared.sectionLabel}>Emergency Fund</p>
 
-          <Form.Label>Current Emergency Fund Balance</Form.Label>
-          <InputGroup className="mb-3 w-100">
-            <InputGroup.Text>$</InputGroup.Text>
-            <Form.Control
-              type="number"
-              onWheel={(e) => e.currentTarget.blur()}
-              value={formatStateValue(inputs.emergencyFundBalance)}
-              onChange={(e) =>
-                setField(
-                  "emergencyFundBalance",
-                  clamp(parseFloat(e.target.value), 0, 10_000_000),
-                )
-              }
-            />
-          </InputGroup>
-
-          <Form.Label>Full Emergency Fund Target</Form.Label>
-          <Form.Select
-            className="mb-3"
-            value={inputs.emergencyFundTargetMonths}
-            onChange={(e) =>
-              setField(
-                "emergencyFundTargetMonths",
-                parseInt(e.target.value) as 3 | 6,
-              )
-            }
-          >
-            <option value={3}>
-              3 months of expenses ({formatCurrency(inputs.monthlyExpenses * 3)}
-              )
-            </option>
-            <option value={6}>
-              6 months of expenses ({formatCurrency(inputs.monthlyExpenses * 6)}
-              )
-            </option>
-          </Form.Select>
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
+              <Form.Label>Full Emergency Fund Target</Form.Label>
+              <Form.Select
+                className="mb-3"
+                value={inputs.emergencyFundTargetMonths}
+                onChange={(e) =>
+                  setField(
+                    "emergencyFundTargetMonths",
+                    parseInt(e.target.value) as 3 | 6,
+                  )
+                }
+              >
+                <option value={3}>
+                  3 months ({formatCurrency(inputs.monthlyExpenses * 3)})
+                </option>
+                <option value={6}>
+                  6 months ({formatCurrency(inputs.monthlyExpenses * 6)})
+                </option>
+              </Form.Select>
+            </div>
+            <div className={shared.col}>
+              <Form.Label>Current Balance</Form.Label>
+              <InputGroup className="mb-3 w-100">
+                <InputGroup.Text>$</InputGroup.Text>
+                <Form.Control
+                  type="number"
+                  onWheel={(e) => e.currentTarget.blur()}
+                  value={formatStateValue(inputs.emergencyFundBalance)}
+                  onChange={(e) =>
+                    setField(
+                      "emergencyFundBalance",
+                      clamp(parseFloat(e.target.value), 0, 10_000_000),
+                    )
+                  }
+                />
+              </InputGroup>
+            </div>
+          </div>
 
           <p className={shared.sectionLabel}>Employer 401k Match</p>
 
@@ -757,7 +760,7 @@ export default function MoneyFlow() {
 
           {inputs.has401kMatch && (
             <div className={styles.conditionalSection}>
-              <Form.Label>Annual Salary</Form.Label>
+              <Form.Label>Base Salary + 401k Eligible Bonus</Form.Label>
               <InputGroup className="mb-3 w-100">
                 <InputGroup.Text>$</InputGroup.Text>
                 <Form.Control
