@@ -673,7 +673,7 @@ export default function MoneyFlow() {
               <TooltipOnHover
                 text="Rent/mortgage, food, utilities, transportation, insurance, and minimum debt payments. Exclude discretionary spending."
                 nest={
-                  <InputGroup className="mb-3 w-100">
+                  <InputGroup className="mb-1 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
                     <Form.Control
                       type="number"
@@ -689,21 +689,25 @@ export default function MoneyFlow() {
                   </InputGroup>
                 }
               />
+              <p className={shared.rateHint}>
+                Surplus:{" "}
+                <strong
+                  style={{
+                    color:
+                      surplus > 0
+                        ? "#2ecc71"
+                        : surplus < 0
+                          ? "#e74c3c"
+                          : undefined,
+                  }}
+                >
+                  {surplus >= 0
+                    ? formatCurrency(surplus)
+                    : `−${formatCurrency(-surplus)}`}
+                </strong>
+              </p>
             </div>
           </div>
-          <p className={shared.rateHint}>
-            Monthly surplus:{" "}
-            <strong
-              style={{
-                color:
-                  surplus > 0 ? "#2ecc71" : surplus < 0 ? "#e74c3c" : undefined,
-              }}
-            >
-              {surplus >= 0
-                ? formatCurrency(surplus)
-                : `−${formatCurrency(-surplus)}`}
-            </strong>
-          </p>
 
           <Form.Check
             type="switch"
@@ -833,28 +837,6 @@ export default function MoneyFlow() {
 
           <div className={shared.twoCol}>
             <div className={shared.col}>
-              <Form.Label>High-Interest Debt (&gt;7% APR)</Form.Label>
-              <TooltipOnHover
-                text="Credit cards, payday loans, and personal loans above ~7% APR. Do not include your mortgage."
-                nest={
-                  <InputGroup className="mb-3 w-100">
-                    <InputGroup.Text>$</InputGroup.Text>
-                    <Form.Control
-                      type="number"
-                      onWheel={(e) => e.currentTarget.blur()}
-                      value={formatStateValue(inputs.highInterestDebtBalance)}
-                      onChange={(e) =>
-                        setField(
-                          "highInterestDebtBalance",
-                          clamp(parseFloat(e.target.value), 0, 10_000_000),
-                        )
-                      }
-                    />
-                  </InputGroup>
-                }
-              />
-            </div>
-            <div className={shared.col}>
               <Form.Label>Medium-Interest Debt (4–7% APR)</Form.Label>
               <TooltipOnHover
                 text="Student loans, auto loans, and personal loans between 4–7% APR."
@@ -868,6 +850,28 @@ export default function MoneyFlow() {
                       onChange={(e) =>
                         setField(
                           "mediumInterestDebtBalance",
+                          clamp(parseFloat(e.target.value), 0, 10_000_000),
+                        )
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+            <div className={shared.col}>
+              <Form.Label>High-Interest Debt (&gt;7% APR)</Form.Label>
+              <TooltipOnHover
+                text="Credit cards, payday loans, and personal loans above ~7% APR. Do not include your mortgage."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.highInterestDebtBalance)}
+                      onChange={(e) =>
+                        setField(
+                          "highInterestDebtBalance",
                           clamp(parseFloat(e.target.value), 0, 10_000_000),
                         )
                       }
