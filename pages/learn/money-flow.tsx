@@ -18,6 +18,21 @@ import styles from "../../styles/MoneyFlow.module.scss";
 
 const STARTER_EF = 1000;
 
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
 // ─── Step Colors ──────────────────────────────────────────────────────────────
 
 const STEP_COLORS = [
@@ -121,6 +136,7 @@ const STEP_DEFS: StepDef[] = [
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface MoneyFlowInputs {
+  currentMonth: number; // 1–12
   monthlyTakeHome: number;
   monthlyExpenses: number;
   emergencyFundBalance: number;
@@ -148,6 +164,7 @@ interface StepResult {
   progressLabel: string | null;
   monthsToComplete: number | null;
   limitLabel: string | null;
+  isAnnualCapped: boolean; // HSA, IRA, 401k — limited by calendar year
 }
 
 interface ComputeResult {
@@ -156,12 +173,14 @@ interface ComputeResult {
   currentStepIndex: number | null; // index 0–8, null if all done or negative surplus
   allDone: boolean;
   negativeSurplus: boolean;
+  monthsRemaining: number; // months left in the calendar year
 }
 
 // ─── Compute ──────────────────────────────────────────────────────────────────
 
 function compute(inputs: MoneyFlowInputs): ComputeResult {
   const {
+    currentMonth,
     monthlyTakeHome,
     monthlyExpenses,
     emergencyFundBalance,
@@ -182,6 +201,7 @@ function compute(inputs: MoneyFlowInputs): ComputeResult {
 
   const surplus = monthlyTakeHome - monthlyExpenses;
   const negativeSurplus = surplus <= 0;
+  const monthsRemaining = Math.max(1, 13 - currentMonth);
 
   const iraLimit = age50Plus ? IRA_CATCHUP : IRA_BASE;
   const k401Limit = age50Plus ? K401_CATCHUP : K401_BASE;
@@ -198,10 +218,12 @@ function compute(inputs: MoneyFlowInputs): ComputeResult {
       )
     : 0;
   const step5Need = hsaEligible
-    ? Math.max(0, hsaLimit - hsaContributedThisYear) / 12
+    ? Math.max(0, hsaLimit - hsaContributedThisYear) / monthsRemaining
     : 0;
-  const step6Need = Math.max(0, iraLimit - iraContributedThisYear) / 12;
-  const step7Need = Math.max(0, k401Limit - k401ContributedThisYear) / 12;
+  const step6Need =
+    Math.max(0, iraLimit - iraContributedThisYear) / monthsRemaining;
+  const step7Need =
+    Math.max(0, k401Limit - k401ContributedThisYear) / monthsRemaining;
 
   // Limit labels
   const limitLabels: (string | null)[] = [
@@ -357,6 +379,7 @@ function compute(inputs: MoneyFlowInputs): ComputeResult {
     const { pct, label } = progressData[i];
 
     // months to complete
+    const isAnnualCapped = i === 4 || i === 5 || i === 6;
     let monthsToComplete: number | null = null;
     if (!doneFlags[i] && !skippedFlags[i] && allocation > 0) {
       if (i === 0) monthsToComplete = Math.ceil(step1Need / allocation);
@@ -366,11 +389,17 @@ function compute(inputs: MoneyFlowInputs): ComputeResult {
         const rem = Math.max(0, efTarget - emergencyFundBalance);
         if (rem > 0) monthsToComplete = Math.ceil(rem / allocation);
       } else if (i === 4 && step5Need > 0)
-        monthsToComplete = Math.ceil((step5Need * 12) / allocation);
+        monthsToComplete = Math.ceil(
+          (step5Need * monthsRemaining) / allocation,
+        );
       else if (i === 5 && step6Need > 0)
-        monthsToComplete = Math.ceil((step6Need * 12) / allocation);
+        monthsToComplete = Math.ceil(
+          (step6Need * monthsRemaining) / allocation,
+        );
       else if (i === 6 && step7Need > 0)
-        monthsToComplete = Math.ceil((step7Need * 12) / allocation);
+        monthsToComplete = Math.ceil(
+          (step7Need * monthsRemaining) / allocation,
+        );
       else if (i === 7 && mediumInterestDebtBalance > 0)
         monthsToComplete = Math.ceil(mediumInterestDebtBalance / allocation);
     }
@@ -382,10 +411,18 @@ function compute(inputs: MoneyFlowInputs): ComputeResult {
       progressLabel: label,
       monthsToComplete,
       limitLabel: limitLabels[i],
+      isAnnualCapped,
     };
   });
 
-  return { surplus, stepResults, currentStepIndex, allDone, negativeSurplus };
+  return {
+    surplus,
+    stepResults,
+    currentStepIndex,
+    allDone,
+    negativeSurplus,
+    monthsRemaining,
+  };
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -403,9 +440,16 @@ interface StepCardProps {
   def: StepDef;
   result: StepResult;
   isLast: boolean;
+  monthsRemaining: number;
 }
 
-function StepCard({ idx, def, result, isLast }: StepCardProps) {
+function StepCard({
+  idx,
+  def,
+  result,
+  isLast,
+  monthsRemaining,
+}: StepCardProps) {
   const {
     status,
     allocation,
@@ -413,6 +457,7 @@ function StepCard({ idx, def, result, isLast }: StepCardProps) {
     progressLabel,
     monthsToComplete,
     limitLabel,
+    isAnnualCapped,
   } = result;
   const color = STEP_COLORS[idx];
   const isDimmed = status === "future" && allocation === 0;
@@ -429,12 +474,16 @@ function StepCard({ idx, def, result, isLast }: StepCardProps) {
   const allocationText = (() => {
     if (allocation <= 0 || status === "done" || status === "skipped")
       return null;
-    const base =
-      idx === 1
-        ? `Redirect ${formatCurrency(allocation)}/mo to 401k to capture match`
-        : idx === 8
-          ? `${formatCurrency(allocation)}/mo → ongoing`
-          : `${formatCurrency(allocation)}/mo allocated`;
+    if (idx === 1)
+      return `Redirect ${formatCurrency(allocation)}/mo to 401k to capture match`;
+    if (idx === 8) return `${formatCurrency(allocation)}/mo → ongoing`;
+    if (isAnnualCapped && monthsToComplete !== null) {
+      const canMax = monthsToComplete <= monthsRemaining;
+      return canMax
+        ? `${formatCurrency(allocation)}/mo · on track to max by year-end`
+        : `${formatCurrency(allocation)}/mo · won't max this year at this rate`;
+    }
+    const base = `${formatCurrency(allocation)}/mo allocated`;
     return monthsToComplete
       ? `${base} · ${fmtMonths(monthsToComplete)} to complete`
       : base;
@@ -511,6 +560,7 @@ function StepCard({ idx, def, result, isLast }: StepCardProps) {
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 const DEFAULT_INPUTS: MoneyFlowInputs = {
+  currentMonth: new Date().getMonth() + 1,
   monthlyTakeHome: 5000,
   monthlyExpenses: 3500,
   emergencyFundBalance: 500,
@@ -543,8 +593,14 @@ export default function MoneyFlow() {
     isNaN(v) ? min : Math.min(max, Math.max(min, v));
 
   const result = useMemo(() => compute(inputs), [inputs]);
-  const { surplus, stepResults, currentStepIndex, allDone, negativeSurplus } =
-    result;
+  const {
+    surplus,
+    stepResults,
+    currentStepIndex,
+    allDone,
+    negativeSurplus,
+    monthsRemaining,
+  } = result;
 
   const currentStep =
     currentStepIndex !== null ? STEP_DEFS[currentStepIndex] : null;
@@ -568,27 +624,51 @@ export default function MoneyFlow() {
         <Form className={retirementStyles.form}>
           <p className={shared.sectionLabel}>Income & Budget</p>
 
-          <Form.Label>Monthly Take-Home Pay</Form.Label>
-          <TooltipOnHover
-            text="Your monthly income after taxes and any pre-tax deductions (e.g., current 401k contributions already being taken out)."
-            nest={
-              <InputGroup className="mb-3 w-100">
-                <InputGroup.Text>$</InputGroup.Text>
-                <Form.Control
-                  type="number"
-                  onWheel={(e) => e.currentTarget.blur()}
-                  value={formatStateValue(inputs.monthlyTakeHome)}
-                  onChange={(e) =>
-                    setField(
-                      "monthlyTakeHome",
-                      clamp(parseFloat(e.target.value), 0, 1_000_000),
-                    )
-                  }
-                />
-                <InputGroup.Text>/ mo</InputGroup.Text>
-              </InputGroup>
-            }
-          />
+          <div className={shared.twoCol}>
+            <div className={shared.col}>
+              <Form.Label>Monthly Take-Home Pay</Form.Label>
+              <TooltipOnHover
+                text="Your monthly income after taxes and any pre-tax deductions (e.g., current 401k contributions already being taken out)."
+                nest={
+                  <InputGroup className="mb-3 w-100">
+                    <InputGroup.Text>$</InputGroup.Text>
+                    <Form.Control
+                      type="number"
+                      onWheel={(e) => e.currentTarget.blur()}
+                      value={formatStateValue(inputs.monthlyTakeHome)}
+                      onChange={(e) =>
+                        setField(
+                          "monthlyTakeHome",
+                          clamp(parseFloat(e.target.value), 0, 1_000_000),
+                        )
+                      }
+                    />
+                  </InputGroup>
+                }
+              />
+            </div>
+            <div className={shared.col}>
+              <Form.Label>Current Month</Form.Label>
+              <TooltipOnHover
+                text="Used to calculate how many months remain in the year for annual contribution limits (HSA, IRA, 401k)."
+                nest={
+                  <Form.Select
+                    className="mb-3"
+                    value={inputs.currentMonth}
+                    onChange={(e) =>
+                      setField("currentMonth", parseInt(e.target.value))
+                    }
+                  >
+                    {MONTH_NAMES.map((name, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {name} ({13 - (i + 1)} mo left)
+                      </option>
+                    ))}
+                  </Form.Select>
+                }
+              />
+            </div>
+          </div>
 
           <Form.Label>Monthly Essential Expenses</Form.Label>
           <TooltipOnHover
@@ -786,8 +866,12 @@ export default function MoneyFlow() {
                       )
                     }
                   >
-                    <option value="single">Single ($4,300)</option>
-                    <option value="family">Family ($8,550)</option>
+                    <option value="single">
+                      Single ({formatCurrency(HSA_SINGLE)})
+                    </option>
+                    <option value="family">
+                      Family ({formatCurrency(HSA_FAMILY)})
+                    </option>
                   </Form.Select>
                 </div>
                 <div className={shared.col}>
@@ -834,7 +918,7 @@ export default function MoneyFlow() {
             <div className={shared.col}>
               <Form.Label>401k contributed</Form.Label>
               <TooltipOnHover
-                text="Your own employee contributions only (excludes employer match). Used to track progress toward the $23,500 employee limit."
+                text={`Your own employee contributions only (excludes employer match). Used to track progress toward the ${formatCurrency(K401_BASE)} employee limit.`}
                 nest={
                   <InputGroup className="mb-3 w-100">
                     <InputGroup.Text>$</InputGroup.Text>
@@ -938,6 +1022,7 @@ export default function MoneyFlow() {
                 def={def}
                 result={stepResults[i]}
                 isLast={i === STEP_DEFS.length - 1}
+                monthsRemaining={monthsRemaining}
               />
             ))}
           </div>
@@ -951,8 +1036,9 @@ export default function MoneyFlow() {
             >
               Prime Directive
             </a>
-            . IRA and 401k monthly amounts spread over 12 months regardless of
-            time of year. State taxes and investment returns not included.
+            . HSA, IRA, and 401k monthly amounts are spread over the months
+            remaining in the year from the selected month. State taxes and
+            investment returns not included.
           </p>
         </div>
       </div>
