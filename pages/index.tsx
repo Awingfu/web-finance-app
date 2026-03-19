@@ -103,8 +103,8 @@ const Home: NextPage = () => {
         <h1 className={styles.title}>Finance Tools</h1>
 
         <p className={styles.description}>
-          Tools for paycheck estimation, retirement planning, and investment
-          strategy.
+          Tools for paycheck estimation, retirement planning, investment
+          strategy, and more.
         </p>
 
         <div className={styles.sections}>
