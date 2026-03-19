@@ -14,7 +14,7 @@ export default function Document() {
         <meta property="og:title" content="Web Finance App" />
         <meta
           property="og:description"
-          content="Free calculators for paycheck, retirement, and investing"
+          content="Calculators for paycheck, retirement, investing, and more"
         />
         <meta
           property="og:image"
