@@ -2,19 +2,21 @@ import { useState, useMemo } from "react";
 import { Alert, Form, InputGroup } from "react-bootstrap";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
 import { formatCurrency, formatStateValue } from "../../src/utils";
+import {
+  _401k_maximum_contribution_individual as K401_BASE,
+  _401k_maximum_contribution_individual_over50 as K401_CATCHUP,
+  _IRA_maximum_contribution_individual as IRA_BASE,
+  _IRA_maximum_contribution_individual_over50 as IRA_CATCHUP,
+  maximum_HSA_contribution as HSA_SINGLE,
+  maximum_HSA_contribution_family as HSA_FAMILY,
+} from "../../src/utils/constants";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import shared from "../../styles/shared.module.scss";
 import styles from "../../styles/MoneyFlow.module.scss";
 
-// ─── 2026 Limits ──────────────────────────────────────────────────────────────
+// ─── Other limits ─────────────────────────────────────────────────────────────
 
 const STARTER_EF = 1000;
-const IRA_BASE = 7000;
-const IRA_CATCHUP = 8000;
-const K401_BASE = 23500;
-const K401_CATCHUP = 31000;
-const HSA_SINGLE = 4300;
-const HSA_FAMILY = 8550;
 
 // ─── Step Colors ──────────────────────────────────────────────────────────────
 
