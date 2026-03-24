@@ -17,6 +17,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import { formatCurrency, formatPercent } from "../../src/utils";
 import { calcFire } from "../../src/utils/fire_utils";
 import type { FireInputs } from "../../src/utils/fire_utils";
@@ -76,6 +77,8 @@ const VARIANT_CARDS = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 const FirePage = () => {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
   const [inputs, setInputs] = useState<FireInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("growth");
 
@@ -358,6 +361,8 @@ const FirePage = () => {
                         "Portfolio",
                       ]}
                       labelFormatter={(l) => `Age ${l}`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Line
                       type="monotone"
@@ -445,6 +450,8 @@ const FirePage = () => {
                         "Years to FIRE",
                       ]}
                       labelFormatter={(l) => `Savings rate: ${l}%`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Line
                       type="monotone"

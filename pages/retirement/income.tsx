@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import { formatCurrency, formatStateValue, downloadCSV } from "../../src/utils";
 import {
   simulateRetirementIncome,
@@ -90,6 +91,9 @@ const DEFAULT_INPUTS: RetirementIncomeInputs = {
 };
 
 function RetirementIncome() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
+
   const [inputs, setInputs] = useState<RetirementIncomeInputs>(DEFAULT_INPUTS);
 
   // Optional account section visibility
@@ -987,7 +991,11 @@ function RetirementIncome() {
                     }}
                   />
                   <YAxis tickFormatter={formatChartDollar} width={60} />
-                  <Tooltip formatter={tooltipFormatter} />
+                  <Tooltip
+                    formatter={tooltipFormatter}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                  />
                   <Legend verticalAlign="top" />
                   {inputs.strategy === "set_withdrawal_rate" && (
                     <ReferenceLine
@@ -1100,7 +1108,11 @@ function RetirementIncome() {
                     }}
                   />
                   <YAxis tickFormatter={formatChartDollar} width={60} />
-                  <Tooltip formatter={tooltipFormatter} />
+                  <Tooltip
+                    formatter={tooltipFormatter}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                  />
                   <Legend verticalAlign="top" />
                   {hasCashBalance && (
                     <Area

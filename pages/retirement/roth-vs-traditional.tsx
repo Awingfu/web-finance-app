@@ -22,6 +22,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -130,6 +131,8 @@ const DEFAULT_INPUTS: CoreInputs = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function RothVsTraditional() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
   const [inputs, setInputs] = useState<CoreInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("breakeven");
   const [equalNetMode, setEqualNetMode] = useState(false);
@@ -915,6 +918,8 @@ export default function RothVsTraditional() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(rate) => `Effective rate: ${rate}%`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Line
@@ -985,6 +990,8 @@ export default function RothVsTraditional() {
                         name: string | undefined,
                       ) => [formatCurrency(value ?? 0), name ?? ""]}
                       labelFormatter={(age) => `Age ${age}`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Legend verticalAlign="top" />
                     <Bar
@@ -1034,6 +1041,8 @@ export default function RothVsTraditional() {
                         name: string | undefined,
                       ) => [formatCurrency(value ?? 0), name ?? ""]}
                       labelFormatter={(age) => `Age ${age}`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Legend verticalAlign="top" />
                     {inputs.currentAge < EARLY_PENALTY_AGE && (
@@ -1187,6 +1196,8 @@ export default function RothVsTraditional() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(age) => `Age ${age}`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Line
@@ -1243,6 +1254,8 @@ export default function RothVsTraditional() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(age) => `Age ${age}`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Bar

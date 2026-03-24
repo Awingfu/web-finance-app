@@ -19,9 +19,11 @@ import {
   Legend,
   ReferenceLine,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -182,8 +184,7 @@ function buildIncomeSegments(
       const room = max - Math.max(min, taxableOrdinary);
       const inBracket = Math.min(remaining, room);
       if (inBracket > 0) {
-        const rateLabel =
-          rate === 0 ? "0%" : rate === 0.15 ? "15%" : "20%";
+        const rateLabel = rate === 0 ? "0%" : rate === 0.15 ? "15%" : "20%";
         segments.push({
           name: `LTCG ${rateLabel}`,
           income: Math.round(inBracket),
@@ -290,6 +291,9 @@ const DEFAULT_ORDINARY = 75000;
 const DEFAULT_GAINS = 20000;
 
 export default function CapitalGains() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
+
   const [filing, setFiling] = useState<FilingStatus>("single");
   const [ordinaryIncome, setOrdinaryIncome] = useState(DEFAULT_ORDINARY);
   const [gains, setGains] = useState(DEFAULT_GAINS);
@@ -319,7 +323,9 @@ export default function CapitalGains() {
   // Effective LTCG rate on total gains (including sheltered portion)
   const ltcgEffectiveRate = gains > 0 ? ltcgTax / gains : 0;
   const ordinaryMarginalRate =
-    ordinaryIncome > stdDed ? getMarginalRateFromTable(ordinaryIncome, table) : 0;
+    ordinaryIncome > stdDed
+      ? getMarginalRateFromTable(ordinaryIncome, table)
+      : 0;
 
   const segments = useMemo(
     () => buildIncomeSegments(ordinaryIncome, gains, filing, table),
@@ -359,9 +365,9 @@ export default function CapitalGains() {
         <h1>Long-Term Capital Gains &amp; Qualified Dividends</h1>
         <p>
           Long-term capital gains (assets held over 1 year) and qualified
-          dividends are taxed at preferential rates: 0%, 15%, or 20%. But
-          your ordinary income fills the lower LTCG brackets first — see how
-          both taxes combine in your situation.
+          dividends are taxed at preferential rates: 0%, 15%, or 20%. But your
+          ordinary income fills the lower LTCG brackets first — see how both
+          taxes combine in your situation.
         </p>
       </main>
 
@@ -401,9 +407,7 @@ export default function CapitalGains() {
             }
           />
 
-          <Form.Label>
-            Long-Term Capital Gains / Qualified Dividends
-          </Form.Label>
+          <Form.Label>Long-Term Capital Gains / Qualified Dividends</Form.Label>
           <TooltipOnHover
             text="Gains from assets held longer than 1 year, plus qualified dividends from stocks and ETFs. These are taxed at special LTCG rates (0%, 15%, or 20%) instead of ordinary income rates."
             nest={
@@ -414,9 +418,7 @@ export default function CapitalGains() {
                   onWheel={(e) => e.currentTarget.blur()}
                   value={formatStateValue(gains)}
                   onChange={(e) =>
-                    setGains(
-                      clamp(parseFloat(e.target.value), 0, 10_000_000),
-                    )
+                    setGains(clamp(parseFloat(e.target.value), 0, 10_000_000))
                   }
                 />
                 <InputGroup.Text>/ yr</InputGroup.Text>
@@ -500,8 +502,8 @@ export default function CapitalGains() {
           <Alert variant="info" className="mb-3">
             {gains === 0 ? (
               <>
-                Enter a long-term capital gains or qualified dividends amount
-                to see how it interacts with your ordinary income taxes.
+                Enter a long-term capital gains or qualified dividends amount to
+                see how it interacts with your ordinary income taxes.
               </>
             ) : ltcgTax === 0 ? (
               <>
@@ -660,35 +662,42 @@ export default function CapitalGains() {
                       value: number | undefined,
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipLabelStyle}
                   />
                   <Bar
                     dataKey="income"
                     name="Income in bracket"
                     radius={[4, 4, 0, 0]}
-                  >
-                    {segments.map((seg, i) => (
-                      <Cell
-                        key={`income-${i}`}
-                        fill={seg.color}
-                        fillOpacity={seg.isMarginal ? 1 : 0.65}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={segments[props.index]?.color}
+                        fillOpacity={
+                          segments[props.index]?.isMarginal ? 1 : 0.65
+                        }
                       />
-                    ))}
-                  </Bar>
-                  <Bar dataKey="tax" name="Tax owed" radius={[4, 4, 0, 0]}>
-                    {segments.map((seg, i) => (
-                      <Cell
-                        key={`tax-${i}`}
-                        fill={seg.color}
+                    )}
+                  />
+                  <Bar
+                    dataKey="tax"
+                    name="Tax owed"
+                    radius={[4, 4, 0, 0]}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={segments[props.index]?.color}
                         fillOpacity={0.35}
                       />
-                    ))}
-                  </Bar>
+                    )}
+                  />
                 </BarChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
                 Ordinary income brackets are shown first (green → red), then
-                LTCG / qualified dividends (teal = 0%, orange = 15%, red =
-                20%). Taller bars = more income; shorter bars = tax owed.
+                LTCG / qualified dividends (teal = 0%, orange = 15%, red = 20%).
+                Taller bars = more income; shorter bars = tax owed.
               </p>
             </div>
           )}
@@ -703,9 +712,9 @@ export default function CapitalGains() {
                 className={shared.chartNote}
                 style={{ marginBottom: "0.75rem" }}
               >
-                With {formatCurrency(gains)} in long-term gains held fixed,
-                see how earning more ordinary income pushes gains into higher
-                LTCG brackets.
+                With {formatCurrency(gains)} in long-term gains held fixed, see
+                how earning more ordinary income pushes gains into higher LTCG
+                brackets.
               </p>
               <ResponsiveContainer width="100%" height={380}>
                 <ComposedChart
@@ -737,6 +746,8 @@ export default function CapitalGains() {
                     labelFormatter={(income) =>
                       `Ordinary Income: ${formatCurrency(income as number)}`
                     }
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Area
@@ -784,8 +795,8 @@ export default function CapitalGains() {
                 </ComposedChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
-                The teal step line shows your LTCG rate on gains — it jumps
-                from 0% → 15% → 20% as ordinary income rises past the LTCG
+                The teal step line shows your LTCG rate on gains — it jumps from
+                0% → 15% → 20% as ordinary income rises past the LTCG
                 thresholds. Your ordinary income uses up the low-rate space
                 first.
               </p>
@@ -803,15 +814,14 @@ export default function CapitalGains() {
           <div className={styles.learnCard}>
             <h4>Long-Term vs Short-Term</h4>
             <p>
-              <strong>Long-term capital gains</strong> (assets held &gt; 1
-              year) and <strong>qualified dividends</strong> are taxed at
-              preferential rates: 0%, 15%, or 20%.
+              <strong>Long-term capital gains</strong> (assets held &gt; 1 year)
+              and <strong>qualified dividends</strong> are taxed at preferential
+              rates: 0%, 15%, or 20%.
             </p>
             <p>
-              <strong>Short-term gains</strong> (assets held ≤ 1 year) are
-              taxed as ordinary income — the same as your salary. Holding
-              investments longer than a year can dramatically lower your tax
-              bill.
+              <strong>Short-term gains</strong> (assets held ≤ 1 year) are taxed
+              as ordinary income — the same as your salary. Holding investments
+              longer than a year can dramatically lower your tax bill.
             </p>
           </div>
           <div className={styles.learnCard}>
@@ -826,9 +836,8 @@ export default function CapitalGains() {
               <strong style={{ color: LTCG_COLOR_0 }}>0%</strong>.
             </p>
             <p>
-              Early retirees, gap-year takers, and low-income years can
-              harvest gains tax-free by staying in this bracket — a powerful
-              strategy.
+              Early retirees, gap-year takers, and low-income years can harvest
+              gains tax-free by staying in this bracket — a powerful strategy.
             </p>
           </div>
           <div className={styles.learnCard}>
@@ -836,16 +845,15 @@ export default function CapitalGains() {
             <p>
               Ordinary income fills the LTCG brackets first. Once taxable
               ordinary income exceeds{" "}
-              <strong>{formatCurrency(ltcgThreshold)}</strong>, every dollar
-              of gains is taxed at 15%. Above{" "}
-              <strong>{formatCurrency(ltcg20Threshold)}</strong>, it&apos;s
-              20%.
+              <strong>{formatCurrency(ltcgThreshold)}</strong>, every dollar of
+              gains is taxed at 15%. Above{" "}
+              <strong>{formatCurrency(ltcg20Threshold)}</strong>, it&apos;s 20%.
             </p>
             <p>
               This means the same {formatCurrency(gains)} gain can cost{" "}
               {formatCurrency(0)}, {formatCurrency(gains * 0.15)}, or{" "}
-              {formatCurrency(gains * 0.2)} in federal taxes depending
-              entirely on your ordinary income level.
+              {formatCurrency(gains * 0.2)} in federal taxes depending entirely
+              on your ordinary income level.
             </p>
           </div>
         </div>

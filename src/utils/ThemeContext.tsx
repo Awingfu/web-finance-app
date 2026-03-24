@@ -45,3 +45,18 @@ export function useTheme() {
   if (!ctx) throw new Error("useTheme must be used inside ThemeProvider");
   return ctx;
 }
+
+export function useChartTooltipProps() {
+  const { theme } = useTheme();
+  const dark = theme === "dark";
+  return {
+    contentStyle: dark
+      ? {
+          backgroundColor: "#2a2a2a",
+          border: "1px solid #555",
+          color: "#e0e0e0",
+        }
+      : { backgroundColor: "#fff", border: "1px solid #ccc", color: "#333" },
+    labelStyle: dark ? { color: "#e0e0e0" } : { color: "#333" },
+  };
+}

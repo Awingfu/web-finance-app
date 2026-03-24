@@ -20,6 +20,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -98,6 +99,8 @@ const DEFAULT_INPUTS: WhyRetirementInputs = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WhyRetirementAccount() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
   const [inputs, setInputs] = useState<WhyRetirementInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("growth");
 
@@ -551,6 +554,8 @@ export default function WhyRetirementAccount() {
                         name: string | undefined,
                       ) => [formatCurrency(value ?? 0), name ?? ""]}
                       labelFormatter={(age) => `Age ${age}`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Legend verticalAlign="top" />
                     <Line
@@ -609,6 +614,8 @@ export default function WhyRetirementAccount() {
                         name: string | undefined,
                       ) => [formatCurrency(value ?? 0), name ?? ""]}
                       labelFormatter={(age) => `Age ${age}`}
+                      contentStyle={tooltipStyle}
+                      labelStyle={tooltipLabelStyle}
                     />
                     <Legend verticalAlign="top" />
                     <Line
@@ -680,6 +687,8 @@ export default function WhyRetirementAccount() {
                       value: number | undefined,
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Bar

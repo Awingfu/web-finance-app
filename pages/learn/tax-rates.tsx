@@ -19,9 +19,11 @@ import {
   Legend,
   ReferenceLine,
   ResponsiveContainer,
-  Cell,
+  Rectangle,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -193,6 +195,9 @@ function buildRateCurve(
 const DEFAULT_INCOME = 85000;
 
 export default function TaxRates() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
+
   const [filing, setFiling] = useState<FilingStatus>("single");
   const [grossIncome, setGrossIncome] = useState(DEFAULT_INCOME);
   const [chartView, setChartView] = useState<ChartView>("breakdown");
@@ -467,29 +472,36 @@ export default function TaxRates() {
                       value: number | undefined,
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipLabelStyle}
                   />
                   <Bar
                     dataKey="income"
                     name="Income in bracket"
                     radius={[4, 4, 0, 0]}
-                  >
-                    {breakdownData.map((seg, i) => (
-                      <Cell
-                        key={`income-${i}`}
-                        fill={seg.color}
-                        fillOpacity={seg.isMarginal ? 1 : 0.65}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={breakdownData[props.index]?.color}
+                        fillOpacity={
+                          breakdownData[props.index]?.isMarginal ? 1 : 0.65
+                        }
                       />
-                    ))}
-                  </Bar>
-                  <Bar dataKey="tax" name="Tax owed" radius={[4, 4, 0, 0]}>
-                    {breakdownData.map((seg, i) => (
-                      <Cell
-                        key={`tax-${i}`}
-                        fill={seg.color}
+                    )}
+                  />
+                  <Bar
+                    dataKey="tax"
+                    name="Tax owed"
+                    radius={[4, 4, 0, 0]}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={breakdownData[props.index]?.color}
                         fillOpacity={0.35}
                       />
-                    ))}
-                  </Bar>
+                    )}
+                  />
                 </BarChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
@@ -537,6 +549,8 @@ export default function TaxRates() {
                     labelFormatter={(income) =>
                       `Income: ${formatCurrency(income as number)}`
                     }
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Area
