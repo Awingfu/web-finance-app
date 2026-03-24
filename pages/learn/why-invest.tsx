@@ -11,17 +11,17 @@ import {
   Line,
   BarChart,
   Bar,
-  ComposedChart,
-  Area,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Legend,
-  Cell,
+  Rectangle,
   ResponsiveContainer,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -67,6 +67,9 @@ const DEFAULT_INPUTS: WhyInvestInputs = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function WhyInvest() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
+
   const [inputs, setInputs] = useState<WhyInvestInputs>(DEFAULT_INPUTS);
   const [chartView, setChartView] = useState<ChartView>("growth");
   const [comparisonAge, setComparisonAge] = useState(
@@ -489,6 +492,8 @@ export default function WhyInvest() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(age) => `Age ${age}`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Line
@@ -661,6 +666,8 @@ export default function WhyInvest() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(age) => `Age ${age}`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Line
@@ -725,36 +732,43 @@ export default function WhyInvest() {
                       name: string | undefined,
                     ) => [formatCurrency(value ?? 0), name ?? ""]}
                     labelFormatter={(age) => `Start age: ${age}`}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipLabelStyle}
                   />
                   <Legend verticalAlign="top" />
                   <Bar
                     dataKey="market"
                     name="Market Portfolio"
                     fill={MARKET_COLOR}
-                  >
-                    {result.delayData.map((entry, index) => (
-                      <Cell
-                        key={`cell-market-${index}`}
-                        fill={
-                          entry.isCurrent ? MARKET_COLOR_DARK : MARKET_COLOR
-                        }
-                        fillOpacity={entry.isCurrent ? 1 : 0.65}
-                      />
-                    ))}
-                  </Bar>
+                    shape={(props: BarShapeProps) => {
+                      const entry = result.delayData[props.index];
+                      return (
+                        <Rectangle
+                          {...props}
+                          fill={
+                            entry?.isCurrent ? MARKET_COLOR_DARK : MARKET_COLOR
+                          }
+                          fillOpacity={entry?.isCurrent ? 1 : 0.65}
+                        />
+                      );
+                    }}
+                  />
                   <Bar
                     dataKey="savings"
                     name="Savings Account"
                     fill={SAVINGS_COLOR}
-                  >
-                    {result.delayData.map((entry, index) => (
-                      <Cell
-                        key={`cell-savings-${index}`}
-                        fill={SAVINGS_COLOR}
-                        fillOpacity={entry.isCurrent ? 1 : 0.65}
-                      />
-                    ))}
-                  </Bar>
+                    shape={(props: BarShapeProps) => {
+                      const entry = result.delayData[props.index];
+                      return (
+                        <Rectangle
+                          {...props}
+                          fill={SAVINGS_COLOR}
+                          fillOpacity={entry?.isCurrent ? 1 : 0.65}
+                        />
+                      );
+                    }}
+                  />
                 </BarChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>

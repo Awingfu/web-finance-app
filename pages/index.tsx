@@ -41,6 +41,12 @@ const SECTIONS: Section[] = [
         description:
           "See how progressive tax brackets work and why your effective rate is always lower than your marginal rate",
       },
+      {
+        href: "/learn/capital-gains",
+        title: "Capital Gains & Qualified Dividends",
+        description:
+          "See how long-term capital gains and qualified dividends are taxed at 0%, 15%, or 20% — and how your ordinary income affects those rates",
+      },
     ],
   },
   {

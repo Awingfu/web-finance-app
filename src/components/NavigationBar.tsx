@@ -38,6 +38,10 @@ const NAV_ENTRIES: NavEntry[] = [
         label: "How Federal Tax Works",
       },
       {
+        href: "/learn/capital-gains",
+        label: "Capital Gains & Qualified Dividends",
+      },
+      {
         href: "/learn/money-flow",
         label: "Where to Put My Money",
       },
@@ -66,6 +70,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/learn/why-retirement-account": "Why Retirement Account?",
   "/learn/three-fund-portfolio": "3-Fund Portfolio",
   "/learn/tax-rates": "How Federal Tax Works",
+  "/learn/capital-gains": "Capital Gains & Qualified Dividends",
   "/learn/money-flow": "Where to Put My Money",
   "/retirement/savings-optimizer": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",

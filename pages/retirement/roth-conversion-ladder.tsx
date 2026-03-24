@@ -22,6 +22,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import {
   formatCurrency,
   formatPercent,
@@ -131,6 +132,8 @@ const DEFAULT_INPUTS: CoreInputs = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function RothConversionLadder() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
   const [inputs, setInputs] = useState<CoreInputs>(DEFAULT_INPUTS);
   const [showTable, setShowTable] = useState(false);
 
@@ -948,6 +951,8 @@ export default function RothConversionLadder() {
                     value: number | undefined,
                     name: string | undefined,
                   ) => [formatCurrency(value ?? 0), name ?? ""]}
+                  contentStyle={tooltipStyle}
+                  labelStyle={tooltipLabelStyle}
                 />
                 <Legend />
                 <ReferenceLine

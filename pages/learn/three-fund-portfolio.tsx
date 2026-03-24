@@ -11,7 +11,7 @@ import {
   Line,
   Bar,
   BarChart,
-  Cell,
+  Rectangle,
   ScatterChart,
   Scatter,
   XAxis,
@@ -22,7 +22,9 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { Header, Footer } from "../../src/components";
+import { useChartTooltipProps } from "../../src/utils/ThemeContext";
 import { formatCurrency, formatPercent } from "../../src/utils";
 import retirementStyles from "../../styles/Retirement.module.scss";
 import shared from "../../styles/shared.module.scss";
@@ -175,6 +177,9 @@ type CompareMetric = "return" | "volatility" | "sharpe";
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function ThreeFundPortfolio() {
+  const { contentStyle: tooltipStyle, labelStyle: tooltipLabelStyle } =
+    useChartTooltipProps();
+
   const [stocksPct, setStocksPct] = useState(80);
   const [usPct, setUsPct] = useState(75);
   const [years, setYears] = useState(25);
@@ -756,12 +761,20 @@ export default function ThreeFundPortfolio() {
                           ? "Volatility"
                           : "Sharpe Ratio",
                     ]}
+                    contentStyle={tooltipStyle}
+                    labelStyle={tooltipLabelStyle}
+                    itemStyle={tooltipLabelStyle}
                   />
-                  <Bar dataKey={compareMetric} radius={[4, 4, 0, 0]}>
-                    {compareData.map((entry, i) => (
-                      <Cell key={i} fill={entry.color} />
-                    ))}
-                  </Bar>
+                  <Bar
+                    dataKey={compareMetric}
+                    radius={[4, 4, 0, 0]}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={compareData[props.index]?.color}
+                      />
+                    )}
+                  />
                 </BarChart>
               </ResponsiveContainer>
               <div className={styles.compareLegend}>
