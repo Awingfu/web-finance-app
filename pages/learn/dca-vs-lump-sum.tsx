@@ -61,31 +61,31 @@ const SCENARIOS: {
   value: MarketScenario;
   label: string;
   icon: string;
-  description: string;
+  hint: string; // static card tooltip
 }[] = [
   {
     value: "bull",
     label: "Bull Market",
     icon: "📈",
-    description: "Steady climb — market gains momentum over time",
+    hint: "Market gains momentum — starts slow, accelerates over time",
   },
   {
     value: "bear",
     label: "Bear then Bull",
     icon: "📉",
-    description: "Market dips first, then recovers (V-shape)",
+    hint: "Market dips early then recovers (V-shape) — DCA buys cheap shares during the dip",
   },
   {
     value: "volatile",
     label: "Volatile",
     icon: "〰",
-    description: "Alternating up/down swings, same long-run return",
+    hint: "Alternating up/down months — DCA naturally buys more when prices are low",
   },
   {
     value: "flat",
     label: "Flat / Average",
     icon: "➡",
-    description: "Consistent average return every month",
+    hint: "Consistent average return every month — no path effects, only HYSA offset matters",
   },
 ];
 
@@ -97,9 +97,51 @@ const DEFAULT_INPUTS: DcaInputs = {
   dcaMonths: 12,
   marketReturnRate: 0.1,
   savingsAccountRate: 0.045,
-  scenario: "flat",
-  customMonthlyReturns: [],
+  scenario: "bear",
+  scenarioIntensity: 0.6,
 };
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function intensityLabel(i: number): string {
+  if (i < 0.25) return "Mild";
+  if (i < 0.5) return "Moderate";
+  if (i < 0.75) return "Strong";
+  return "Extreme";
+}
+
+/** Plain-English description of what the scenario is doing at a given intensity. */
+function scenarioDescription(
+  scenario: MarketScenario,
+  intensity: number,
+  marketReturnRate: number,
+): string {
+  if (scenario === "flat")
+    return "Consistent average return every month — path doesn't affect either strategy.";
+
+  const mb = Math.pow(1 + marketReturnRate, 1 / 12) - 1;
+  const I = intensity;
+
+  switch (scenario) {
+    case "bull": {
+      const startPct = Math.max(0, (1 - I) * 100).toFixed(0);
+      const endPct = ((1 + I) * 100).toFixed(0);
+      return `Market starts slow (${startPct}% of avg return) and accelerates to ${endPct}% of avg return by the end. Lump sum gets the upside from being fully invested; DCA's uninvested cash earns HYSA interest during the slow start.`;
+    }
+    case "bear": {
+      const troughAnnual = Math.pow(1 + mb * (1 - 4 * I), 12) - 1;
+      const peakAnnual = Math.pow(1 + mb * (1 + 4 * I), 12) - 1;
+      return `Market falls to ≈${formatPercent(troughAnnual)}/yr at the trough then recovers to ≈${formatPercent(peakAnnual)}/yr at the peak. DCA buys discounted shares during the dip, lowering its average cost.`;
+    }
+    case "volatile": {
+      const lowAnnual = Math.pow(1 + mb * (1 - 3 * I), 12) - 1;
+      const highAnnual = Math.pow(1 + mb * (1 + 3 * I), 12) - 1;
+      return `Returns alternate between ≈${formatPercent(lowAnnual)}/yr and ≈${formatPercent(highAnnual)}/yr each month. DCA's equal installments buy more shares on down months and fewer on up months.`;
+    }
+    default:
+      return "";
+  }
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -123,6 +165,16 @@ export default function DcaVsLumpSum() {
   const winner = dcaWins ? "DCA" : "Lump Sum";
   const winnerColor = dcaWins ? DCA_COLOR : LUMP_COLOR;
 
+  const currentScenarioDesc = useMemo(
+    () =>
+      scenarioDescription(
+        inputs.scenario,
+        inputs.scenarioIntensity,
+        inputs.marketReturnRate,
+      ),
+    [inputs.scenario, inputs.scenarioIntensity, inputs.marketReturnRate],
+  );
+
   // Downsample monthly data for charts (max ~120 points)
   const chartData = useMemo(() => {
     const data = result.monthlyData;
@@ -131,7 +183,7 @@ export default function DcaVsLumpSum() {
     return data.filter((_, i) => i % step === 0 || i === data.length - 1);
   }, [result.monthlyData]);
 
-  // Price path data (normalised to 100)
+  // Price path data (normalised to 100 at month 0)
   const pricePath = useMemo(() => {
     let price = 100;
     return result.monthlyReturns.slice(0, horizonMonths).map((r, i) => {
@@ -140,7 +192,6 @@ export default function DcaVsLumpSum() {
     });
   }, [result.monthlyReturns, horizonMonths]);
 
-  // Final value bar chart data
   const barData = [
     { name: "DCA", value: result.finalDcaTotal, fill: DCA_COLOR },
     { name: "Lump Sum", value: result.finalLumpSum, fill: LUMP_COLOR },
@@ -156,8 +207,8 @@ export default function DcaVsLumpSum() {
           You have a windfall or savings ready to invest. Should you put it all
           in at once (<strong>lump sum</strong>), or spread it out over time (
           <strong>dollar-cost averaging</strong>)? Money not yet invested earns
-          interest in a savings account. Tune the market scenario and see which
-          strategy comes out ahead.
+          interest in a savings account. Tune the scenario and intensity to see
+          which strategy comes out ahead.
         </p>
       </main>
 
@@ -300,16 +351,12 @@ export default function DcaVsLumpSum() {
 
           {/* ── Market Scenario ── */}
           <p className={shared.sectionLabel}>Market Scenario</p>
-          <p className={shared.rateHint}>
-            Choose how the market behaves during your investment period. All
-            scenarios share the same long-run annual return above.
-          </p>
 
           <div className={styles.scenarioGrid}>
             {SCENARIOS.map((s) => (
               <div key={s.value}>
                 <TooltipOnHover
-                  text={s.description}
+                  text={s.hint}
                   nest={
                     <div
                       className={
@@ -333,6 +380,40 @@ export default function DcaVsLumpSum() {
               </div>
             ))}
           </div>
+
+          {/* Intensity slider — hidden for flat */}
+          {inputs.scenario !== "flat" && (
+            <>
+              <div className={styles.dcaSlider} style={{ marginTop: "1rem" }}>
+                <div className={styles.dcaMonthDisplay}>
+                  <Form.Label className="mb-0">Scenario Intensity</Form.Label>
+                  <span
+                    className={styles.dcaMonthBadge}
+                    style={{ color: "#e67e22" }}
+                  >
+                    {intensityLabel(inputs.scenarioIntensity)}
+                  </span>
+                </div>
+                <Form.Range
+                  min={5}
+                  max={100}
+                  step={5}
+                  value={Math.round(inputs.scenarioIntensity * 100)}
+                  onChange={(e) =>
+                    setField(
+                      "scenarioIntensity",
+                      parseInt(e.target.value) / 100,
+                    )
+                  }
+                />
+                <div className="d-flex justify-content-between">
+                  <small className="text-muted">Mild</small>
+                  <small className="text-muted">Extreme</small>
+                </div>
+              </div>
+              <p className={shared.rateHint}>{currentScenarioDesc}</p>
+            </>
+          )}
         </Form>
 
         {/* ── RESULTS ──────────────────────────────────────────────────────── */}
@@ -340,7 +421,7 @@ export default function DcaVsLumpSum() {
           {/* Key insight alert */}
           <Alert
             variant={dcaWins ? "info" : "primary"}
-            className="mb-3"
+            className="mb-2"
             style={{ borderLeft: `4px solid ${winnerColor}` }}
           >
             <strong style={{ color: winnerColor }}>{winner} wins</strong> in
@@ -351,8 +432,8 @@ export default function DcaVsLumpSum() {
                 <strong>
                   {formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}
                 </strong>{" "}
-                ahead. The HYSA interest on uninvested cash and lower average
-                buy price more than compensate for time out of market.
+                ahead. Lower average buy price and HYSA interest on idle cash
+                outweigh missing time in market.
               </>
             ) : (
               <>
@@ -360,11 +441,21 @@ export default function DcaVsLumpSum() {
                 <strong>
                   {formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}
                 </strong>{" "}
-                ahead. Getting fully invested immediately lets compounding work
-                on the full amount sooner.
+                ahead. Full compounding from day one beats the benefit of
+                spreading purchases.
               </>
             )}
           </Alert>
+
+          {/* Why are the differences small? */}
+          <p className={shared.chartNote} style={{ marginBottom: "1rem" }}>
+            <strong>Why are the differences often small?</strong> That&apos;s
+            realistic. Research shows lump sum beats DCA ≈65% of the time in
+            rising equity markets, but typically by only 2–4% over a 12-month
+            DCA window. The gap widens with a longer DCA period, higher market
+            volatility, and deeper drawdowns — use the intensity slider to
+            explore extremes.
+          </p>
 
           {/* Summary cards */}
           <div className={shared.summaryCards}>
@@ -527,9 +618,9 @@ export default function DcaVsLumpSum() {
                 </LineChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
-                The dashed gray line shows cash still sitting in the HYSA
-                waiting to be deployed. Once DCA is complete at month{" "}
-                {inputs.dcaMonths}, both strategies are fully invested.
+                The dashed gray line shows cash still in the HYSA waiting to be
+                deployed. After month {inputs.dcaMonths} both strategies are
+                fully invested and move in lockstep.
               </p>
             </div>
           )}
@@ -540,7 +631,7 @@ export default function DcaVsLumpSum() {
               <h5 className="text-center mb-3">
                 Final Portfolio Value at {inputs.investmentHorizonYears} Years
               </h5>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width="100%" height={280}>
                 <BarChart
                   data={barData}
                   margin={{ top: 10, right: 20, left: 10, bottom: 10 }}
@@ -622,8 +713,8 @@ export default function DcaVsLumpSum() {
 
               <p className={shared.chartNote}>
                 {result.avgCostAdvantage > 0
-                  ? `DCA achieved a lower average buy price (${result.averageBuyPrice.toFixed(1)} vs ${result.lumpSumBuyPrice.toFixed(1)}), but time out of market cost some compounding.`
-                  : `Lump sum secured a lower entry price. In a rising market, buying earlier is typically better.`}
+                  ? `DCA achieved a lower average buy price (${result.averageBuyPrice.toFixed(1)} vs ${result.lumpSumBuyPrice.toFixed(1)}), but time out of market reduces total compounding.`
+                  : `Lump sum secured a lower entry price — in a rising market, buying earlier is typically better.`}
               </p>
             </div>
           )}
@@ -633,6 +724,12 @@ export default function DcaVsLumpSum() {
             <div className={shared.chartWrap}>
               <h5 className="text-center mb-3">
                 Market Price Path — {result.scenarioLabel}
+                {inputs.scenario !== "flat" && (
+                  <span className="text-muted fs-6">
+                    {" "}
+                    ({intensityLabel(inputs.scenarioIntensity)} intensity)
+                  </span>
+                )}
               </h5>
               <ResponsiveContainer width="100%" height={320}>
                 <LineChart
@@ -670,7 +767,7 @@ export default function DcaVsLumpSum() {
                     stroke="#888"
                     strokeDasharray="4 3"
                     label={{
-                      value: "Start",
+                      value: "Start (100)",
                       position: "insideTopLeft",
                       fontSize: 11,
                     }}
@@ -699,10 +796,11 @@ export default function DcaVsLumpSum() {
                 </LineChart>
               </ResponsiveContainer>
               <p className={shared.chartNote}>
-                All scenarios produce the same long-run annualised return (
-                {formatPercent(inputs.marketReturnRate)}), but the path affects
-                how much each strategy benefits from timing. DCA buys more
-                shares when prices are low and fewer when high.
+                All scenarios share the same long-run annualised return (
+                {formatPercent(inputs.marketReturnRate)}), but the path shape
+                determines how much the DCA strategy benefits from buying at
+                different prices along the way. Use the intensity slider to make
+                the path more or less extreme.
               </p>
             </div>
           )}

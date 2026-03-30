@@ -47,6 +47,12 @@ const SECTIONS: Section[] = [
         description:
           "See how long-term capital gains and qualified dividends are taxed at 0%, 15%, or 20% — and how your ordinary income affects those rates",
       },
+      {
+        href: "/learn/dca-vs-lump-sum",
+        title: "DCA vs Lump Sum",
+        description:
+          "Should you invest a windfall all at once or spread it out? Compare strategies across bull, bear, and volatile markets — uninvested cash earns HYSA interest",
+      },
     ],
   },
   {

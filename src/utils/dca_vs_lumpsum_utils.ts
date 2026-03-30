@@ -6,7 +6,7 @@
  * earning interest. Supports bullish, bearish, and volatile market scenarios.
  */
 
-export type MarketScenario = "bull" | "bear" | "volatile" | "flat" | "custom";
+export type MarketScenario = "bull" | "bear" | "volatile" | "flat";
 
 export interface DcaInputs {
   totalAmount: number; // total money available to invest
@@ -15,7 +15,7 @@ export interface DcaInputs {
   marketReturnRate: number; // nominal annual market return (e.g. 0.10)
   savingsAccountRate: number; // HYSA annual rate for uninvested cash
   scenario: MarketScenario;
-  customMonthlyReturns: number[]; // used when scenario === "custom"
+  scenarioIntensity: number; // 0–1: how extreme the scenario path is (0 = flat, 1 = max)
 }
 
 export interface MonthlyDataPoint {
@@ -42,86 +42,76 @@ export interface DcaResult {
   monthlyReturns: number[]; // actual monthly return rates used
 }
 
-/** Build a sequence of monthly returns for a given scenario over N months. */
-function buildMonthlyReturns(
-  inputs: DcaInputs,
-  totalMonths: number,
-): number[] {
-  const { scenario, marketReturnRate, customMonthlyReturns } = inputs;
-  const monthlyBase = Math.pow(1 + marketReturnRate, 1 / 12) - 1;
+/**
+ * Build a sequence of monthly returns for a given scenario over N months.
+ *
+ * All non-flat scenarios keep the arithmetic mean of their multipliers at 1.0,
+ * so the long-run average return stays close to `marketReturnRate`.
+ * `scenarioIntensity` (0–1) scales how far returns deviate from the flat case:
+ *   0 = perfectly flat, 1 = maximum path effect.
+ *
+ * Amplitude constants chosen so intensity=1.0 produces realistic extremes:
+ *   bull:     ±1× of base (0× at start → 2× at end)
+ *   bear:     ±4× of base (sharp dip then sharp recovery — ~25% annualised drop at peak)
+ *   volatile: ±3× of base (~17% annualised down to ~46% annualised up, alternating)
+ */
+function buildMonthlyReturns(inputs: DcaInputs, totalMonths: number): number[] {
+  const { scenario, marketReturnRate, scenarioIntensity } = inputs;
+  const I = scenarioIntensity;
+  const mb = Math.pow(1 + marketReturnRate, 1 / 12) - 1;
 
   switch (scenario) {
     case "bull": {
-      // Gradually accelerating — starts below average, ends above
+      // Ramp from (1 - I)× to (1 + I)× — arithmetic mean of multipliers = 1 ✓
       return Array.from({ length: totalMonths }, (_, i) => {
         const t = i / Math.max(totalMonths - 1, 1);
-        // ramp from 0.4× to 1.8× of the average monthly return
-        return monthlyBase * (0.4 + 1.4 * t);
+        return mb * (1 + I * (2 * t - 1));
       });
     }
     case "bear": {
-      // Market drops in the first half, recovers in the second half
+      // Cosine V-shape: drops then recovers.
+      // ∫cos(πt) dt from 0→1 = 0, so arithmetic mean of multipliers = 1 ✓
       return Array.from({ length: totalMonths }, (_, i) => {
         const t = i / Math.max(totalMonths - 1, 1);
-        // V-shape: down then up
-        const phase = Math.cos(Math.PI * t); // 1 at start, -1 at mid, 1 at end
-        return monthlyBase * (1 - 1.5 * phase);
+        return mb * (1 - I * 4 * Math.cos(Math.PI * t));
       });
     }
     case "volatile": {
-      // Alternating up/down with same long-run average
+      // Alternating up/down months — mean = 1 ✓ (with an even number of months)
       return Array.from({ length: totalMonths }, (_, i) => {
         const sign = i % 2 === 0 ? 1 : -1;
-        // Swing ±2× around the base, but keep same annualized return geometrically
-        return monthlyBase + sign * monthlyBase * 1.5;
+        return mb * (1 + sign * I * 3);
       });
     }
-    case "flat": {
-      return Array.from({ length: totalMonths }, () => monthlyBase);
-    }
-    case "custom": {
-      // Repeat provided values cyclically
-      if (customMonthlyReturns.length === 0)
-        return Array.from({ length: totalMonths }, () => monthlyBase);
-      return Array.from(
-        { length: totalMonths },
-        (_, i) => customMonthlyReturns[i % customMonthlyReturns.length],
-      );
-    }
+    case "flat":
     default:
-      return Array.from({ length: totalMonths }, () => monthlyBase);
+      return Array.from({ length: totalMonths }, () => mb);
   }
 }
 
 const SCENARIO_LABELS: Record<MarketScenario, string> = {
   bull: "Bull Market (steady climb)",
-  bear: "Bear Market (dip then recovery)",
+  bear: "Bear then Bull (V-shape)",
   volatile: "Volatile (alternating swings)",
   flat: "Flat / Average",
-  custom: "Custom",
 };
 
 export function calcDcaVsLumpSum(inputs: DcaInputs): DcaResult {
-  const {
-    totalAmount,
-    investmentHorizonYears,
-    dcaMonths,
-    savingsAccountRate,
-  } = inputs;
+  const { totalAmount, investmentHorizonYears, dcaMonths, savingsAccountRate } =
+    inputs;
 
   const totalMonths = Math.max(investmentHorizonYears * 12, dcaMonths);
   const monthlyInstallment = totalAmount / Math.max(dcaMonths, 1);
   const monthlySavingsRate = Math.pow(1 + savingsAccountRate, 1 / 12) - 1;
   const monthlyReturns = buildMonthlyReturns(inputs, totalMonths);
 
-  // Track price index for average cost calculation
+  // Track price index for average-cost calculation
   let priceIndex = 100; // starts at 100
   const dcaBuyPrices: { amount: number; price: number }[] = [];
 
   let dcaPortfolio = 0;
   let dcaCash = totalAmount; // all money starts in HYSA
   let lumpSumPortfolio = totalAmount; // lump sum invests everything immediately
-  let dcaSharesEquivalent = 0; // track shares * initial price for avg cost
 
   const monthlyData: MonthlyDataPoint[] = [];
 
@@ -144,13 +134,13 @@ export function calcDcaVsLumpSum(inputs: DcaInputs): DcaResult {
     dcaPortfolio = dcaPortfolio * (1 + monthlyReturn);
     lumpSumPortfolio = lumpSumPortfolio * (1 + monthlyReturn);
 
-    // Update price index (tracks cumulative market price)
+    // Update price index (cumulative market level)
     priceIndex = priceIndex * (1 + monthlyReturn);
 
     // DCA: apply HYSA interest to uninvested cash
     dcaCash = dcaCash * (1 + monthlySavingsRate);
 
-    // DCA: invest this month's installment (if still in DCA period)
+    // DCA: deploy this month's installment (if still in DCA period)
     if (m <= dcaMonths) {
       const installment = Math.min(monthlyInstallment, dcaCash);
       dcaCash -= installment;
@@ -171,11 +161,14 @@ export function calcDcaVsLumpSum(inputs: DcaInputs): DcaResult {
     });
   }
 
-  // Calculate weighted average buy price for DCA
+  // Weighted average buy price for DCA
   const totalInvested = dcaBuyPrices.reduce((s, p) => s + p.amount, 0);
   const weightedPrice =
     totalInvested > 0
-      ? dcaBuyPrices.reduce((s, p) => s + (p.amount / totalInvested) * p.price, 0)
+      ? dcaBuyPrices.reduce(
+          (s, p) => s + (p.amount / totalInvested) * p.price,
+          0,
+        )
       : lumpSumBuyPrice;
 
   const finalDcaTotal = dcaPortfolio + dcaCash;
