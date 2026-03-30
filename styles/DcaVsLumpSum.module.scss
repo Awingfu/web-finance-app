@@ -1,0 +1,81 @@
+@use "breakpoints" as *;
+
+.scenarioGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 1rem;
+
+  @media screen and (min-width: $medium) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.scenarioCard {
+  border: 2px solid var(--bs-border-color);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+  font-size: 0.82rem;
+  background: var(--bs-secondary-bg);
+
+  &:hover {
+    border-color: var(--bs-primary);
+  }
+}
+
+.scenarioCardActive {
+  composes: scenarioCard;
+  border-color: var(--bs-primary);
+  background: var(--bs-primary-bg-subtle, var(--bs-primary));
+  color: var(--bs-primary-text-emphasis, #fff);
+}
+
+.scenarioIcon {
+  font-size: 1.4rem;
+  margin-bottom: 4px;
+}
+
+.winnerBadge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.winnerBadgeDca {
+  composes: winnerBadge;
+  background: #2980b9;
+  color: #fff;
+}
+
+.winnerBadgeLump {
+  composes: winnerBadge;
+  background: #8e44ad;
+  color: #fff;
+}
+
+.dcaSlider {
+  margin-bottom: 1.25rem;
+}
+
+.dcaMonthDisplay {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.dcaMonthBadge {
+  font-size: 1.4rem;
+  font-weight: 700;
+  min-width: 2.5rem;
+  text-align: center;
+}
