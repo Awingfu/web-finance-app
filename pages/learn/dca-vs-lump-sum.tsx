@@ -17,11 +17,17 @@ import {
   Tooltip,
   Legend,
   ReferenceLine,
+  Rectangle,
   ResponsiveContainer,
 } from "recharts";
+import type { BarShapeProps } from "recharts";
 import { Header, Footer, TooltipOnHover } from "../../src/components";
 import { useChartTooltipProps } from "../../src/utils/ThemeContext";
-import { formatCurrency, formatPercent, formatStateValue } from "../../src/utils";
+import {
+  formatCurrency,
+  formatPercent,
+  formatStateValue,
+} from "../../src/utils";
 import {
   calcDcaVsLumpSum,
   type DcaInputs,
@@ -128,12 +134,10 @@ export default function DcaVsLumpSum() {
   // Price path data (normalised to 100)
   const pricePath = useMemo(() => {
     let price = 100;
-    return result.monthlyReturns
-      .slice(0, horizonMonths)
-      .map((r, i) => {
-        price = price * (1 + r);
-        return { month: i + 1, price };
-      });
+    return result.monthlyReturns.slice(0, horizonMonths).map((r, i) => {
+      price = price * (1 + r);
+      return { month: i + 1, price };
+    });
   }, [result.monthlyReturns, horizonMonths]);
 
   // Final value bar chart data
@@ -211,7 +215,10 @@ export default function DcaVsLumpSum() {
           <div className={styles.dcaSlider}>
             <div className={styles.dcaMonthDisplay}>
               <Form.Label className="mb-0">Spread investments over</Form.Label>
-              <span className={styles.dcaMonthBadge} style={{ color: DCA_COLOR }}>
+              <span
+                className={styles.dcaMonthBadge}
+                style={{ color: DCA_COLOR }}
+              >
                 {inputs.dcaMonths}
               </span>
               <Form.Label className="mb-0">months</Form.Label>
@@ -233,8 +240,8 @@ export default function DcaVsLumpSum() {
           <p className={shared.rateHint}>
             Monthly installment:{" "}
             <strong>{formatCurrency(result.monthlyInstallment)}</strong> — cash
-            not yet invested earns {formatPercent(inputs.savingsAccountRate)}{" "}
-            in a HYSA
+            not yet invested earns {formatPercent(inputs.savingsAccountRate)} in
+            a HYSA
           </p>
 
           {/* ── Return Assumptions ── */}
@@ -301,28 +308,28 @@ export default function DcaVsLumpSum() {
           <div className={styles.scenarioGrid}>
             {SCENARIOS.map((s) => (
               <div key={s.value}>
-              <TooltipOnHover
-                text={s.description}
-                nest={
-                  <div
-                    className={
-                      inputs.scenario === s.value
-                        ? styles.scenarioCardActive
-                        : styles.scenarioCard
-                    }
-                    onClick={() => setField("scenario", s.value)}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ")
-                        setField("scenario", s.value);
-                    }}
-                  >
-                    <div className={styles.scenarioIcon}>{s.icon}</div>
-                    <div>{s.label}</div>
-                  </div>
-                }
-              />
+                <TooltipOnHover
+                  text={s.description}
+                  nest={
+                    <div
+                      className={
+                        inputs.scenario === s.value
+                          ? styles.scenarioCardActive
+                          : styles.scenarioCard
+                      }
+                      onClick={() => setField("scenario", s.value)}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ")
+                          setField("scenario", s.value);
+                      }}
+                    >
+                      <div className={styles.scenarioIcon}>{s.icon}</div>
+                      <div>{s.label}</div>
+                    </div>
+                  }
+                />
               </div>
             ))}
           </div>
@@ -341,14 +348,18 @@ export default function DcaVsLumpSum() {
             {dcaWins ? (
               <>
                 DCA ends up{" "}
-                <strong>{formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}</strong>{" "}
+                <strong>
+                  {formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}
+                </strong>{" "}
                 ahead. The HYSA interest on uninvested cash and lower average
                 buy price more than compensate for time out of market.
               </>
             ) : (
               <>
                 Lump Sum ends up{" "}
-                <strong>{formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}</strong>{" "}
+                <strong>
+                  {formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}
+                </strong>{" "}
                 ahead. Getting fully invested immediately lets compounding work
                 on the full amount sooner.
               </>
@@ -378,10 +389,7 @@ export default function DcaVsLumpSum() {
               <div className={shared.cardLabel}>
                 {dcaWins ? "DCA Advantage" : "Lump Sum Advantage"}
               </div>
-              <div
-                className={shared.cardValue}
-                style={{ color: winnerColor }}
-              >
+              <div className={shared.cardValue} style={{ color: winnerColor }}>
                 {formatCurrency(Math.abs(result.dcaVsLumpSumDiff))}
               </div>
               <div className={shared.cardSub}>
@@ -444,7 +452,10 @@ export default function DcaVsLumpSum() {
           {chartView === "growth" && (
             <div className={shared.chartWrap}>
               <h5 className="text-center mb-1">Portfolio Value Over Time</h5>
-              <p className="text-center text-muted mb-3" style={{ fontSize: "0.82rem" }}>
+              <p
+                className="text-center text-muted mb-3"
+                style={{ fontSize: "0.82rem" }}
+              >
                 DCA total includes cash still in HYSA
               </p>
               <ResponsiveContainer width="100%" height={380}>
@@ -464,11 +475,13 @@ export default function DcaVsLumpSum() {
                   />
                   <YAxis tickFormatter={formatChartDollar} width={65} />
                   <Tooltip
-                    formatter={(value: number | undefined, name: string | undefined) => [
-                      formatCurrency(value ?? 0),
-                      name ?? "",
-                    ]}
-                    labelFormatter={(m) => `Month ${m} (${formatMonth(m as number)})`}
+                    formatter={(
+                      value: number | undefined,
+                      name: string | undefined,
+                    ) => [formatCurrency(value ?? 0), name ?? ""]}
+                    labelFormatter={(m) =>
+                      `Month ${m} (${formatMonth(m as number)})`
+                    }
                     contentStyle={tooltipStyle}
                     labelStyle={tooltipLabelStyle}
                   />
@@ -537,10 +550,10 @@ export default function DcaVsLumpSum() {
                   <XAxis dataKey="name" />
                   <YAxis tickFormatter={formatChartDollar} width={65} />
                   <Tooltip
-                    formatter={(value: number | undefined, name: string | undefined) => [
-                      formatCurrency(value ?? 0),
-                      name ?? "",
-                    ]}
+                    formatter={(
+                      value: number | undefined,
+                      name: string | undefined,
+                    ) => [formatCurrency(value ?? 0), name ?? ""]}
                     contentStyle={tooltipStyle}
                     labelStyle={tooltipLabelStyle}
                   />
@@ -548,27 +561,14 @@ export default function DcaVsLumpSum() {
                     dataKey="value"
                     name="Final Value"
                     isAnimationActive={false}
-                    shape={(props: Record<string, unknown>) => {
-                      const { x, y, width, height, index } = props as {
-                        x: number;
-                        y: number;
-                        width: number;
-                        height: number;
-                        index: number;
-                      };
-                      return (
-                        <rect
-                          x={x}
-                          y={y}
-                          width={width}
-                          height={height}
-                          fill={barData[index]?.fill ?? "#888"}
-                          opacity={0.85}
-                          rx={4}
-                          ry={4}
-                        />
-                      );
-                    }}
+                    shape={(props: BarShapeProps) => (
+                      <Rectangle
+                        {...props}
+                        fill={barData[props.index]?.fill ?? "#888"}
+                        fillOpacity={0.85}
+                        radius={4}
+                      />
+                    )}
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -659,7 +659,9 @@ export default function DcaVsLumpSum() {
                       (v ?? 0).toFixed(1),
                       "Price index",
                     ]}
-                    labelFormatter={(m) => `Month ${m} (${formatMonth(m as number)})`}
+                    labelFormatter={(m) =>
+                      `Month ${m} (${formatMonth(m as number)})`
+                    }
                     contentStyle={tooltipStyle}
                     labelStyle={tooltipLabelStyle}
                   />
@@ -667,7 +669,11 @@ export default function DcaVsLumpSum() {
                     y={100}
                     stroke="#888"
                     strokeDasharray="4 3"
-                    label={{ value: "Start", position: "insideTopLeft", fontSize: 11 }}
+                    label={{
+                      value: "Start",
+                      position: "insideTopLeft",
+                      fontSize: 11,
+                    }}
                   />
                   {inputs.dcaMonths > 1 && (
                     <ReferenceLine
