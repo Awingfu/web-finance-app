@@ -45,6 +45,10 @@ const NAV_ENTRIES: NavEntry[] = [
         href: "/learn/money-flow",
         label: "Where to Put My Money",
       },
+      {
+        href: "/learn/dca-vs-lump-sum",
+        label: "DCA vs Lump Sum",
+      },
     ],
   },
   {
@@ -72,6 +76,7 @@ const PAGE_NAMES: Record<string, string> = {
   "/learn/tax-rates": "How Federal Tax Works",
   "/learn/capital-gains": "Capital Gains & Qualified Dividends",
   "/learn/money-flow": "Where to Put My Money",
+  "/learn/dca-vs-lump-sum": "DCA vs Lump Sum",
   "/retirement/savings-optimizer": "401k Optimizer",
   "/retirement/maximize": "401k Maximize",
   "/retirement/income": "Retirement Income",
